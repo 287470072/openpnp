@@ -37,6 +37,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -72,18 +73,10 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
                 .getDefaultCamera();
         // Move to the feeder pick location
         MovableUtils.moveToLocationAtSafeZ(camera, location);
-        Head head = nozzle.getHead();
-
-        double leftXValue = getLeftXValue();
-        double leftYValue = getLeftYValue();
-        double rightXValue = getRightXValue();
-        double rightYValue = getRightYValue();
         try (CvPipeline pipeline = getPipeline()) {
             for (int i = 0; i < 3; i++) {
                 pickLocation = getPickLocation(pipeline, camera, nozzle);
-                if ((leftXValue <= pickLocation.getX() && pickLocation.getX() <= rightXValue) && leftYValue <= pickLocation.getY() && pickLocation.getY() <= rightYValue) {
-                    camera.moveTo(pickLocation.derive(null, null, null, 0.0));
-                }
+                camera.moveTo(pickLocation.derive(null, null, null, 0.0));
             }
             MainFrame.get()
                     .getCameraViews()
