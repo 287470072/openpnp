@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -37,7 +38,7 @@ public class ReferenceLoosePartConfigurationTest extends AbstractConfigurationWi
         this.feeder = feeder;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "老铁双击666", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, "限制范围", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -91,6 +92,13 @@ public class ReferenceLoosePartConfigurationTest extends AbstractConfigurationWi
         
         JLabel lblPostPick = new JLabel("右上角坐标");
         panel.add(lblPostPick, "2, 6, right, default");
+        
+        
+        LocationButtonsPanel locationButtonsLeft = new LocationButtonsPanel(leftXValue, leftYValue, null, null);
+        panel.add(locationButtonsLeft, "10, 4");
+        
+        LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(rightXValue, rightYValue,  null,  null);
+        panel.add(locationButtonsRight, "10, 6");
     }
 
     @Override
