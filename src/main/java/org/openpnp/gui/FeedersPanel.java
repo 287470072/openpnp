@@ -620,8 +620,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(),
                 placementLocation);
 
-        //控制散料飞达的限制范围
-        if (!feeder.getName().equals("ReferenceLoosePartFeeder")) {
 
             // Go to the pick location and pick.
             nozzle.moveToPickLocation(feeder);
@@ -645,46 +643,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
             }
 
-        } else {
-
-            Location pickLocation = feeder.getPickLocation();
-            double leftXValue = (double) getValueByPropertyName(feeder, "leftXValue");
-            double leftYValue = (double) getValueByPropertyName(feeder, "leftYValue");
-            double rightXValue = (double) getValueByPropertyName(feeder, "rightXValue");
-            double rightYValue = (double) getValueByPropertyName(feeder, "rightYValue");
-            if ((leftXValue <= pickLocation.getX() && pickLocation.getX() <= rightXValue) &&
-                    leftYValue <= pickLocation.getY() && pickLocation.getY() <= rightYValue && (
-                    leftXValue != 0 && rightXValue != 0 && leftYValue != 0 && rightYValue != 0
-            )) {
-                // Go to the pick location and pick.
-                nozzle.moveToPickLocation(feeder);
-                nozzle.pick(feeder.getPart());
-                nozzle.moveToSafeZ();
-
-                // After the pick.
-                feeder.postPick(nozzle);
-
-                // Perform the vacuum check, if enabled.
-                if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
-                    if (!nozzle.isPartOn()) {
-                        throw new JobProcessorException(nozzle, "No part detected.");
-                    }
-                }
-                // The part is now on the nozzle.
-                MovableUtils.fireTargetedUserAction(nozzle);
-                if (MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getFeedersTab()
-                        && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-                    MainFrame.get().getPartsTab().selectPartInTable(feeder.getPart());
-                    MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
-                }
-
-            }else {
-                Logger.debug("散料飞达：需要拾取的元件坐标范围超过预设！");
-            }
-
-
-
-        }
 
 
     }

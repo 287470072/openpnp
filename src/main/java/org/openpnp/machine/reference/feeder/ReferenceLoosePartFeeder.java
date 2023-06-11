@@ -41,6 +41,9 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
+import static org.openpnp.gui.support.Icons.feeder;
+import static org.openpnp.machine.reference.ReferencePnpJobProcessor.getValueByPropertyName;
+
 public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
@@ -76,7 +79,16 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         try (CvPipeline pipeline = getPipeline()) {
             for (int i = 0; i < 3; i++) {
                 pickLocation = getPickLocation(pipeline, camera, nozzle);
-                camera.moveTo(pickLocation.derive(null, null, null, 0.0));
+                if (leftXValue <= pickLocation.getX() && pickLocation.getX() <= rightXValue &&
+                        leftYValue <= pickLocation.getY() && pickLocation.getY() <= rightYValue) {
+                    camera.moveTo(pickLocation.derive(null, null, null, 0.0));
+
+                }else {
+                    Logger.debug("元件位置超过限定范围！！");
+                    throw new Exception("在限定范围内，未找到可用元件！");
+                }
+                //Logger.debug("X|Y:" + pickLocation.getX() + "|" + pickLocation.getY());
+
             }
             MainFrame.get()
                     .getCameraViews()
