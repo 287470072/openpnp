@@ -38,7 +38,7 @@ public class ReferenceLoosePartConfigurationTest extends AbstractConfigurationWi
         this.feeder = feeder;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "限制范围", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, "限制范围(基于Top摄像头的坐标)", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {

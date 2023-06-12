@@ -65,6 +65,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected String actuatorName;
 
+
     @Override
     public Location getPickLocation() throws Exception {
         return pickLocation == null ? location : pickLocation;
@@ -77,14 +78,18 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         // Move to the feeder pick location
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         try (CvPipeline pipeline = getPipeline()) {
+            boolean status;
             for (int i = 0; i < 3; i++) {
                 pickLocation = getPickLocation(pipeline, camera, nozzle);
+                Logger.debug("pickLocation:" + pickLocation.getX() + "|" + pickLocation.getY());
                 if (leftXValue <= pickLocation.getX() && pickLocation.getX() <= rightXValue &&
                         leftYValue <= pickLocation.getY() && pickLocation.getY() <= rightYValue) {
                     camera.moveTo(pickLocation.derive(null, null, null, 0.0));
-
-                }else {
-                    Logger.debug("元件位置超过限定范围！！");
+                    status = true;
+                } else {
+                    status = false;
+                }
+                if (i == 2 && status == false) {
                     throw new Exception("在限定范围内，未找到可用元件！");
                 }
                 //Logger.debug("X|Y:" + pickLocation.getX() + "|" + pickLocation.getY());
