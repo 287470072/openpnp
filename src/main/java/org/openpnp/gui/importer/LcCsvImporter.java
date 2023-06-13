@@ -53,13 +53,21 @@ public abstract class LcCsvImporter {
     // This class converts the data read from file to upper case before compare. So 
     // provide upper case pattern only.
     abstract String[] getReferencePattern();
+
     abstract String[] getValuePattern();
+
     abstract String[] getPackagePattern();
+
     abstract String[] getXPattern();
+
     abstract String[] getYPattern();
+
     abstract String[] getRotationPattern();
+
     abstract String[] getSidePattern();
+
     abstract String[] getHeightPattern();
+
     abstract String[] getCommentPattern();
 
     // this variables hold the pattern to decode the data
@@ -79,18 +87,18 @@ public abstract class LcCsvImporter {
     // this method shall be called by the parent to open a file open dialog and import
     // the selected file.
     public Board importBoard(Frame parent) throws Exception {
-    	// get strings to parse CSV context
-    	referencePattern = getReferencePattern();
-    	valuePattern     = getValuePattern();
-    	packagePattern   = getPackagePattern();
-    	xPattern         = getXPattern();
-    	yPattern         = getYPattern();
-    	rotationPattern  = getRotationPattern();
-    	sidePattern      = getSidePattern();
-    	heightPattern    = getHeightPattern();
-    	commentPattern   = getCommentPattern();
+        // get strings to parse CSV context
+        referencePattern = getReferencePattern();
+        valuePattern = getValuePattern();
+        packagePattern = getPackagePattern();
+        xPattern = getXPattern();
+        yPattern = getYPattern();
+        rotationPattern = getRotationPattern();
+        sidePattern = getSidePattern();
+        heightPattern = getHeightPattern();
+        commentPattern = getCommentPattern();
 
-    	// open the file import dialog
+        // open the file import dialog
         Dlg dlg = new Dlg(parent);
         dlg.setVisible(true);
         return board;
@@ -117,7 +125,7 @@ public abstract class LcCsvImporter {
     // automatic mil to mm conversion: if a property of the header ends in the specified
     // string, all values are converted from mil to mm. Again, the conversion is done with the
     // data read from file converted to upper case, so specify an upper case value here.
-    static private final String MilToMM = "(MIL)";	//$NON-NLS-1$
+    static private final String MilToMM = "(MIL)";    //$NON-NLS-1$
 
     // this flags are used to remember if mil to mm conversion is required
     private boolean xUnitsMil;
@@ -140,9 +148,12 @@ public abstract class LcCsvImporter {
     private static int checkCSV(String str[], String val[]) {
         for (int i = 0; i < str.length; i++) {
             for (int j = 0; j < val.length; j++) {
-                Logger.debug(str[i]);
-                Logger.debug(val[j]);
-                Logger.debug(str[i].equals(val[j]));
+                //如果是UTF8，BOM编码的，首位会有一个看不见的字符，给他处理掉
+                char c = val[j].charAt(0);
+                if (c == 65279) {
+                    val[j] = val[j].substring(1);
+                }
+
                 if (str[i].equals(val[j])) {
                     Logger.trace("checkCSV: " + val[j] + " = " + j); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -157,35 +168,35 @@ public abstract class LcCsvImporter {
     private boolean checkCSV(String str[]) {
 
         // note that layer/side, height and comment are optional
-        if (       (referenceIndex = checkCSV(referencePattern, str)) >= 0
-        		&& (valueIndex     = checkCSV(valuePattern,     str)) >= 0
-                && (packageIndex   = checkCSV(packagePattern,   str)) >= 0
-                && (xIndex         = checkCSV(xPattern,         str)) >= 0
-                && (yIndex         = checkCSV(yPattern,         str)) >= 0
-                && (rotationIndex  = checkCSV(rotationPattern,  str)) >= 0) {
+        if ((referenceIndex = checkCSV(referencePattern, str)) >= 0
+                && (valueIndex = checkCSV(valuePattern, str)) >= 0
+                && (packageIndex = checkCSV(packagePattern, str)) >= 0
+                && (xIndex = checkCSV(xPattern, str)) >= 0
+                && (yIndex = checkCSV(yPattern, str)) >= 0
+                && (rotationIndex = checkCSV(rotationPattern, str)) >= 0) {
 
             // the following fields are optional
-            heightIndex  = checkCSV(heightPattern , str); // optional height field
-            sideIndex    = checkCSV(sidePattern,    str); // optional top/bottom layer field
+            heightIndex = checkCSV(heightPattern, str); // optional height field
+            sideIndex = checkCSV(sidePattern, str); // optional top/bottom layer field
             commentIndex = checkCSV(commentPattern, str); // optional comment field
 
-        	// test if any value requires mil to mm conversion
+            // test if any value requires mil to mm conversion
             xUnitsMil = str[xIndex].endsWith(MilToMM);
-			if (xUnitsMil) {
+            if (xUnitsMil) {
                 Logger.trace("X units are in mils"); //$NON-NLS-1$
             }
-			yUnitsMil = str[yIndex].endsWith(MilToMM);
-			if (yUnitsMil) {
+            yUnitsMil = str[yIndex].endsWith(MilToMM);
+            if (yUnitsMil) {
                 Logger.trace("Y units are in mils"); //$NON-NLS-1$
             }
-			heightUnitsMil = heightIndex >= 0 && str[heightIndex].endsWith(MilToMM);
-			if (heightUnitsMil) {
+            heightUnitsMil = heightIndex >= 0 && str[heightIndex].endsWith(MilToMM);
+            if (heightUnitsMil) {
                 Logger.trace("Height units are in mils"); //$NON-NLS-1$
             }
 
-			// find the largest index, which defines the required line length
-			len = 0;
-			len = Math.max(len, referenceIndex);
+            // find the largest index, which defines the required line length
+            len = 0;
+            len = Math.max(len, referenceIndex);
             len = Math.max(len, valueIndex);
             len = Math.max(len, packageIndex);
             len = Math.max(len, xIndex);
@@ -198,14 +209,14 @@ public abstract class LcCsvImporter {
         }
         // output values found
         Logger.trace("checkCSV: referenceIndex = " + referenceIndex); //$NON-NLS-1$
-        Logger.trace("checkCSV: valueIndex = "     + valueIndex);     //$NON-NLS-1$
-        Logger.trace("checkCSV: packageIndex = "   + packageIndex);   //$NON-NLS-1$
-        Logger.trace("checkCSV: xIndex = "         + xIndex);         //$NON-NLS-1$
-        Logger.trace("checkCSV: yIndex = "         + yIndex);         //$NON-NLS-1$
-        Logger.trace("checkCSV: rotationIndex = "  + rotationIndex);  //$NON-NLS-1$
-        Logger.trace("checkCSV: sideIndex = "      + sideIndex);      //$NON-NLS-1$
-        Logger.trace("checkCSV: heightIndex = "    + heightIndex);    //$NON-NLS-1$
-        Logger.trace("checkCSV: commentIndex = "   + commentIndex);   //$NON-NLS-1$
+        Logger.trace("checkCSV: valueIndex = " + valueIndex);     //$NON-NLS-1$
+        Logger.trace("checkCSV: packageIndex = " + packageIndex);   //$NON-NLS-1$
+        Logger.trace("checkCSV: xIndex = " + xIndex);         //$NON-NLS-1$
+        Logger.trace("checkCSV: yIndex = " + yIndex);         //$NON-NLS-1$
+        Logger.trace("checkCSV: rotationIndex = " + rotationIndex);  //$NON-NLS-1$
+        Logger.trace("checkCSV: sideIndex = " + sideIndex);      //$NON-NLS-1$
+        Logger.trace("checkCSV: heightIndex = " + heightIndex);    //$NON-NLS-1$
+        Logger.trace("checkCSV: commentIndex = " + commentIndex);   //$NON-NLS-1$
         // force length to invalid for following stages
         len = 0;
         return false;
@@ -221,8 +232,8 @@ public abstract class LcCsvImporter {
             return false;
         }
         // sting not empty, try to decode it as header line
-        String as[];		// a line of the file as string
-        String at[][];		// the line as split into fields
+        String as[];        // a line of the file as string
+        String at[][];        // the line as split into fields
         CSVParser csvParser = new CSVParser(new StringReader(input_str));
         as = csvParser.getLine();
 
@@ -255,33 +266,54 @@ public abstract class LcCsvImporter {
     // convert given string taken from a .csv files field into a double
     // unified method to handle all conversions identical
     private double convert(String s) {
-    	return Double.parseDouble(s
-    			.replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
-    			.replace(" ", ""));   //$NON-NLS-1$ //$NON-NLS-2$
+        return Double.parseDouble(s
+                .replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
+                .replace(" ", ""));   //$NON-NLS-1$ //$NON-NLS-2$
     }
+
     // convert length string to double incl. units removal and mil to mm conversion
     private double convert(String s, boolean unitsInMil) {
-    	double v = Double.parseDouble(s
-    			.replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
-    			.replace(" ", "")     //$NON-NLS-1$ //$NON-NLS-2$
+        double v = Double.parseDouble(s
+                .replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
+                .replace(" ", "")     //$NON-NLS-1$ //$NON-NLS-2$
                 .replace("mm", "")    //$NON-NLS-1$ //$NON-NLS-2$
                 .replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$
-    	// if units are in mil, convert them to the OpenPnP standard millimeter
-    	if (unitsInMil) {
-    		v = v * 0.0254;
-    	}
-    	return v;
+        // if units are in mil, convert them to the OpenPnP standard millimeter
+        if (unitsInMil) {
+            v = v * 0.0254;
+        }
+        return v;
     }
 
     private List<Placement> parseFile(File file, boolean createMissingParts,
-            boolean updateHeights) throws Exception {
+                                      boolean updateHeights) throws Exception {
+        //检测csv文件的编码格式
+        BufferedInputStream bin = new BufferedInputStream(
+                new FileInputStream(file));
+        int p = (bin.read() << 8) + bin.read();
+        String code = null;
+
+        switch (p) {
+            case 0xefbb:
+                code = "UTF-8";
+                break;
+            case 0xfffe:
+                code = "Unicode";
+                break;
+            case 0xfeff:
+                code = "UTF-16BE";
+                break;
+            default:
+                code = "GBK";
+        }
+
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_16)); //$NON-NLS-1$
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), code)); //$NON-NLS-1$
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
         // search for a maximum number of lines for headings describing the content
-        for (int i = 0; i++ < maxHeaderLines && (line = reader.readLine()) != null;) {
+        for (int i = 0; i++ < maxHeaderLines && (line = reader.readLine()) != null; ) {
             line = line.trim();
             if (line.length() == 0) {
                 continue;
@@ -298,11 +330,10 @@ public abstract class LcCsvImporter {
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
         CSVParser csvParser = new CSVParser(reader, separator);
-        for (String as[]; (as = csvParser.getLine()) != null;) {
+        for (String as[]; (as = csvParser.getLine()) != null; ) {
             if (as.length <= len) {
                 continue;
-            }
-            else {
+            } else {
                 double placementX = convert(as[xIndex], xUnitsMil);
                 double placementY = convert(as[yIndex], yUnitsMil);
 
@@ -357,7 +388,7 @@ public abstract class LcCsvImporter {
                 }
 
                 // get optional comment
-                if(commentIndex >= 0) {
+                if (commentIndex >= 0) {
                     placement.setComments(as[commentIndex]);
                 }
 
@@ -392,10 +423,10 @@ public abstract class LcCsvImporter {
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
-                    new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                    new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                             FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                             FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                    new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
             JLabel lblTopFilemnt = new JLabel(Translations.getString("CsvImporter.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
@@ -414,8 +445,8 @@ public abstract class LcCsvImporter {
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
-                    new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                    new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                    new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             RowSpec.decode("default:grow")})); //$NON-NLS-1$
 
             chckbxCreateMissingParts = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
@@ -479,7 +510,6 @@ public abstract class LcCsvImporter {
         }
 
 
-
         private class SwingAction_2 extends AbstractAction {
             public SwingAction_2() {
                 putValue(NAME, Translations.getString("CsvImporter.Import2Action.Name")); //$NON-NLS-1$
@@ -496,8 +526,7 @@ public abstract class LcCsvImporter {
                         placements.addAll(parseFile(file, chckbxCreateMissingParts.isSelected(),
                                 chckbxUpdatePartHeight.isSelected()));
                     }
-                }
-                catch (Exception e1) {
+                } catch (Exception e1) {
                     MessageBoxes.errorBox(Dlg.this, Translations.getString("CsvImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
                     return;
                 }
