@@ -104,6 +104,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+
     @Override
     public boolean isPartHeightAbovePickLocation() {
         return true;
