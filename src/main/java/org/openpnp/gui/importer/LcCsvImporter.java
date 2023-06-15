@@ -366,6 +366,7 @@ public abstract class LcCsvImporter {
                         part = new Part(partId);
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
+                        //判断封装是否存在，如果没有就创建封装
                         Package pkg = cfg.getPackage(as[packageIndex]);
                         if (pkg == null) {
                             pkg = new Package(as[packageIndex]);

@@ -1,27 +1,25 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Frame;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -36,26 +34,13 @@ import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
@@ -72,12 +57,9 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
-import org.openpnp.model.AbstractVisionSettings;
-import org.openpnp.model.BottomVisionSettings;
-import org.openpnp.model.Configuration;
+import org.openpnp.model.*;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.FiducialVisionSettings;
-import org.openpnp.model.Part;
+import org.openpnp.model.Package;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
@@ -104,6 +86,13 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private ActionGroup multiSelectionActionGroup;
     private JTabbedPane tabbedPane;
     private Part selectedPart;
+
+    private static Color typeColorFiducial = new Color(157, 188, 255);
+    private static Color typeColorPlacement = new Color(255, 255, 255);
+    private static Color statusColorWarning = new Color(252, 255, 157);
+    private static Color statusColorReady = new Color(157, 255, 168);
+    private static Color statusColorError = new Color(255, 157, 157);
+    private static Color statusColorDisabled = new Color(180, 180, 180);
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -178,6 +167,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.setDefaultRenderer(org.openpnp.model.Package.class,
                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 
+
+
+
         JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
                 new VisionSettingsComboBoxModel(BottomVisionSettings.class));
         bottomVisionCombo.setMaximumRowCount(20);
@@ -199,17 +191,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-        
+
+
+        //控制part列表的列颜色
+        table.setDefaultRenderer(Package.class, new PackageRenderer());
+
+
         toolBar.add(newPartAction);
         toolBar.add(deletePartAction);
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
-        
+
         toolBar.addSeparator();
         JButton btnNewButton = new JButton(copyPartToClipboardAction);
         btnNewButton.setHideActionText(true);
         toolBar.add(btnNewButton);
-        
+
         JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
         btnNewButton_1.setHideActionText(true);
         toolBar.add(btnNewButton_1);
@@ -234,7 +231,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         });
 
         tableModel.addTableModelListener(e -> {
-            if (selectedPart != null) { 
+            if (selectedPart != null) {
                 // Reselect previously selected settings.
                 Helpers.selectObjectTableRow(table, selectedPart);
             }
@@ -263,8 +260,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         // If current expression doesn't parse, don't update.
         try {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
-        }
-        catch (PatternSyntaxException e) {
+        } catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");
             return;
         }
@@ -319,15 +315,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
-            }
-            else {
+            } else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
-            
+
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                     Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString( //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
+                            "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (ret == JOptionPane.YES_OPTION) {
                 for (Part part : selections) {
                     Configuration.get().removePart(part);
@@ -383,8 +378,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
             }
         }
@@ -420,8 +414,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Configuration.get().addPart(part);
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
@@ -434,8 +427,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         if (selections.size() > 1) {
             singleSelectionActionGroup.setEnabled(false);
             multiSelectionActionGroup.setEnabled(true);
-        }
-        else {
+        } else {
             multiSelectionActionGroup.setEnabled(false);
             singleSelectionActionGroup.setEnabled(!selections.isEmpty());
         }
@@ -464,7 +456,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     wizard.setWizardContainer(PartsPanel.this);
                 }
             }
-            
+
             FiducialLocator fiducialLocator =
                     Configuration.get().getMachine().getFiducialLocator();
             Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPart);
@@ -476,7 +468,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 wizard.setWizardContainer(PartsPanel.this);
             }
             MainFrame mainFrame = MainFrame.get();
-            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab()
                     && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
                 mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
                 mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
@@ -493,6 +485,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
     }
 
+
+    static class PackageRenderer extends DefaultTableCellRenderer {
+        @Override
+        public void setValue(Object value) {
+            return;
+        }
+    }
+
     public void selectPartInTable(Part part) {
         if (getSelectedPart() != part) {
             Helpers.selectObjectTableRow(table, part);
@@ -500,8 +500,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
     }
 
     @Override
-    public void wizardCompleted(Wizard wizard) {}
+    public void wizardCompleted(Wizard wizard) {
+    }
 
     @Override
-    public void wizardCancelled(Wizard wizard) {}
+    public void wizardCancelled(Wizard wizard) {
+    }
 }

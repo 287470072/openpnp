@@ -45,7 +45,8 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                     Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.FiducialVision"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
-                    Translations.getString("PartsTableModel.ColumnName.Feeders") //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Feeders"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Status") //$NON-NLS-1$
     };
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
@@ -150,6 +151,8 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 7:
                 return part.getPlacementCount();
             case 8:
+                return part.getAssignedFeeders();
+            case 9:
                 return part.getAssignedFeeders();
             default:
                 return null;
