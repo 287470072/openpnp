@@ -52,6 +52,8 @@ public class Part extends AbstractPartSettingsHolder {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
+
+
     @SuppressWarnings("unused")
     private Part() {
         this(null);

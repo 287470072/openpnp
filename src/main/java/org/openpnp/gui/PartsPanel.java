@@ -57,6 +57,7 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.model.*;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Package;
@@ -66,6 +67,9 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
+
+import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.gui.tablemodel.PartsTableModel.Status;
 
 @SuppressWarnings("serial")
 public class PartsPanel extends JPanel implements WizardContainer {
@@ -193,8 +197,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
         splitPane.setRightComponent(tabbedPane);
 
 
-        //控制part列表的列颜色
-        table.setDefaultRenderer(Package.class, new PackageRenderer());
+        //控制part列表的status列颜色
+        table.setDefaultRenderer(PartsTableModel.Status.class, new StatusRenderer());
 
 
         toolBar.add(newPartAction);
@@ -291,6 +295,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
                 Part part = new Part(id);
 
+                //为Part添加封装
                 part.setPackage(Configuration.get().getPackages().get(0));
 
                 configuration.addPart(part);
@@ -486,11 +491,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
     }
 
 
-    static class PackageRenderer extends DefaultTableCellRenderer {
+    static class StatusRenderer extends DefaultTableCellRenderer {
         @Override
         public void setValue(Object value) {
-            return;
+            if (value == null) {
+                return;
+            }
+            Status status=(Status) value;
+            if (status == Status.Ready) {
+                setBorder(new LineBorder(getBackground()));
+                setForeground(Color.black);
+                setBackground(statusColorReady);
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusReady")); //$NON-NLS-1$
+            }
         }
+
+
     }
 
     public void selectPartInTable(Part part) {

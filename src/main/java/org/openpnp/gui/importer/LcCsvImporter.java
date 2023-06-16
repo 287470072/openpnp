@@ -368,11 +368,13 @@ public abstract class LcCsvImporter {
                         part.setHeight(l);
                         //判断封装是否存在，如果没有就创建封装
                         Package pkg = cfg.getPackage(as[packageIndex]);
-                        if (pkg == null) {
-                            pkg = new Package(as[packageIndex]);
-                            cfg.addPackage(pkg);
+                        //如果存在封装，就进行关联，没有就留空，并修改status状态
+                        if (pkg != null) {
+                            //pkg = new Package(as[packageIndex]);
+                            //cfg.addPackage(pkg);
+                            part.setPackage(pkg);
                         }
-                        part.setPackage(pkg);
+
 
                         cfg.addPart(part);
                     }

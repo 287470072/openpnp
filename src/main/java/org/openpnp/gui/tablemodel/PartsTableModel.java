@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -27,17 +27,14 @@ import java.util.List;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PercentConverter;
-import org.openpnp.model.BottomVisionSettings;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialVisionSettings;
-import org.openpnp.model.Length;
+import org.openpnp.model.*;
 import org.openpnp.model.Package;
-import org.openpnp.model.Part;
+import org.openpnp.spi.Feeder;
 
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
+            new String[]{Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
@@ -46,12 +43,29 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                     Translations.getString("PartsTableModel.ColumnName.FiducialVision"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Feeders"), //$NON-NLS-1$
-                    Translations.getString("PartsTableModel.ColumnName.Status") //$NON-NLS-1$
-    };
-    private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
-            Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
+                    "Status"
+            };
+    private Class[] columnTypes = new Class[]{
+            String.class,
+            String.class,
+            LengthCellValue.class,
+            Package.class,
+            String.class,
+            BottomVisionSettings.class,
+            FiducialVisionSettings.class,
+            Integer.class,
+            Integer.class,
+            Status.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
+
+    public enum Status {
+        Ready,
+        MissingPart,
+        MissingFeeder,
+        ZeroPartHeight,
+        Disabled
+    }
 
     public PartsTableModel() {
         Configuration.get().addPropertyChangeListener("parts", this);
@@ -97,8 +111,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             Part part = parts.get(rowIndex);
             if (columnIndex == 1) {
                 part.setName((String) aValue);
-            }
-            else if (columnIndex == 2) {
+            } else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
@@ -112,21 +125,16 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                     }
                 }
                 part.setHeight(length);
-            }
-            else if (columnIndex == 3) {
+            } else if (columnIndex == 3) {
                 part.setPackage((Package) aValue);
-            }
-            else if (columnIndex == 4) {
+            } else if (columnIndex == 4) {
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
-            }
-            else if (columnIndex == 5) {
+            } else if (columnIndex == 5) {
                 part.setBottomVisionSettings((BottomVisionSettings) aValue);
-            }
-            else if (columnIndex == 6) {
+            } else if (columnIndex == 6) {
                 part.setFiducialVisionSettings((FiducialVisionSettings) aValue);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // TODO: dialog, bad input
         }
     }
@@ -153,10 +161,18 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 8:
                 return part.getAssignedFeeders();
             case 9:
-                return part.getAssignedFeeders();
+                return getPartStatus(part);
             default:
                 return null;
         }
+    }
+
+
+    private Status getPartStatus(Part part) {
+        if (part.getPackage() == null) {
+            return Status.MissingPart;
+        }
+        return Status.Ready;
     }
 
     @Override
@@ -164,10 +180,9 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
         if (arg0.getSource() instanceof Part) {
             // Only single part data changed, but sort order might change, so still need fireTableDataChanged().
             fireTableDataChanged();
-        }
-        else  {
+        } else {
             // Parts list itself changes.
-            if (parts != null) { 
+            if (parts != null) {
                 for (Part part : parts) {
                     part.removePropertyChangeListener(this);
                 }
