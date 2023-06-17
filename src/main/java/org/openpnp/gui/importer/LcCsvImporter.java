@@ -41,6 +41,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("serial")
 public abstract class LcCsvImporter {
@@ -358,7 +359,7 @@ public abstract class LcCsvImporter {
                         0, placementRotation));
                 Configuration cfg = Configuration.get();
                 if (cfg != null && createMissingParts) {
-                    String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
+                    String partId = filtration(as[packageIndex]) + "-" + as[valueIndex]; //$NON-NLS-1$
                     Part part = cfg.getPart(partId);
 
                     // if part does not exist, create it
@@ -367,7 +368,7 @@ public abstract class LcCsvImporter {
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
                         //判断封装是否存在，如果没有就创建封装
-                        Package pkg = cfg.getPackage(as[packageIndex]);
+                        Package pkg = cfg.getPackage(filtration(as[packageIndex]));
                         //如果存在封装，就进行关联，没有就留空，并修改status状态
                         if (pkg != null) {
                             //pkg = new Package(as[packageIndex]);
@@ -407,6 +408,21 @@ public abstract class LcCsvImporter {
         }
         reader.close();
         return placements;
+    }
+
+
+    /**
+     * 常见特殊字符过滤
+     *
+     * @param str
+     * @return
+     */
+    private String filtration(String str) {
+        String regEx = "[`~!@#$%^&*()+=|{}:;\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
+        str = Pattern.compile(regEx).matcher(str).replaceAll("").trim();
+        System.out.println("str ======" + str + ".");
+
+        return str;
     }
 
     class Dlg extends JDialog {
