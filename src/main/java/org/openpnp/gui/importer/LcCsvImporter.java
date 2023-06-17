@@ -41,6 +41,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("serial")
@@ -359,7 +360,7 @@ public abstract class LcCsvImporter {
                         0, placementRotation));
                 Configuration cfg = Configuration.get();
                 if (cfg != null && createMissingParts) {
-                    String partId = filtration(as[packageIndex]) + "-" + as[valueIndex]; //$NON-NLS-1$
+                    String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
                     Part part = cfg.getPart(partId);
 
                     // if part does not exist, create it
@@ -368,7 +369,7 @@ public abstract class LcCsvImporter {
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
                         //判断封装是否存在，如果没有就创建封装
-                        Package pkg = cfg.getPackage(filtration(as[packageIndex]));
+                        Package pkg = cfg.getPackage(filtPackage(filtration(as[packageIndex])));
                         //如果存在封装，就进行关联，没有就留空，并修改status状态
                         if (pkg != null) {
                             //pkg = new Package(as[packageIndex]);
@@ -420,10 +421,28 @@ public abstract class LcCsvImporter {
     private String filtration(String str) {
         String regEx = "[`~!@#$%^&*()+=|{}:;\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
         str = Pattern.compile(regEx).matcher(str).replaceAll("").trim();
-        System.out.println("str ======" + str + ".");
-
         return str;
     }
+
+
+
+    /**
+     * 提取特定的封装
+     *
+     * @param str
+     * @return
+     */
+    private String filtPackage(String str) {
+        String regEx = "(0201|0402|0603|0805|1206)";
+        Pattern pattern = Pattern.compile(regEx);
+        Matcher matcher = pattern.matcher(str);
+        if (matcher.find())
+        {
+            str=matcher.group(0);
+        }
+        return str;
+    }
+
 
     class Dlg extends JDialog {
         private JTextField textFieldFile;

@@ -34,6 +34,8 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -304,7 +306,7 @@ public abstract class CsvImporter {
     private List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_16)); //$NON-NLS-1$
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.ISO_8859_1)); //$NON-NLS-1$
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
@@ -363,12 +365,13 @@ public abstract class CsvImporter {
                         part = new Part(partId);
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
-                        Package pkg = cfg.getPackage(as[packageIndex]);
-                        if (pkg == null) {
-                            pkg = new Package(as[packageIndex]);
-                            cfg.addPackage(pkg);
+                        Package pkg = cfg.getPackage(filtPackage(filtration(as[packageIndex])));
+                        //如果存在封装，就进行关联，没有就留空，并修改status状态
+                        if (pkg != null) {
+                            //pkg = new Package(as[packageIndex]);
+                            //cfg.addPackage(pkg);
+                            part.setPackage(pkg);
                         }
-                        part.setPackage(pkg);
 
                         cfg.addPart(part);
                     }
@@ -401,6 +404,37 @@ public abstract class CsvImporter {
         }
         reader.close();
         return placements;
+    }
+
+    /**
+     * 常见特殊字符过滤
+     *
+     * @param str
+     * @return
+     */
+    private String filtration(String str) {
+        String regEx = "[`~!@#$%^&*()+=|{}:;\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
+        str = Pattern.compile(regEx).matcher(str).replaceAll("").trim();
+        return str;
+    }
+
+
+
+    /**
+     * 提取特定的封装
+     *
+     * @param str
+     * @return
+     */
+    private String filtPackage(String str) {
+        String regEx = "(0201|0402|0603|0805|1206)";
+        Pattern pattern = Pattern.compile(regEx);
+        Matcher matcher = pattern.matcher(str);
+        if (matcher.find())
+        {
+            str=matcher.group(0);
+        }
+        return str;
     }
 
     class Dlg extends JDialog {
