@@ -657,7 +657,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         
         btnReapplyToCamera = new JButton(reapplyPropertiesToCameraAction);
         panelProperties.add(btnReapplyToCamera, "12, 32");
-
+        //获取摄像头列表
         for (CaptureDevice dev : camera.getCaptureDevices()) {
             deviceCb.addItem(dev);
         }

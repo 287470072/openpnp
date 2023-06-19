@@ -886,6 +886,7 @@ public class JobPanel extends JPanel {
     public void jobStart() throws Exception {
         jobProcessor = Configuration.get().getMachine().getPnpJobProcessor();
         if (isAllPlaced()) {
+            //询问是否要重置所有的元件摆放任务
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     Translations.getString("JobPanel.JobStart.ResetPlacements.ConfirmDialog.Question"), //$NON-NLS-1$
                     Translations.getString("JobPanel.JobStart.ResetPlacements.ConfirmDIalog.Title"), JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
@@ -895,6 +896,7 @@ public class JobPanel extends JPanel {
                 jobPlacementsPanel.refresh();
             }
         }
+        //任务执行器初始化
         jobProcessor.initialize(job);
         jobRun();
     }
@@ -1010,6 +1012,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            //控制任务的启停
             UiUtils.messageBoxOnException(() -> {
                 if (state == State.Stopped) {
                     setState(State.Running);
