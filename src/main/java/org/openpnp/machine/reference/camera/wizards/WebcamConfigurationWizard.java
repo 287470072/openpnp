@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -25,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import com.github.sarxos.webcam.Webcam;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.util.UiUtils;
@@ -35,7 +36,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
 
 
 public class WebcamConfigurationWizard extends AbstractConfigurationWizard
@@ -54,19 +54,19 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral.setBorder(new TitledBorder(null,
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblDeviceId = new JLabel("Device ID");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
         Object[] deviceIds = null;
+        String looking;
         try {
-            deviceIds = camera.getDeviceIds().toArray(new String[] {});
-        }
-        catch (Exception e) {
+            deviceIds = camera.getDeviceIds().toArray(new String[]{});
+        } catch (Exception e) {
             // TODO: Show an error to the use when we can't get the list of device IDs
         }
         comboBoxDeviceId = new JComboBox(deviceIds);
@@ -74,6 +74,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
 
         chckbxGray = new JCheckBox("Force Grayscale?");
         panelGeneral.add(chckbxGray, "2, 4, 3, 1");
+        //webCamDis();
     }
 
     @Override
@@ -90,7 +91,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         try {
             int i = 0;
             String id = null;
-            for (String s : camera.getDeviceIds().toArray(new String[] {})) {
+            for (String s : camera.getDeviceIds().toArray(new String[]{})) {
                 comboBoxDeviceId.addItem(s);
                 if (s.equals(camera.getDeviceId())) {
                     id = s;
@@ -100,8 +101,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
             if (id != null) {
                 comboBoxDeviceId.setSelectedItem(id);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ;
         }
         comboBoxDeviceId.repaint();
@@ -109,6 +109,14 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral.repaint();
     }
 
+
+    public void webCamDis() {
+        for (Webcam webcam : Webcam.getWebcams()) {
+            System.out.println("Webcam detected: " + webcam.getName());
+        }
+        Webcam.addDiscoveryListener(this);
+        System.out.println("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
+    }
 
     @Override
     public void webcamFound(WebcamDiscoveryEvent event) {
@@ -130,7 +138,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
     protected void saveToModel() {
         super.saveToModel();
         UiUtils.messageBoxOnException(() -> {
-            camera.reinitialize(); 
+            camera.reinitialize();
         });
     }
 }

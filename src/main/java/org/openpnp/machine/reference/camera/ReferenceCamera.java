@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -75,6 +75,7 @@ import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
 import org.pmw.tinylog.Logger;
+import org.python.jline.internal.Log;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -124,22 +125,22 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     protected int scaleHeight = 0;
 
     @Attribute(required = false)
-    protected double redBalance = 1.0; 
+    protected double redBalance = 1.0;
 
     @Attribute(required = false)
-    protected double greenBalance = 1.0; 
+    protected double greenBalance = 1.0;
 
     @Attribute(required = false)
-    protected double blueBalance = 1.0; 
+    protected double blueBalance = 1.0;
 
     @Attribute(required = false)
-    protected double redGamma = 1.0; 
+    protected double redGamma = 1.0;
 
     @Attribute(required = false)
-    protected double greenGamma = 1.0; 
+    protected double greenGamma = 1.0;
 
     @Attribute(required = false)
-    protected double blueGamma = 1.0; 
+    protected double blueGamma = 1.0;
 
     @Attribute(required = false)
     protected boolean deinterlace;
@@ -151,7 +152,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     private AdvancedCalibration advancedCalibration = new AdvancedCalibration();
 
     @Attribute(required = false)
-    private String lightActuatorId; 
+    private String lightActuatorId;
     @Attribute(required = false)
     private boolean allowMachineActuators = false;
 
@@ -213,11 +214,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
         });
     }
-    
+
     /**
      * Captures an image using captureTransformed() and performs scripting and lighting events
      * before and after the capture.
-     * @throws Exception 
+     * @throws Exception
      */
     @Override
     public BufferedImage capture() throws Exception {
@@ -230,7 +231,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         Configuration.get().getScripting().on("Camera.AfterCapture", globals);
         return image;
     }
-    
+
     /**
      * Captures an image using captureRaw(), applies local transformations and returns the image.
      */
@@ -238,7 +239,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public BufferedImage captureTransformed() {
         return transformImage(captureRaw());
     }
-    
+
     /**
      * Captures an image using safeInternalCapture() and returns it without any transformations
      * applied.
@@ -255,7 +256,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     protected abstract BufferedImage internalCapture();
-    
+
     /**
      * Wraps internalCapture() to ensure that a null image is never returned. Attempts to
      * retry capture if the capture returns null and if no image can be captured returns a
@@ -277,6 +278,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 return image;
             }
             if (i >= getCaptureTryCount()) {
+                //Thread.currentThread().interrupt();
                 break;
             }
             if (System.currentTimeMillis() > t1) {
@@ -284,7 +286,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 break;
             }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
-            Thread.yield();
+            Thread.currentThread().interrupt();
+            // Thread.yield();
         }
         Logger.warn("Camera {} failed to return an image after {} tries.", this, i);
         return getCaptureErrorImage();
@@ -525,7 +528,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public boolean isWhiteBalanced() {
         return redBalance != 1.0 || greenBalance != 1.0 || blueBalance != 1.0
                 || redGamma != 1.0 || greenGamma != 1.0 || blueGamma != 1.0
-                || (redColorMap != null & blueColorMap != null & greenColorMap != null); 
+                || (redColorMap != null & blueColorMap != null & greenColorMap != null);
     }
 
     @Override
@@ -589,7 +592,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             // We do skip the convert to and from Mat if no transforms are needed.
             // But we must enter while performing original calibration.
             else if (isDeinterlaced()
-                || isCropped() 
+                || isCropped()
                 || isCalibrating()
                 || isUndistorted()
                 || isScaled()
@@ -637,11 +640,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public synchronized Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() &&
                 advancedCalibration.isValid()) {
             double upp = 0;
             upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
-                        convertToUnits(LengthUnit.Millimeters).getValue() / 
+                        convertToUnits(LengthUnit.Millimeters).getValue() /
                         advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
             upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
@@ -661,7 +664,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             if (undistortionMap2 == null) {
                 undistortionMap2 = new Mat();
             }
-            advancedCalibration.initUndistortRectifyMap(mat.size(), 
+            advancedCalibration.initUndistortRectifyMap(mat.size(),
                     undistortionMap1, undistortionMap2);
         }
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
@@ -693,7 +696,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     // Indexed BGR.
                     int level1 = (i+halfRange)/range;
                     int level0 = level1 - 1;
-                    double weight1 = ((i + halfRange) % range)/(double)range; 
+                    double weight1 = ((i + halfRange) % range)/(double)range;
                     double weight0 = 1.0 - weight1;
                     if (level0 < 0) {
                         level0 = 0;
@@ -701,7 +704,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     }
                     if (level1 >= levels) {
                         level1 = levels-2;
-                        weight0 += 2*weight1; 
+                        weight0 += 2*weight1;
                         weight1 = -weight1;
                     }
                     data[2] = (byte)Math.max(0, Math.min(255, (redColorMap[level0]*weight0 + redColorMap[level1]*weight1)*255.0));
@@ -775,12 +778,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         setRedBalance(r/clip);
         setGreenBalance(g/clip);
         setBlueBalance(b/clip);
-        
+
         // Scale the gamma percentile.
-        percentileGamma[0] *= r/clip/255; 
-        percentileGamma[1] *= g/clip/255; 
+        percentileGamma[0] *= r/clip/255;
+        percentileGamma[1] *= g/clip/255;
         percentileGamma[2] *= b/clip/255;
-        
+
         // Make the gamma match by percentile.
         double midGamma = (percentileGamma[0] + percentileGamma[1] + percentileGamma[2])/3;
         setRedGamma(Math.log(percentileGamma[0])/Math.log(midGamma));
@@ -796,7 +799,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         // Map the balance on various levels.
         final int range = 256/levels;
         final int halfRange = range/2;
-        final int clip = 254; 
+        final int clip = 254;
         final int balanceLimit = 4;
         long[][] histogram = VisionUtils.computeImageHistogram(image);
         double lead[] = new double[3];
@@ -904,7 +907,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     public SimpleGraph getColorBalanceGraph() {
-        final String COLOR_GRAPH = "C"; 
+        final String COLOR_GRAPH = "C";
         SimpleGraph colorGraph = new SimpleGraph();
         colorGraph.setRelativePaddingLeft(0.1);
         colorGraph.setRelativePaddingRight(0.05);
@@ -1058,7 +1061,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     protected boolean isOffset() {
         return offsetX != 0D || offsetY != 0D;
     }
-    
+
     private Mat scale(Mat mat) {
         if (!isScaled()) {
             return mat;
@@ -1253,12 +1256,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
         return sheets;
     }
-    
+
     @Override
     public Action[] getPropertySheetHolderActions() {
         return new Action[] { deleteAction };
     }
-    
+
     public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);

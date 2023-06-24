@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -33,7 +33,6 @@ import org.simpleframework.xml.Attribute;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamImageTransformer;
 import com.github.sarxos.webcam.util.jh.JHGrayFilter;
-
 
 
 /**
@@ -66,14 +65,13 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (! ensureOpen()) {
+        if (!ensureOpen()) {
             return null;
         }
 
         try {
             return webcam.getImage();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -89,12 +87,10 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
     @Override
     public void open() throws Exception {
         stop();
-
         if (webcam != null) {
             try {
                 webcam.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             webcam = null;
@@ -111,15 +107,21 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
             if (preferredWidth != 0 && preferredHeight != 0) {
                 webcam.setViewSize(new Dimension(preferredWidth, preferredHeight));
             }
+            int i = 0;
+            do {
+                if (webcam.getLock().isLocked()) {
+                    //解决拔插摄像头导致的摄像头被锁死，无法出图像的问题
+                    webcam.getLock().disable();
+
+                }
+            } while (i++ < 3);
             webcam.open();
             if (forceGray) {
                 webcam.setImageTransformer(this);
-            }
-            else {
+            } else {
                 webcam.setImageTransformer(null);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return;
         }

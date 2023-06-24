@@ -359,4 +359,6 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
     }
+
+
 }

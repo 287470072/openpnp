@@ -135,6 +135,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lookingCb = new JComboBox(Camera.Looking.values());
         lookingCb.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
+                //Logger.trace("Looking内容更改！");
                 adaptDialog();
             }
         });

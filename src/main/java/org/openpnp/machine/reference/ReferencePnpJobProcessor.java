@@ -740,6 +740,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return new Place(plannedPlacements);
             }
 
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -1189,7 +1190,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     default:
                         throw new Error("Unhandled Error Handling case " + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());
                 }
+
             }
+
         }
     }
 

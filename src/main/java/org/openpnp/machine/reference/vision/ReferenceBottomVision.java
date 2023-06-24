@@ -558,10 +558,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), 
                 nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
+        //下视觉识别矫正吸嘴元件的关键位置
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
+            //移动吸嘴到摄像头上方
             pipelineShot.apply();
-
+            //识别
             pipeline.process();
+            //取结果
             Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
 
             // Fall back to the old name of "result" instead of "results" for backwards

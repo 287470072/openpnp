@@ -19,8 +19,11 @@
 
 package org.openpnp;
 
+import com.github.sarxos.webcam.Webcam;
+
 import java.awt.image.BufferedImage;
 
 public interface CameraListener {
     public void frameReceived(BufferedImage img);
+
 }
