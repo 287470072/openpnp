@@ -278,7 +278,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 return image;
             }
             if (i >= getCaptureTryCount()) {
-                //Thread.currentThread().interrupt();
+                Thread.currentThread().interrupt();
                 break;
             }
             if (System.currentTimeMillis() > t1) {
@@ -286,8 +286,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 break;
             }
             Logger.trace("Camera {} failed to return an image. Retrying.", this);
-            Thread.currentThread().interrupt();
-            // Thread.yield();
+            //Thread.currentThread().interrupt();
+            Thread.yield();
         }
         Logger.warn("Camera {} failed to return an image after {} tries.", this, i);
         return getCaptureErrorImage();

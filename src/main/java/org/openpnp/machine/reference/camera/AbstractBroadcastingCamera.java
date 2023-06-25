@@ -2,20 +2,20 @@
  * Copyright (C) 2021 <mark@makr.zone>
  * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jnr.ffi.Struct;
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
@@ -47,8 +48,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
- * AbstractPreviewCamera handles the preview capture broadcasting aspects of a Camera. 
- *
+ * AbstractPreviewCamera handles the preview capture broadcasting aspects of a Camera.
  */
 public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera implements Runnable {
     // Calling notifyAll on this object will wake the stream thread for one loop to broadcast
@@ -85,12 +85,12 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                             }
                         }
 
-                        @Override 
+                        @Override
                         public void machineEnabled(Machine machine) {
                             notifyCapture();
                         }
 
-                        @Override 
+                        @Override
                         public void machineBusy(Machine machine, boolean busy) {
                             if (!busy) {
                                 if (cameraViewDirty) {
@@ -106,8 +106,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                             if (hm instanceof Camera) {
                                 // That's easy.
                                 nearestCamera = (Camera) hm;
-                            }
-                            else if (hm != null) {
+                            } else if (hm != null) {
                                 // This is not a Camera but it may be a camera subject. Get the nearest camera looking at it.   
                                 Location location = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
                                 double nearestDistance = Double.POSITIVE_INFINITY;
@@ -171,19 +170,18 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
     }
 
     protected void notifyCapture() {
-        synchronized(captureNotifier) {
+        synchronized (captureNotifier) {
             captureNotifier.notifyAll();
         }
     }
 
     /**
      * Whenever a user action deliberately changes the Camera view via its position, subject, or other action,
-     * this method should be called to trigger a new image capture. 
-     * If the camera is set to 0 fps or otherwise not continuously capturing, this will generate an updated 
+     * this method should be called to trigger a new image capture.
+     * If the camera is set to 0 fps or otherwise not continuously capturing, this will generate an updated
      * camera view (subject to configuration and other constraints).
      *
      * @param location Location at which the view is targeted.
-     *  
      */
     public void cameraViewHasChanged(Location location) {
         cameraViewDirty = true;
@@ -222,12 +220,10 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 if (getPreviewFps() == 0.0) {
                     broadcastCapture(settleAndCapture());
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Logger.error(e);
             }
-        }
-        finally {
+        } finally {
             cameraViewDirty = false;
         }
     }
@@ -253,8 +249,8 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
     }
 
     /**
-     * New settings applied to the Camera are activated by reopening the camera.   
-     * 
+     * New settings applied to the Camera are activated by reopening the camera.
+     *
      * @throws Exception
      */
     public synchronized void reinitialize() throws Exception {
@@ -268,8 +264,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
             thread.interrupt();
             try {
                 thread.join(200);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
             }
         }
         thread = null;
@@ -288,8 +283,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
         if (!isOpen()) {
             try {
                 open();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Logger.error(e);
                 return false;
             }
@@ -317,12 +311,13 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
 
     @Override
     public void run() {
-        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" started.");
+        Logger.trace("Camera " + getName() + " thread " + Thread.currentThread().getId() + " started.");
+        int i = 0;
         while (!Thread.interrupted()) {
             if (thread == null
-                    ||thread.getId()!= Thread.currentThread().getId()) {
+                    || thread.getId() != Thread.currentThread().getId()) {
                 // The interrupt must have missed. We're not the running thread.
-                Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" interrupt failed, closing anyway.");
+                Logger.trace("Camera " + getName() + " thread " + Thread.currentThread().getId() + " interrupt failed, closing anyway.");
                 break;
             }
             try {
@@ -332,7 +327,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 // Note, by using the atomic getAndSet() we make sure not to miss the last image.
                 BufferedImage img = lastTransformedImage.getAndSet(null);
                 if (img == null && !isPreviewSuspended()) {
-                    if (hasNewFrame()){
+                    if (hasNewFrame()) {
                         // None available, try capture a new frame.
                         captureTransformed();
                         // Void the last image, so a new one will be triggered next time.
@@ -341,26 +336,29 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 }
                 if (img != null) {
                     broadcastCapture(img);
+                } else {
+                    //针对openPnpCaptureCamera的插拔支持
+                    if (i > 50) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             try {
-                synchronized(captureNotifier) {
+                synchronized (captureNotifier) {
                     if (fps == 0) {
                         captureNotifier.wait();
-                    }
-                    else {
+                    } else {
                         captureNotifier.wait((long) (1000. / fps));
                     }
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 break;
             }
+            i++;
         }
-        Logger.trace("Camera "+getName()+" thread "+Thread.currentThread().getId()+" bye-bye.");
+        Logger.trace("Camera " + getName() + " thread " + Thread.currentThread().getId() + " bye-bye.");
     }
 
     public boolean isPreviewSuspended() {

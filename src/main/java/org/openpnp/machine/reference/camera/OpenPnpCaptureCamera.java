@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -99,7 +99,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (! ensureOpen()) {
+        if (!ensureOpen()) {
             return null;
         }
         try {
@@ -107,7 +107,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
              * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
              * which can happen, if you disconnect the USB port and then try to capture from a pipeline.  
              */
-            long timeout = System.currentTimeMillis()+500;
+            long timeout = System.currentTimeMillis() + 500;
             while (!stream.hasNewFrame()) {
                 Thread.yield();
                 if (System.currentTimeMillis() > timeout) {
@@ -116,23 +116,22 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             }
             BufferedImage img = stream.capture();
             return img;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     @Override
     protected synchronized boolean isOpen() {
-        return super.isOpen() 
+        return super.isOpen()
                 && stream != null;
     }
-    
+
     @Override
     public synchronized boolean hasNewFrame() {
         if (isOpen()) {
             return stream.hasNewFrame();
-        }        
+        }
         return false;
     }
 
@@ -143,8 +142,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         if (stream != null) {
             try {
                 stream.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             stream = null;
@@ -152,7 +150,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         setPropertiesStream(stream);
 
         clearCalibrationCache();
-        
+
         // If a device and format are not set, see if we can read them from the stored
         // properties. This will only happen during startup.
         if (device == null && format == null) {
@@ -202,8 +200,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
             stream = device.openStream(format);
             setPropertiesStream(stream);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return;
         }
@@ -214,7 +211,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized double estimateCaptureFps() throws Exception {
         ensureOpen();
         if (stream == null || format == null) {
-            throw new Exception("Camera stream not properly initialized."); 
+            throw new Exception("Camera stream not properly initialized.");
         }
         // Stop the broadcasting thread.
         stop();
@@ -244,8 +241,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                     t0 = t1;
                     timeout = t0 + 2000;
                     capturedFrames = 0;
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -253,7 +249,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         // Start the broadcasting thread.
         start();
         // Compute the fps.
-        return capturedFrames*1000./(t1-t0);
+        return capturedFrames * 1000. / (t1 - t0);
     }
 
     @Commit
@@ -297,8 +293,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         if (stream != null) {
             try {
                 stream.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             stream = null;
@@ -330,8 +325,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         this.device = device;
         if (device == null) {
             this.uniqueId = null;
-        }
-        else {
+        } else {
             this.uniqueId = device.getUniqueId();
         }
         firePropertyChange("device", null, device);
@@ -345,8 +339,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         this.format = format;
         if (format == null) {
             this.formatId = null;
-        }
-        else {
+        } else {
             this.formatId = format.getFormatId();
         }
         firePropertyChange("format", null, format);
@@ -363,8 +356,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public void setFormatName(String formatName) {
         if (formatName == null) {
             format = null;
-        }
-        else if (device != null) {
+        } else if (device != null) {
             for (CaptureFormat format : device.getFormats()) {
                 if (format.toString().equals(formatName)) {
                     setFormat(format);
@@ -481,8 +473,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
                 return limits.getMin();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return 0;
             }
         }
@@ -491,8 +482,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
                 return limits.getMax();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return 0;
             }
         }
@@ -501,8 +491,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 PropertyLimits limits = stream.getPropertyLimits(property);
                 return limits.getDefault();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return 0;
             }
         }
@@ -511,12 +500,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 if (this.auto == null || !this.camera.isFreezeProperties()) {
                     return this.auto = stream.getAutoProperty(property);
-                }
-                else {
+                } else {
                     return this.auto;
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return false;
             }
         }
@@ -526,8 +513,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 stream.setAutoProperty(property, auto);
                 this.auto = auto;
                 firePropertyChange("auto", null, auto);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
             }
         }
 
@@ -536,8 +522,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 stream.setProperty(property, value);
                 this.value = value;
                 firePropertyChange("value", null, value);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
             }
         }
 
@@ -545,12 +530,10 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 if (this.value == null || !this.camera.isFreezeProperties()) {
                     return this.value = stream.getProperty(property);
-                }
-                else {
+                } else {
                     return this.value;
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return 0;
             }
         }
@@ -559,8 +542,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 stream.getPropertyLimits(property);
                 return true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return false;
             }
         }
@@ -569,8 +551,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             try {
                 stream.getAutoProperty(property);
                 return true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 return false;
             }
         }
@@ -583,7 +564,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public void setFreezeProperties(boolean freezeProperties) {
         Object oldValue = this.freezeProperties;
         this.freezeProperties = freezeProperties;
-        if (! freezeProperties) {
+        if (!freezeProperties) {
             // Unfrozen properties might be read back different. 
             reapplyProperties();
         }

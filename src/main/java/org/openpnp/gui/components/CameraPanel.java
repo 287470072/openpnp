@@ -50,7 +50,7 @@ import org.pmw.tinylog.Logger;
  * Shows a square grid of cameras or a blown up image from a single camera.
  */
 @SuppressWarnings("serial")
-public class CameraPanel extends JPanel implements WebcamDiscoveryListener{
+public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
     private static final String SHOW_NONE_ITEM = "Show None";
     private static final String SHOW_ALL_ITEM_H = "Show All Horizontal";
     private static final String SHOW_ALL_ITEM_V = "Show All Vertical";
@@ -290,18 +290,19 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener{
             Logger.info("Webcam detected: " + webcam.getName());
         }
         Webcam.addDiscoveryListener(this);
-        Logger.info("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
+        //Logger.info("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
     }
 
     @Override
     public void webcamFound(WebcamDiscoveryEvent event) {
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
-            String cameraName = (String) getValueByPropertyName(camera, "deviceId");
             String webCamera = event.getWebcam().getDevice().getName();
+            String cameraName = camera.getName();
             if (cameraName != null & webCamera.equals(cameraName)) {
                 addCamera(camera);
                 webcams.clear();
             }
+
         }
     }
 
@@ -309,11 +310,14 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener{
     public void webcamGone(WebcamDiscoveryEvent event) {
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
             String webCamera = event.getWebcam().getDevice().getName();
-            String cameraName = (String) getValueByPropertyName(camera, "deviceId");
+            String camName = camera.getName();
+            String cameraName = camera.getName();
             if (cameraName != null & webCamera.equals(cameraName)) {
                 removeCamera(camera);
             }
         }
+
+
         webcams.add(event.getWebcam());
         Logger.info("Webcam disconnected: " + event.getWebcam().getName());
     }
