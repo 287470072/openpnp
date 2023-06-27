@@ -115,6 +115,7 @@ import org.openpnp.spi.MotionPlanner;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import com.google.common.eventbus.Subscribe;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")  //$NON-NLS-1$
 public class JobPanel extends JPanel {
@@ -950,6 +951,7 @@ public class JobPanel extends JPanel {
             // For optional motion stepping, remember the past move.
             MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
             Motion pastMotion = motionPlanner.getLastMotion();
+            int i = 0;
             do {
                 do {
                     if (!jobProcessor.next()) {
@@ -962,14 +964,19 @@ public class JobPanel extends JPanel {
                             break;
                         }
                     }
+
                 }
                 while (state == State.Pausing);
+                i++;
+                if (i % 20 == 0) {
+                    Machine machine = configuration.getMachine();
+                    machine.home();
+                }
             } while (state == State.Running);
 
             if (state == State.Pausing) {
                 setState(State.Paused);
             }
-
             return null;
         }, (e) -> {
 

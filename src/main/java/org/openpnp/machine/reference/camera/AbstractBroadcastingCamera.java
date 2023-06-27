@@ -336,6 +336,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 }
                 if (img != null) {
                     broadcastCapture(img);
+                    i = 0;
                 } else {
                     //针对openPnpCaptureCamera的插拔支持
                     if (i > 50) {

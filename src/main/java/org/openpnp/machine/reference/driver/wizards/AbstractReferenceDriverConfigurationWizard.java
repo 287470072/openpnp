@@ -2,6 +2,7 @@ package org.openpnp.machine.reference.driver.wizards;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.lang.reflect.Method;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -67,45 +68,45 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         this.driver = driver;
 
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        
+
         panelController = new JPanel();
         panelController.setBorder(new TitledBorder(null, Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.ControllerPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelController);
-        panelController.setLayout(new FormLayout(new ColumnSpec[] {
+        panelController.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblName = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.ControllerPanel.NameLabel.text")); //$NON-NLS-1$
         panelController.add(lblName, "2, 2, right, default");
-        
+
         driverName = new JTextField();
         panelController.add(driverName, "4, 2, fill, default");
         driverName.setColumns(20);
-        
+
         lblSyncInitialLocation = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.text")); //$NON-NLS-1$
         panelController.add(lblSyncInitialLocation, "2, 4, right, default");
         lblSyncInitialLocation.setToolTipText(Translations.getString("AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.toolTipText")); //$NON-NLS-1$
-        
+
         syncInitialLocation = new JCheckBox("");
         panelController.add(syncInitialLocation, "4, 4");
-        
+
         lblAllowUnhomedMotion = new JLabel(Translations.getString("AbstractReferenceDriverConfigurationWizard.lblAllowUnhomedMotion.text")); //$NON-NLS-1$
         lblAllowUnhomedMotion.setToolTipText(Translations.getString("AbstractReferenceDriverConfigurationWizard.lblAllowUnhomedMotion.toolTipText")); //$NON-NLS-1$
         panelController.add(lblAllowUnhomedMotion, "2, 6");
-        
+
         allowUnhomedMotion = new JCheckBox(""); //$NON-NLS-1$
         panelController.add(allowUnhomedMotion, "4, 6");
 
@@ -115,28 +116,28 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelComms);
-        panelComms.setLayout(new FormLayout(new ColumnSpec[] {
+        panelComms.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         commsMethodButtonGroup = new ButtonGroup();
-        
+
         communicationsType = new JComboBox(CommunicationsType.values());
         communicationsType.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 communicationsTypeChanged();
             }
         });
-        
+
         lblCommunicationsType = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.CommunicationTypeLabel.text" //$NON-NLS-1$
         ));
@@ -146,17 +147,17 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         JLabel lblConnectionKeepAlive = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.KeepAliveLabel.text")); //$NON-NLS-1$
         panelComms.add(lblConnectionKeepAlive, "2, 4, right, default");
-        
+
         connectionKeepAlive = new JCheckBox("");
         panelComms.add(connectionKeepAlive, "4, 4");
-        
+
         lblLineendings = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.text")); //$NON-NLS-1$
         lblLineendings.setToolTipText(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.toolTipText" //$NON-NLS-1$
         ));
         panelComms.add(lblLineendings, "2, 6, right, default");
-        
+
         lineEndingType = new JComboBox(LineEndingType.values());
         panelComms.add(lineEndingType, "4, 6, fill, default");
 
@@ -166,28 +167,28 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SerialPortLabel.text"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSerial);
-        panelSerial.setLayout(new FormLayout(new ColumnSpec[] {
+        panelSerial.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblPortName = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.PortLabel.text")); //$NON-NLS-1$
@@ -306,16 +307,16 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 "AbstractReferenceDriverConfigurationWizard.TCPPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTcp);
-        panelTcp.setLayout(new FormLayout(new ColumnSpec[] {
+        panelTcp.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblIpAddress = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.text")); //$NON-NLS-1$
@@ -352,6 +353,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
             String[] portNames = SerialPortCommunications.getPortNames();
             for (String portName : portNames) {
                 comboBoxPort.addItem(portName);
+                String driverName = driver.getPortName();
                 if (portName.equals(driver.getPortName())) {
                     exists = true;
                 }
@@ -373,7 +375,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         addWrappedBinding(driver, "communicationsType", communicationsType, "selectedItem");
         addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
         addWrappedBinding(driver, "lineEndingType", lineEndingType, "selectedItem");
-        
+
         addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");
         addWrappedBinding(driver, "baud", comboBoxBaud, "selectedItem");
         addWrappedBinding(driver, "parity", parityComboBox, "selectedItem");
@@ -381,8 +383,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         addWrappedBinding(driver, "dataBits", dataBitsComboBox, "selectedItem");
         addWrappedBinding(driver, "flowControl", flowControlComboBox, "selectedItem");
         addWrappedBinding(driver, "setDtr", setDtrCheckbox, "selected");
-        addWrappedBinding(driver, "setRts", setRtsCheckbox, "selected");        
-        
+        addWrappedBinding(driver, "setRts", setRtsCheckbox, "selected");
+
         addWrappedBinding(driver, "ipAddress", ipAddressTextField, "text");
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
 
@@ -416,10 +418,37 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
             setPanelEnabled(panelTcp, true);
         }
     }
+
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty_1 = BeanProperty.create("enabled");
         AutoBinding<JCheckBox, Boolean, JCheckBox, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, syncInitialLocation, jCheckBoxBeanProperty, allowUnhomedMotion, jCheckBoxBeanProperty_1);
         autoBinding.bind();
+    }
+
+    /**
+     * 根据标准javaBean对象的属性名获取其属性值
+     *
+     * @param obj
+     * @param propertyName
+     * @return
+     */
+    public static Object getValueByPropertyName(Object obj, String propertyName) {
+        // 1.根据属性名称就可以获取其get方法
+        String getMethodName = "get"
+                + propertyName.substring(0, 1).toUpperCase()
+                + propertyName.substring(1);
+        //2.获取方法对象
+        Class c = obj.getClass();
+        try {
+            //get方法都是public的且无参数
+            Method m = c.getMethod(getMethodName);
+            //3 通过方法的反射操作方法
+            Object value = m.invoke(obj);
+            return value;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
