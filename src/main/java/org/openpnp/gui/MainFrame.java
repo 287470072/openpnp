@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -161,10 +161,12 @@ public class MainFrame extends JFrame {
     private AbstractConfigurationWizard wizardWithActiveProcess = null;
     private UndoManager undoManager = new UndoManager();
 
+    private OtherPanel otherPanel;
+
     public static MainFrame get() {
         return mainFrame;
     }
-    
+
     /**
      * @return the wizardWithActiveProcess
      */
@@ -179,16 +181,14 @@ public class MainFrame extends JFrame {
         if (this.wizardWithActiveProcess == null) {
             if (wizardWithActiveProcess.getId() != null) {
                 this.wizardWithActiveProcess = wizardWithActiveProcess;
-            }
-            else {
+            } else {
                 throw new InvalidParameterException("Wizard does not have a valid Id.");
             }
-        }
-        else {
+        } else {
             throw new IllegalStateException(String.format("Another wizard (%s - %s) already has an active process, it must complete or be cancelled before this wizard can start another process.", this.wizardWithActiveProcess.getName(), ((PropertySheetWizardAdapter) (this.wizardWithActiveProcess.getWizardContainer())).getPropertySheetTitle()));
         }
     }
-    
+
     public synchronized void clearWizardWithActiveProcess(AbstractConfigurationWizard wizardWithActiveProcess) {
         if (this.wizardWithActiveProcess == wizardWithActiveProcess) {
             this.wizardWithActiveProcess = null;
@@ -318,6 +318,7 @@ public class MainFrame extends JFrame {
         machineSetupPanel = new MachineSetupPanel();
         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
         visionSettingsPanel = new VisionSettingsPanel(this);
+        otherPanel = new OtherPanel(configuration, this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -401,7 +402,7 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         mnUnits.add(menuItem);
-        
+
         // View -> Tables Linked
         buttonGroup = new ButtonGroup();
         JMenu tablesLinked = new JMenu(Translations.getString("Menu.View.TablesLinked")); //$NON-NLS-1$
@@ -419,7 +420,7 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         tablesLinked.add(menuItem);
-        
+
         // View -> Language
         buttonGroup = new ButtonGroup();
         JMenu mnLanguage = new JMenu(Translations.getString("Menu.View.Language")); //$NON-NLS-1$
@@ -428,7 +429,7 @@ public class MainFrame extends JFrame {
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(Locale.US));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
-        
+
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("ru")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
@@ -440,7 +441,7 @@ public class MainFrame extends JFrame {
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("fr")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
-		
+
         menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("it")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
@@ -460,7 +461,7 @@ public class MainFrame extends JFrame {
                 item.setSelected(true);
             }
         }
-        
+
 
         // Job
         //////////////////////////////////////////////////////////////////////
@@ -471,9 +472,9 @@ public class MainFrame extends JFrame {
         mnJob.add(new JMenuItem(jobPanel.startPauseResumeJobAction));
         mnJob.add(new JMenuItem(jobPanel.stepJobAction));
         mnJob.add(new JMenuItem(jobPanel.stopJobAction));
-        
+
         mnJob.addSeparator();
-        
+
         mnJob.add(new JMenuItem(jobPanel.resetAllPlacedAction));
 
         // Machine
@@ -614,7 +615,7 @@ public class MainFrame extends JFrame {
         lblInstructions.setEditable(false);
         panel_1.add(lblInstructions);
 
-        labelIcon = new JLabel(); 
+        labelIcon = new JLabel();
         labelIcon.setIcon(Icons.processActivity1Icon);
         panelInstructions.add(labelIcon, BorderLayout.WEST);
 
@@ -670,7 +671,7 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().setIncrement4Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 machineControlsPanel.getJogControlsPanel().setIncrement5Action);
-				
+
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneMachineAndTabs.setRightComponent(tabs);
 
@@ -690,11 +691,11 @@ public class MainFrame extends JFrame {
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Panels"), //$NON-NLS-1$
                 null, panelsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Boards" //$NON-NLS-1$
-        ),null, boardsPanel, null);
+        ), null, boardsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Parts"), //$NON-NLS-1$
                 null, partsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Packages" //$NON-NLS-1$
-        ),null, packagesPanel, null);
+        ), null, packagesPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Vision"), //$NON-NLS-1$
                 null, visionSettingsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Feeders"), //$NON-NLS-1$
@@ -708,35 +709,37 @@ public class MainFrame extends JFrame {
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Log"),
                 null, logPanel, null); //$NON-NLS-1$
 
+        tabs.addTab("其他设置", null, otherPanel, null);
         tabs.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 updateMenuState(tabs.getSelectedComponent());
-            }});
-        
+            }
+        });
+
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
         contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
         panelStatusAndDros.setLayout(new FormLayout(
-                new ColumnSpec[] {ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"), //$NON-NLS-1$ //$NON-NLS-2$
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, 
+                new ColumnSpec[]{ColumnSpec.decode("default:grow"), ColumnSpec.decode("8px"), //$NON-NLS-1$ //$NON-NLS-2$
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {RowSpec.decode("20px"),})); //$NON-NLS-1$
+                new RowSpec[]{RowSpec.decode("20px"),})); //$NON-NLS-1$
 
-        
+
         // Status Information
         lblStatus = new JLabel(" "); //$NON-NLS-1$
         lblStatus.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblStatus, "1, 1"); //$NON-NLS-1$
-        
-        
+
+
         // Placement Information
         lblPlacements = new JLabel(Translations.getString("MainFrame.StatusPanel.PlacementsLabel.initial.text")); //$NON-NLS-1$
         lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
-        
-        
+
+
         // Placements Progress Bar
         prgbrPlacements = new JProgressBar();
         prgbrPlacements.setMinimum(0);
@@ -746,11 +749,11 @@ public class MainFrame extends JFrame {
         prgbrPlacements.setValue(0);
         panelStatusAndDros.add(prgbrPlacements, "6, 1"); //$NON-NLS-1$
 
-        
+
         // DRO 
         droLbl = new JLabel("X 0000.0000, Y 0000.0000, Z 0000.0000, R 0000.0000"); //$NON-NLS-1$
         droLbl.setOpaque(true);
-        droLbl.setForeground(new Color(0,0,0));
+        droLbl.setForeground(new Color(0, 0, 0));
         droLbl.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
@@ -764,46 +767,46 @@ public class MainFrame extends JFrame {
         addImporterMenuOptions();
 
         addComponentListener(componentListener);
-        
+
         boolean configurationLoaded = false;
         while (!configurationLoaded) {
-	        try {
-	            configuration.load();
-	            scriptFileWatcher = new ScriptFileWatcher(configuration.getScripting());
-	            scriptFileWatcher.setMenu(mnScripts);
-	            
-	            if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
-	                Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
-	                dialog.setSize(750, 550);
-	                dialog.setLocationRelativeTo(null);
-	                dialog.setModal(true);
-	                dialog.setVisible(true);
-	                Configuration.get().getMachine().setProperty("Welcome2_0_Dialog_Shown", true);
-	            }
-	            configurationLoaded = true;    
-	        }
-	        catch (Exception e) {
-	            e.printStackTrace();
-	            if (!MessageBoxes.errorBoxWithRetry(this, "Configuration Load Error", //$NON-NLS-1$
-	                    "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
-	                            + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
-	                            + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
-	                            + configuration.getConfigurationDirectory().getAbsolutePath()
-	                            + "<br/><br/>" //$NON-NLS-1$
-	                            + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
-	                            + "Retry loading (else openpnp will exit) ?")) { //$NON-NLS-1$
-	            	System.exit(1);
-	            }
-	        }
-	    }
+            try {
+                configuration.load();
+                scriptFileWatcher = new ScriptFileWatcher(configuration.getScripting());
+                scriptFileWatcher.setMenu(mnScripts);
+
+                if (Configuration.get().getMachine().getProperty("Welcome2_0_Dialog_Shown") == null) {
+                    Welcome2_0Dialog dialog = new Welcome2_0Dialog(this);
+                    dialog.setSize(750, 550);
+                    dialog.setLocationRelativeTo(null);
+                    dialog.setModal(true);
+                    dialog.setVisible(true);
+                    Configuration.get().getMachine().setProperty("Welcome2_0_Dialog_Shown", true);
+                }
+                configurationLoaded = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (!MessageBoxes.errorBoxWithRetry(this, "Configuration Load Error", //$NON-NLS-1$
+                        "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
+                                + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
+                                + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
+                                + configuration.getConfigurationDirectory().getAbsolutePath()
+                                + "<br/><br/>" //$NON-NLS-1$
+                                + "If you would like to start with a fresh configuration, just delete the entire directory at the location above.<br/><br/>" //$NON-NLS-1$
+                                + "Retry loading (else openpnp will exit) ?")) { //$NON-NLS-1$
+                    System.exit(1);
+                }
+            }
+        }
         splitWindows();
     }
 
     // 20161222 - ldpgh/lutz_dd
+
     /**
      * Add multiple windows (aka JFrame) to OpenPnp for the camera (frameCamera) and the machine
      * controls (frameMachineControls).
-     *
+     * <p>
      * ATTENTION ... the current implementation in MainFrame.java requires a refactoring on the
      * long-term to separate JFrame from JPanels
      */
@@ -854,8 +857,7 @@ public class MainFrame extends JFrame {
             // move the splitPaneDivider to position 0 to fill the gap of the
             // relocated panels 'panelCameraAndInstructions' & 'machineControlsPanel'
             splitPaneMachineAndTabs.setDividerLocation(0);
-        }
-        else {
+        } else {
             panelMachine.add(panelCameraAndInstructions, BorderLayout.CENTER);
             // A value of 0 indicates 'multiple window style' was used before.
             if (0 == prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF)) {
@@ -864,13 +866,12 @@ public class MainFrame extends JFrame {
             }
         }
     }
-    
+
     public boolean isInstallerAvailable() {
         try {
             Class.forName("com.install4j.api.launcher.ApplicationLauncher"); //$NON-NLS-1$
             return true;
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             return false;
         }
     }
@@ -902,6 +903,7 @@ public class MainFrame extends JFrame {
     /**
      * Enables/disables the Import Board, Add Board/Panel, and Remove Board(s)/Panel(s) menu items
      * appropriately depending on which tab is selected and what is selected within the tab
+     *
      * @param selectedTab - the selected tab
      */
     public void updateMenuState(Component selectedTab) {
@@ -913,53 +915,46 @@ public class MainFrame extends JFrame {
                     jobPanel.getJob().instanceCount(jobPanel.getSelection().getPlacementsHolder()) == 1 &&
                     jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections())) {
                 mnImport.setEnabled(true);
-            }
-            else {
+            } else {
                 mnImport.setEnabled(false);
             }
             mnEditAddBoard.setEnabled(true);
             if (jobPanel.getSelections().size() >= 1) {
                 mnEditRemoveBoard.setEnabled(jobPanel.getJob().getRootPanelLocation().getChildren().
                         containsAll(jobPanel.getSelections()));
-            }
-            else {
+            } else {
                 mnEditRemoveBoard.getAction().setEnabled(false);
             }
-            if (jobPanel.getSelections().size() == 1 && jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections()) ) {
+            if (jobPanel.getSelections().size() == 1 && jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections())) {
                 mnCaptureToolLocation.setEnabled(true);
-            }
-            else {
+            } else {
                 mnCaptureToolLocation.setEnabled(false);
             }
-        }
-        else if (selectedTab == panelsPanel) {
+        } else if (selectedTab == panelsPanel) {
             mnImport.setEnabled(false);
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
             mnCaptureToolLocation.setEnabled(false);
-        }
-        else if (selectedTab == boardsPanel) {
+        } else if (selectedTab == boardsPanel) {
             if (boardsPanel.getSelections().size() == 1) {
                 mnImport.setEnabled(true);
-            }
-            else {
+            } else {
                 mnImport.setEnabled(false);
             }
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
             mnCaptureToolLocation.setEnabled(false);
-        }
-        else {
+        } else {
             mnImport.setEnabled(false);
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
             mnCaptureToolLocation.setEnabled(false);
         }
     }
-    
+
     public void showInstructions(String title, String instructions, boolean showCancelButton,
-            boolean showProceedButton, String proceedButtonText,
-            ActionListener cancelActionListener, ActionListener proceedActionListener) {
+                                 boolean showProceedButton, String proceedButtonText,
+                                 ActionListener cancelActionListener, ActionListener proceedActionListener) {
         panelInstructionsBorder.setTitle(title);
         lblInstructions.setText(instructions);
         btnInstructionsCancel.setVisible(showCancelButton);
@@ -1007,8 +1002,7 @@ public class MainFrame extends JFrame {
                 // getClass().getDeclaredMethod("loadImageFile",
                 // new Class[] { String.class }));
                 return true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("Error while loading the OSXAdapter: " + e.getMessage()); //$NON-NLS-1$
             }
         }
@@ -1027,22 +1021,20 @@ public class MainFrame extends JFrame {
         // Save the configuration
         try {
             Preferences.userRoot().flush();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             MessageBoxes.errorBox(MainFrame.this, "Save Preferences", e); //$NON-NLS-1$
         }
-        
+
         try {
             configuration.save();
-        }
-        catch (Exception e) {
-			String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
-					+ "\n\n"; //$NON-NLS-1$
-			message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
-			message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
-			JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
-			return false;
+        } catch (Exception e) {
+            String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
+                    + "\n\n"; //$NON-NLS-1$
+            message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
+            message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
+            JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+            return false;
         }
 
         Logger.debug("Config saved successfully!"); //$NON-NLS-1$
@@ -1053,16 +1045,14 @@ public class MainFrame extends JFrame {
         Logger.info("Shutting down..."); //$NON-NLS-1$
         try {
             Preferences.userRoot().flush();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
 
         }
 
         // Save the configuration
         try {
             configuration.save();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = "There was a problem saving the configuration. The reason was:\n\n" //$NON-NLS-1$
                     + e.getMessage() + "\n\nDo you want to quit without saving?"; //$NON-NLS-1$
             message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1080,15 +1070,13 @@ public class MainFrame extends JFrame {
         // Attempt to stop the machine on quit
         try {
             configuration.getMachine().setEnabled(false);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         // Attempt to stop the machine on quit
         try {
             configuration.getMachine().close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         Logger.info("Shutdown complete, exiting."); //$NON-NLS-1$
@@ -1101,13 +1089,13 @@ public class MainFrame extends JFrame {
             lblStatus.setText(status);
         });
     }
-    
+
     public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
             lblPlacements.setText(String.format(Translations.getString(
-                    "MainFrame.StatusPanel.PlacementsLabel.initial.format.text"), //$NON-NLS-1$
+                            "MainFrame.StatusPanel.PlacementsLabel.initial.format.text"), //$NON-NLS-1$
                     totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
-        	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
+            prgbrPlacements.setValue((int) (((float) totalPlacementsCompleted / (float) totalPlacements) * 100.0f));
         });
     }
 
@@ -1157,18 +1145,18 @@ public class MainFrame extends JFrame {
             prefs.putInt(PREF_MACHINECONTROLS_WINDOW_HEIGHT, frameMachineControls.getSize().height);
         }
     };
-    
+
     private Action inchesUnitSelected = new AbstractAction(LengthUnit.Inches.name()) {
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_I);
         }
-        
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
             MessageBoxes.infoBox(Translations.getString("CommonWords.notice"), //$NON-NLS-1$
-                  Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
-      }
+                    Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
+        }
     };
 
     private Action millimetersUnitSelected = new AbstractAction(LengthUnit.Millimeters.name()) {
@@ -1207,8 +1195,7 @@ public class MainFrame extends JFrame {
         public void actionPerformed(ActionEvent arg0) {
             if (mnWindows.getItem(0).isSelected()) {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, true);
-            }
-            else {
+            } else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
             MessageBoxes.infoBox(Translations.getString("CommonPhrases.windowsStyleChanged"), //$NON-NLS-1$
@@ -1226,7 +1213,7 @@ public class MainFrame extends JFrame {
     private Action saveConfigAction = new AbstractAction(Translations.getString("Menu.File.SaveConfiguration")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-			saveConfig();
+            saveConfig();
         }
     };
 
@@ -1251,7 +1238,7 @@ public class MainFrame extends JFrame {
             about();
         }
     };
-    
+
     private Action checkForUpdatesAction = new AbstractAction(Translations.getString("Menu.Help.CheckForUpdates")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_U);
@@ -1264,41 +1251,40 @@ public class MainFrame extends JFrame {
                 Class callback = Class.forName("com.install4j.api.launcher.ApplicationLauncher$Callback"); //$NON-NLS-1$
                 Method launchApplication = applicationLauncher.getMethod("launchApplication", String.class, String[].class, boolean.class, callback); //$NON-NLS-1$
                 launchApplication.invoke(null, "125", null, false, null); //$NON-NLS-1$
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e); //$NON-NLS-1$
             }
         }
     };
-    
+
     private Action quickStartLinkAction = new AbstractAction(Translations.getString("Menu.Help.QuickStart")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Quick-Start"); //$NON-NLS-1$
         }
     };
-    
+
     private Action setupAndCalibrationLinkAction = new AbstractAction(Translations.getString("Menu.Help.SetupAndCalibration")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration"); //$NON-NLS-1$
         }
     };
-    
+
     private Action userManualLinkAction = new AbstractAction(Translations.getString("Menu.Help.UserManual")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/User-Manual"); //$NON-NLS-1$
         }
     };
-    
+
     private Action changeLogAction = new AbstractAction(Translations.getString("Menu.Help.ChangeLog")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.browseUri(Main.getSourceUri()+"CHANGES.md"); //$NON-NLS-1$
+            UiUtils.browseUri(Main.getSourceUri() + "CHANGES.md"); //$NON-NLS-1$
         }
     };
-    
+
     private Action submitDiagnosticsAction = new AbstractAction(Translations.getString("Menu.Help.SubmitDiagnostics")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -1309,7 +1295,7 @@ public class MainFrame extends JFrame {
             dialog.setVisible(true);
         }
     };
-    
+
     public final Action undoAction = new AbstractAction(Translations.getString("Menu.Edit.Undo")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_Z);
@@ -1321,13 +1307,12 @@ public class MainFrame extends JFrame {
         public void actionPerformed(ActionEvent arg0) {
             try {
                 undoManager.undo();
-            }
-            catch (Exception e) {
-                
+            } catch (Exception e) {
+
             }
         }
     };
-    
+
     public final Action redoAction = new AbstractAction(Translations.getString("Menu.Edit.Redo")) { //$NON-NLS-1$
         {
 //            putValue(MNEMONIC_KEY, KeyEvent.VK_Y);
@@ -1339,32 +1324,31 @@ public class MainFrame extends JFrame {
         public void actionPerformed(ActionEvent arg0) {
             try {
                 undoManager.redo();
-            }
-            catch (Exception e) {
-                
+            } catch (Exception e) {
+
             }
         }
     };
-    
+
     public class LanguageSelectionAction extends AbstractAction {
         private final Locale locale;
-        
+
         public LanguageSelectionAction(Locale locale) {
             this.locale = locale;
             this.putValue(NAME, locale.getDisplayName());
         }
-        
+
         public Locale getLocale() {
             return locale;
         }
-        
+
         public void actionPerformed(ActionEvent arg0) {
             configuration.setLocale(locale);
             MessageBoxes.infoBox(Translations.getString("CommonWords.notice"), //$NON-NLS-1$
                     Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
-      }
+        }
     }
-    
+
     private JPanel panelStatusAndDros;
     private JLabel droLbl;
     private JLabel lblStatus;

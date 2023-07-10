@@ -3,12 +3,15 @@ package org.openpnp.spi;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.model.Job;
 
 public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
     public interface TextStatusListener {
         public void textStatus(String text);
     }
+
+    String currentStepName();
 
     public void initialize(Job job) throws Exception;
 

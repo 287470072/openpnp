@@ -340,7 +340,9 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 } else {
                     //针对openPnpCaptureCamera的插拔支持
                     if (i > 50) {
-                        Thread.currentThread().interrupt();
+                        if (!suspendPreviewInTasks) {
+                            Thread.currentThread().interrupt();
+                        }
                     }
                 }
             } catch (Exception e) {

@@ -19,47 +19,27 @@
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.FileDialog;
-import java.awt.Frame;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.AffineTransform;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.prefs.Preferences;
+import com.google.common.eventbus.Subscribe;
+import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
+import org.openpnp.events.*;
+import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.components.ExistingBoardOrPanelDialog;
+import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
+import org.openpnp.gui.support.*;
+import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
+import org.openpnp.model.Abstract2DLocatable.Side;
+import org.openpnp.model.*;
+import org.openpnp.model.Panel;
+import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.Placement.Type;
+import org.openpnp.spi.*;
+import org.openpnp.spi.JobProcessor.TextStatusListener;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTable;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -67,55 +47,20 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
-
-import org.openpnp.ConfigurationListener;
-import org.openpnp.Translations;
-import org.openpnp.events.DefinitionStructureChangedEvent;
-import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
-import org.openpnp.events.JobLoadedEvent;
-import org.openpnp.events.PlacementSelectedEvent;
-import org.openpnp.events.PlacementsHolderLocationChangedEvent;
-import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.components.ExistingBoardOrPanelDialog;
-import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
-import org.openpnp.gui.support.ActionGroup;
-import org.openpnp.gui.support.CustomBooleanRenderer;
-import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
-import org.openpnp.gui.support.MonospacedFontWithAffineStatusTableCellRenderer;
-import org.openpnp.gui.support.CustomPlacementsHolderRenderer;
-import org.openpnp.gui.support.Helpers;
-import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.gui.support.TableUtils;
-import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
-import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
-import org.openpnp.model.Board;
-import org.openpnp.model.Abstract2DLocatable.Side;
-import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.PlacementsHolderLocation;
-import org.openpnp.model.Job;
-import org.openpnp.model.Length;
-import org.openpnp.model.Location;
-import org.openpnp.model.Panel;
-import org.openpnp.model.PanelLocation;
-import org.openpnp.model.Motion;
-import org.openpnp.model.Placement;
-import org.openpnp.model.Placement.Type;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor;
-import org.openpnp.spi.JobProcessor.TextStatusListener;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.MotionPlanner;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
-import com.google.common.eventbus.Subscribe;
-import org.pmw.tinylog.Logger;
+import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.prefs.Preferences;
 
 @SuppressWarnings("serial")  //$NON-NLS-1$
 public class JobPanel extends JPanel {
@@ -967,10 +912,20 @@ public class JobPanel extends JPanel {
 
                 }
                 while (state == State.Pausing);
-                i++;
-                if (i % 20 == 0) {
-                    Machine machine = configuration.getMachine();
-                    machine.home();
+
+                //每隔一定运行的数量就归位一次
+                if (state != State.Stopped) {
+                    String currentStepName = jobProcessor.currentStepName();
+                    if (currentStepName.equals("org.openpnp.machine.reference.ReferencePnpJobProcessor$FinishCycle")) {
+                        i++;
+                    }
+                    //每贴100个元件回home校准一次
+                    if (currentStepName.equals("org.openpnp.machine.reference.ReferencePnpJobProcessor$FinishCycle") && i >= 2) {
+                        Machine machine = configuration.getMachine();
+                        machine.home2();
+                        i = 0;
+
+                    }
                 }
             } while (state == State.Running);
 
@@ -998,6 +953,7 @@ public class JobPanel extends JPanel {
             }
         });
     }
+
 
     private void jobAbort() {
         UiUtils.submitUiMachineTask(() -> {
@@ -1692,5 +1648,31 @@ public class JobPanel extends JPanel {
             }
         }
         return true;
+    }
+
+    /**
+     * 根据标准javaBean对象的属性名获取其属性值
+     *
+     * @param obj
+     * @param propertyName
+     * @return
+     */
+    public static Object getValueByPropertyName(Object obj, String propertyName) {
+        // 1.根据属性名称就可以获取其get方法
+        String getMethodName = "get"
+                + propertyName.substring(0, 1).toUpperCase()
+                + propertyName.substring(1);
+        //2.获取方法对象
+        Class c = obj.getClass();
+        try {
+            //get方法都是public的且无参数
+            Method m = c.getMethod(getMethodName);
+            //3 通过方法的反射操作方法
+            Object value = m.invoke(obj);
+            return value;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

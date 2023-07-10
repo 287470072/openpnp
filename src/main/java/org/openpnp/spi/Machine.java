@@ -134,6 +134,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      */
     public void home() throws Exception;
 
+    public void home2() throws Exception;
+
     /**
      * Returns whether the Machine is currently ready for commands.
      */

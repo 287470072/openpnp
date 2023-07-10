@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -1126,6 +1125,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public boolean isSteppingToNextMotion() {
         return steppingToNextMotion;
     }
+
+    @Override
+    public String currentStepName() {
+        return currentStep.getClass().getName();
+    }
+
 
     public void setSteppingToNextMotion(boolean steppingToNextMotion) {
         this.steppingToNextMotion = steppingToNextMotion;
