@@ -1,72 +1,122 @@
 package org.openpnp.gui;
 
-import org.openpnp.Translations;
-import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
-import org.openpnp.gui.support.Wizard;
-import org.openpnp.gui.support.WizardContainer;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
-import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.PartAlignment;
-import org.pmw.tinylog.Logger;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.gui.components.LocationButtonsPanel;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.util.List;
 
 
-public class OtherPanel extends JPanel implements WizardContainer {
+public class OtherPanel extends JPanel {
 
-    private JTable table;
+    private JTextField s1XValue;
 
-    final private Configuration configuration;
-    final private Frame frame;
+    private JTextField s1YValue;
+
+    private JTextField s1ZValue;
+
+    private JTextField s2XValue;
+
+    private JTextField s2YValue;
+
+    private JTextField s2ZValue;
+
+    private JButton btnApply;
+    private JButton btnReset;
 
 
-    public OtherPanel(Configuration configuration, Frame frame) {
-        this.configuration = configuration;
-        this.frame = frame;
+    public OtherPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 
-        table = new AutoSelectTextTable();
-        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        panelXYZ = new JPanel();
+        panelXYZ.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+        JLabel lblActuatorX = new JLabel("X");
+        panelXYZ.add(lblActuatorX, "4, 2, left, default");
 
-        table.setDefaultRenderer(org.openpnp.model.Package.class,
-                new IdentifiableTableCellRenderer<Package>());
+        JLabel lblActuatorY = new JLabel("Y");
+        panelXYZ.add(lblActuatorY, "6, 2, left, default");
 
-        table.add(Translations.getString("PartsPanel.SettingsTab.title"), //$NON-NLS-1$
-                new JScrollPane(new OtherSettingPanel()));
+        JLabel lblActuatorZ = new JLabel("Z");
+        panelXYZ.add(lblActuatorZ, "8, 2, left, default");
 
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
+        s1XValue = new JTextField();
+        panelXYZ.add(s1XValue, "4, 4");
+        s1XValue.setColumns(10);
 
-                firePartSelectionChanged();
-            }
-        });
+        s1YValue = new JTextField();
+        panelXYZ.add(s1YValue, "6, 4");
+        s1YValue.setColumns(10);
+
+        s1ZValue = new JTextField();
+        panelXYZ.add(s1ZValue, "8, 4");
+        s1ZValue.setColumns(10);
+
+
+        s2XValue = new JTextField();
+        panelXYZ.add(s2XValue, "4, 6");
+        s2XValue.setColumns(10);
+
+        s2YValue = new JTextField();
+        panelXYZ.add(s2YValue, "6, 6");
+        s2YValue.setColumns(10);
+
+        s2ZValue = new JTextField();
+        panelXYZ.add(s2ZValue, "8, 6");
+        s2ZValue.setColumns(10);
+
+
+        JLabel lblFeed = new JLabel("1号位坐标");
+        panelXYZ.add(lblFeed, "2, 4, right, default");
+
+
+        JLabel lblPostPick = new JLabel("2号位坐标");
+        panelXYZ.add(lblPostPick, "2, 6, right, default");
+
+
+        LocationButtonsPanel locationButtonsLeft = new LocationButtonsPanel(s1XValue, s1YValue, s1ZValue, null);
+        panelXYZ.add(locationButtonsLeft, "10, 4");
+
+        LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(s2XValue, s2YValue, s2ZValue, null);
+        panelXYZ.add(locationButtonsRight, "10, 6");
+
+        JPanel panelActions = new JPanel();
+        panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+        btnReset = new JButton();
+        panelActions.add(btnReset);
+
+        btnApply = new JButton();
+        panelActions.add(btnApply);
+
+        panelXYZ.add(panelActions, "10, 8");
+
+        //contentPanel.add(panelXYZ);
 
     }
 
-    public void firePartSelectionChanged() {
-        Logger.trace("老铁双击666");         //$NON-NLS-1$
+    private JPanel panelXYZ;
 
-    }
-
-
-    @Override
-    public void wizardCompleted(Wizard wizard) {
-
-    }
-
-    @Override
-    public void wizardCancelled(Wizard wizard) {
-
-    }
 }

@@ -17,6 +17,12 @@ import javax.swing.border.TitledBorder;
 public class OtherSettingPanel  extends JPanel {
 
 
+	public OtherSettingPanel() {
+        createUi();
+        initDataBindings();
+	}
+
+
     private JPanel pickConditionsPanel;
     private JLabel lblNewLabel;
     private JTextField pickRetryCount;
@@ -27,8 +33,7 @@ public class OtherSettingPanel  extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         pickConditionsPanel = new JPanel();
-        pickConditionsPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PartSettingsPanel.pickConditionsPanel.Border.title"), //$NON-NLS-1$
+        pickConditionsPanel.setBorder(new TitledBorder(null, "老铁双击666！！！", //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         add(pickConditionsPanel);
         pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -50,5 +55,11 @@ public class OtherSettingPanel  extends JPanel {
     }
 
     protected void initDataBindings() {
+        BeanProperty<Part, Integer> partBeanProperty = BeanProperty.create("pickRetryCount");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
+        //AutoBinding<Part, Integer, JTextField, String> autoBinding = Bindings.createAutoBinding(AutoBinding.UpdateStrategy.READ_WRITE, part, partBeanProperty, pickRetryCount, jTextFieldBeanProperty);
+        //autoBinding.bind();
+
+        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
     }
 }

@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -32,22 +32,16 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.OtherConfigurationWizard;
 import org.openpnp.gui.support.WrapLayout;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -73,11 +67,12 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.pmw.tinylog.Logger;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left, X + / -, Y + / -, Z
  * + / -, stop, pause, slider for jog increment DROs: X, Y, Z, C Radio buttons to select mm or inch.
- * 
+ *
  * @author jason
  */
 public class JogControlsPanel extends JPanel {
@@ -87,11 +82,27 @@ public class JogControlsPanel extends JPanel {
     private JSlider sliderIncrements;
     private JCheckBox boardProtectionOverrideCheck;
 
+    private JTextField s1XValue;
+
+    private JTextField s1YValue;
+
+    private JTextField s1ZValue;
+
+    private JTextField s2XValue;
+
+    private JTextField s2YValue;
+
+    private JTextField s2ZValue;
+
+    private JButton btnApply;
+    private JButton btnReset;
+
+
     /**
      * Create the panel.
      */
     public JogControlsPanel(Configuration configuration,
-            MachineControlsPanel machineControlsPanel) {
+                            MachineControlsPanel machineControlsPanel) {
         this.machineControlsPanel = machineControlsPanel;
         this.configuration = configuration;
 
@@ -130,8 +141,7 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(4, new JLabel("10")); //$NON-NLS-1$
             incrementsLabels.put(5, new JLabel("100")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else if (units == LengthUnit.Inches) {
+        } else if (units == LengthUnit.Inches) {
             Hashtable<Integer, JLabel> incrementsLabels = new Hashtable<>();
             incrementsLabels.put(1, new JLabel("0.001")); //$NON-NLS-1$
             incrementsLabels.put(2, new JLabel("0.01")); //$NON-NLS-1$
@@ -139,8 +149,7 @@ public class JogControlsPanel extends JPanel {
             incrementsLabels.put(4, new JLabel("1.0")); //$NON-NLS-1$
             incrementsLabels.put(5, new JLabel("10.0")); //$NON-NLS-1$
             sliderIncrements.setLabelTable(incrementsLabels);
-        }
-        else {
+        } else {
             throw new Error("setUnits() not implemented for " + units); //$NON-NLS-1$
         }
         machineControlsPanel.updateDros();
@@ -149,11 +158,9 @@ public class JogControlsPanel extends JPanel {
     public double getJogIncrement() {
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
             return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else if (configuration.getSystemUnits() == LengthUnit.Inches) {
+        } else if (configuration.getSystemUnits() == LengthUnit.Inches) {
             return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
-        }
-        else {
+        } else {
             throw new Error(
                     "getJogIncrement() not implemented for " + configuration.getSystemUnits()); //$NON-NLS-1$
         }
@@ -185,29 +192,25 @@ public class JogControlsPanel extends JPanel {
 
         if (x > 0) {
             xPos += jogIncrement;
-        }
-        else if (x < 0) {
+        } else if (x < 0) {
             xPos -= jogIncrement;
         }
 
         if (y > 0) {
             yPos += jogIncrement;
-        }
-        else if (y < 0) {
+        } else if (y < 0) {
             yPos -= jogIncrement;
         }
 
         if (z > 0) {
             zPos += jogIncrement;
-        }
-        else if (z < 0) {
+        } else if (z < 0) {
             zPos -= jogIncrement;
         }
 
         if (c > 0) {
             cPos += jogIncrement;
-        }
-        else if (c < 0) {
+        } else if (c < 0) {
             cPos -= jogIncrement;
         }
 
@@ -223,23 +226,23 @@ public class JogControlsPanel extends JPanel {
                 }
                 boolean safe = nozzleLocationIsSafe(boardLocation.getGlobalLocation(),
                         boardLocation.getBoard()
-                        .getDimensions(),
+                                .getDimensions(),
                         targetLocation, new Length(1.0, l.getUnits()));
                 if (!safe) {
                     throw new Exception(
                             "Nozzle would crash into board: " + boardLocation.toString() + "\n" + //$NON-NLS-1$ //$NON-NLS-2$
-                            "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel."); //$NON-NLS-1$
+                                    "To disable the board protection go to the \"Safety\" tab in the \"Machine Controls\" panel."); //$NON-NLS-1$
                 }
             }
         }
 
-        tool.moveTo(targetLocation, MotionOption.JogMotion); 
+        tool.moveTo(targetLocation, MotionOption.JogMotion);
 
         MovableUtils.fireTargetedUserAction(tool, true);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
-            Length safeDistance) {
+                                         Length safeDistance) {
         double distance = safeDistance.convertToUnits(nozzle.getUnits())
                 .getValue();
         Location originConverted = origin.convertToUnits(nozzle.getUnits());
@@ -271,11 +274,11 @@ public class JogControlsPanel extends JPanel {
         double alpha = ((p2.getY() - p3.getY()) * (p.getX() - p3.getX())
                 + (p3.getX() - p2.getX()) * (p.getY() - p3.getY()))
                 / ((p2.getY() - p3.getY()) * (p1.getX() - p3.getX())
-                        + (p3.getX() - p2.getX()) * (p1.getY() - p3.getY()));
+                + (p3.getX() - p2.getX()) * (p1.getY() - p3.getY()));
         double beta = ((p3.getY() - p1.getY()) * (p.getX() - p3.getX())
                 + (p1.getX() - p3.getX()) * (p.getY() - p3.getY()))
                 / ((p2.getY() - p3.getY()) * (p1.getX() - p3.getX())
-                        + (p3.getX() - p2.getX()) * (p1.getY() - p3.getY()));
+                + (p3.getX() - p2.getX()) * (p1.getY() - p3.getY()));
         double gamma = 1.0 - alpha - beta;
 
         return (alpha > 0.0) && (beta > 0.0) && (gamma > 0.0);
@@ -295,7 +298,7 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Jog"), //$NON-NLS-1$
                 null, panelControls, null);
         panelControls.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -307,7 +310,7 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -370,16 +373,16 @@ public class JogControlsPanel extends JPanel {
         panelControls.add(speedSlider, "20, 4, 1, 9"); //$NON-NLS-1$
         speedSlider.addChangeListener(new ChangeListener() {
             int oldValue = 100;
+
             @Override
             public void stateChanged(ChangeEvent e) {
                 Machine machine = Configuration.get().getMachine();
-                int minSpeedSlider = (int) Math.ceil(machine.getMotionPlanner().getMinimumSpeed()*100);
+                int minSpeedSlider = (int) Math.ceil(machine.getMotionPlanner().getMinimumSpeed() * 100);
                 if (speedSlider.getValue() > 0 && speedSlider.getValue() < minSpeedSlider) {
                     if (oldValue > speedSlider.getValue()) {
                         // Snap to zero.
                         speedSlider.setValue(0);
-                    }
-                    else {
+                    } else {
                         // Snap to minium.
                         speedSlider.setValue(minSpeedSlider);
                     }
@@ -479,7 +482,115 @@ public class JogControlsPanel extends JPanel {
         boardProtectionOverrideCheck.setToolTipText(
                 Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
         panelSafety.add(boardProtectionOverrideCheck, "1, 1"); //$NON-NLS-1$
+
+
+        JPanel panelXYZ = new JPanel();
+
+        panelXYZ.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+        JLabel lblActuatorX = new JLabel("X");
+        panelXYZ.add(lblActuatorX, "4, 2, left, default");
+
+        JLabel lblActuatorY = new JLabel("Y");
+        panelXYZ.add(lblActuatorY, "6, 2, left, default");
+
+        JLabel lblActuatorZ = new JLabel("Z");
+        panelXYZ.add(lblActuatorZ, "8, 2, left, default");
+
+        s1XValue = new JTextField();
+        panelXYZ.add(s1XValue, "4, 4");
+        s1XValue.setColumns(10);
+
+        s1YValue = new JTextField();
+        panelXYZ.add(s1YValue, "6, 4");
+        s1YValue.setColumns(10);
+
+        s1ZValue = new JTextField();
+        panelXYZ.add(s1ZValue, "8, 4");
+        s1ZValue.setColumns(10);
+
+
+        s2XValue = new JTextField();
+        panelXYZ.add(s2XValue, "4, 6");
+        s2XValue.setColumns(10);
+
+        s2YValue = new JTextField();
+        panelXYZ.add(s2YValue, "6, 6");
+        s2YValue.setColumns(10);
+
+        s2ZValue = new JTextField();
+        panelXYZ.add(s2ZValue, "8, 6");
+        s2ZValue.setColumns(10);
+
+
+        JLabel lblFeed = new JLabel("1号位坐标");
+        panelXYZ.add(lblFeed, "2, 4, right, default");
+
+
+        JLabel lblPostPick = new JLabel("2号位坐标");
+        panelXYZ.add(lblPostPick, "2, 6, right, default");
+
+
+        LocationButtonsPanel locationButtonsLeft = new LocationButtonsPanel(s1XValue, s1YValue, s1ZValue, null);
+        panelXYZ.add(locationButtonsLeft, "10, 4");
+
+        LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(s2XValue, s2YValue, s2ZValue, null);
+        panelXYZ.add(locationButtonsRight, "10, 6");
+
+        JPanel panelActions = new JPanel();
+        panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+        btnReset = new JButton(resetAction);
+        panelActions.add(btnReset);
+
+        btnApply = new JButton(applyAction);
+        panelActions.add(btnApply);
+
+        panelXYZ.add(panelActions, "10, 8");
+
+
+        tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
+                null, panelXYZ, null);
+
     }
+
+    protected Action applyAction = new AbstractAction(Translations.getString(
+            "AbstractConfigurationWizard.Action.Apply")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Logger.trace("test");
+            //saveToModel();
+            //wizardContainer.wizardCompleted(OtherConfigurationWizard.this);
+        }
+    };
+
+    protected Action resetAction = new AbstractAction(Translations.getString(
+            "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            Logger.trace("test");
+            //loadFromModel();
+        }
+    };
+
 
     private FocusTraversalPolicy focusPolicy = new FocusTraversalPolicy() {
         @Override
@@ -590,7 +701,7 @@ public class JogControlsPanel extends JPanel {
                 if (head == null) {
                     head = Configuration.get()
                             .getMachine()
-                            .getDefaultHead(); 
+                            .getDefaultHead();
                 }
                 MovableUtils.park(head);
                 MovableUtils.fireTargetedUserAction(head.getDefaultHeadMountable());
@@ -637,11 +748,11 @@ public class JogControlsPanel extends JPanel {
                             nozzle.setRotationModeOffset(null);
                         }
                         // Limited axis, select a 90° step position within the limits.
-                        double [] limits = nozzle.getRotationModeLimits();
-                        parkAngle = Math.round((limits[0]+limits[1])/2/90)*90;
+                        double[] limits = nozzle.getRotationModeLimits();
+                        parkAngle = Math.round((limits[0] + limits[1]) / 2 / 90) * 90;
                         if (parkAngle < limits[0] || parkAngle > limits[1]) {
                             // Rounded mid-point outside limits? Can this ever happen? If yes, fall back to exact mid-point.
-                            parkAngle = (limits[1] + limits[0])/2;
+                            parkAngle = (limits[1] + limits[0]) / 2;
                         }
                     }
                 }
@@ -760,22 +871,22 @@ public class JogControlsPanel extends JPanel {
         String name = actuator.getHead() == null ? actuator.getName() : actuator.getHead()
                 .getName()
                 + ":" + actuator.getName(); //$NON-NLS-1$
-                JButton actuatorButton = new JButton(name);
-                actuatorButton.addActionListener((e) -> {
-                    ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
-                    dlg.pack();
-                    dlg.revalidate();
-                    dlg.setLocationRelativeTo(JogControlsPanel.this);
-                    dlg.setVisible(true);
-                });
-                BeanUtils.addPropertyChangeListener(actuator, "name", e -> { //$NON-NLS-1$
-                    actuatorButton.setText(
-                            actuator.getHead() == null ? actuator.getName() : actuator.getHead()
-                                    .getName()
-                                    + ":" + actuator.getName()); //$NON-NLS-1$
-                });
-                panelActuators.add(actuatorButton);
-                actuatorButtons.put(actuator, actuatorButton);
+        JButton actuatorButton = new JButton(name);
+        actuatorButton.addActionListener((e) -> {
+            ActuatorControlDialog dlg = new ActuatorControlDialog(actuator);
+            dlg.pack();
+            dlg.revalidate();
+            dlg.setLocationRelativeTo(JogControlsPanel.this);
+            dlg.setVisible(true);
+        });
+        BeanUtils.addPropertyChangeListener(actuator, "name", e -> { //$NON-NLS-1$
+            actuatorButton.setText(
+                    actuator.getHead() == null ? actuator.getName() : actuator.getHead()
+                            .getName()
+                            + ":" + actuator.getName()); //$NON-NLS-1$
+        });
+        panelActuators.add(actuatorButton);
+        actuatorButtons.put(actuator, actuatorButton);
     }
 
     private void removeActuator(Actuator actuator) {
@@ -809,8 +920,7 @@ public class JogControlsPanel extends JPanel {
                 if (e.getOldValue() == null && e.getNewValue() != null) {
                     Actuator actuator = (Actuator) e.getNewValue();
                     addActuator(actuator);
-                }
-                else if (e.getOldValue() != null && e.getNewValue() == null) {
+                } else if (e.getOldValue() != null && e.getNewValue() == null) {
                     removeActuator((Actuator) e.getOldValue());
                 }
             };
@@ -822,26 +932,26 @@ public class JogControlsPanel extends JPanel {
 
 
             setEnabled(machineControlsPanel.isEnabled());
-            
+
             // add property listener for recycle button
             // enable recycle only if part on current head
             PropertyChangeListener recyclePropertyListener = (e) -> {
-                    Nozzle selectedNozzle = machineControlsPanel.getSelectedNozzle();
-                    if (selectedNozzle != null) {
-                        boolean canTakeBack = false;
-                        Part part = selectedNozzle.getPart();
-                        if (part != null) {
-                            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                                if (feeder.isEnabled() 
-                                        && feeder.getPart() == part
-                                        && feeder.canTakeBackPart()) {
-                                    canTakeBack = true;
-                                }
+                Nozzle selectedNozzle = machineControlsPanel.getSelectedNozzle();
+                if (selectedNozzle != null) {
+                    boolean canTakeBack = false;
+                    Part part = selectedNozzle.getPart();
+                    if (part != null) {
+                        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                            if (feeder.isEnabled()
+                                    && feeder.getPart() == part
+                                    && feeder.canTakeBackPart()) {
+                                canTakeBack = true;
                             }
                         }
-                        recycleAction.setEnabled(canTakeBack);
                     }
-                };
+                    recycleAction.setEnabled(canTakeBack);
+                }
+            };
             // add to all nozzles
             for (Head head : Configuration.get().getMachine().getHeads()) {
                 for (Nozzle nozzle : head.getNozzles()) {

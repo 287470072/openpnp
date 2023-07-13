@@ -318,7 +318,7 @@ public class MainFrame extends JFrame {
         machineSetupPanel = new MachineSetupPanel();
         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
         visionSettingsPanel = new VisionSettingsPanel(this);
-        otherPanel = new OtherPanel(configuration, this);
+        //otherPanel = new OtherPanel(configuration, this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -709,7 +709,7 @@ public class MainFrame extends JFrame {
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Log"),
                 null, logPanel, null); //$NON-NLS-1$
 
-        tabs.addTab("其他设置", null, otherPanel, null);
+        //tabs.addTab("其他设置", null, otherPanel, null);
         tabs.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
