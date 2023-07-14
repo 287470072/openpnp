@@ -50,12 +50,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.*;
 import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.BeanUtils;
@@ -570,15 +565,34 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
                 null, panelXYZ, null);
 
+/*        JPanel panelXYZ = new OtherPanel();
+
+        tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
+                null, panelXYZ, null);*/
     }
 
     protected Action applyAction = new AbstractAction(Translations.getString(
             "AbstractConfigurationWizard.Action.Apply")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Logger.trace("test");
-            //saveToModel();
-            //wizardContainer.wizardCompleted(OtherConfigurationWizard.this);
+
+
+            List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
+            for (NozzleTip nozzle : nozzles) {
+                Location test = nozzle.getChangerStartLocation();
+                test.setX(Double.parseDouble(s1XValue.getText()));
+                test.setY(Double.parseDouble(s1YValue.getText()));
+                test.setZ(Double.parseDouble(s1ZValue.getText()));
+                nozzle.setChangerStartLocation(test);
+
+                test = nozzle.getChangerEndLocation();
+                test.setX(Double.parseDouble(s2XValue.getText()));
+                test.setY(Double.parseDouble(s2YValue.getText()));
+                test.setZ(Double.parseDouble(s2ZValue.getText()));
+                nozzle.setChangerEndLocation(test);
+            }
+            Logger.trace("1");
+
         }
     };
 
@@ -586,7 +600,20 @@ public class JogControlsPanel extends JPanel {
             "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Logger.trace("test");
+            List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
+            for (NozzleTip nozzle : nozzles) {
+                Location test = nozzle.getChangerStartLocation();
+                //addWrappedBinding(nozzle, "enableDynamicSafeZ", chckbxDynamicsafez, "selected");
+                s1XValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getX()));
+                s1YValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getY()));
+                s1ZValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getZ()));
+                Logger.trace("!111");
+
+                s2XValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getX()));
+                s2YValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getY()));
+                s2ZValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getZ()));
+                Logger.trace("!111");
+            }
             //loadFromModel();
         }
     };

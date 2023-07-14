@@ -4,10 +4,20 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.support.*;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.NozzleTip;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.border.TitledBorder;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class OtherPanel extends JPanel {
@@ -24,11 +34,11 @@ public class OtherPanel extends JPanel {
 
     private JTextField s2ZValue;
 
-    private JButton btnApply;
-    private JButton btnReset;
+    private List<NozzleTip> nozzles;
 
 
     public OtherPanel() {
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 
@@ -102,20 +112,24 @@ public class OtherPanel extends JPanel {
         LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(s2XValue, s2YValue, s2ZValue, null);
         panelXYZ.add(locationButtonsRight, "10, 6");
 
-        JPanel panelActions = new JPanel();
-        panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
-
-        btnReset = new JButton();
-        panelActions.add(btnReset);
-
-        btnApply = new JButton();
-        panelActions.add(btnApply);
-
-        panelXYZ.add(panelActions, "10, 8");
-
+        JButton btnApply = new JButton(applyAction);
+        panelXYZ.add(btnApply, "10, 8");
         //contentPanel.add(panelXYZ);
+        //createBindings();
 
     }
+
+    protected Action applyAction = new AbstractAction(Translations.getString(
+            "AbstractConfigurationWizard.Action.Apply")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            List<NozzleTip> tipList = Configuration.get().getMachine().getNozzleTips();
+
+            Logger.trace("1111");
+            //saveToModel();
+            //wizardContainer.wizardCompleted(AbstractConfigurationWizard.this);
+        }
+    };
 
     private JPanel panelXYZ;
 

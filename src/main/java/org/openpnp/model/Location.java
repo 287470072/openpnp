@@ -35,6 +35,19 @@ public class Location {
 
     @Attribute
     private LengthUnit units;
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public void setZ(double z) {
+        this.z = z;
+    }
+
     @Attribute(required = false)
     private double x;
     @Attribute(required = false)
@@ -48,7 +61,7 @@ public class Location {
      * Only used by XML serialization.
      */
     @SuppressWarnings("unused")
-    private Location() {
+    public Location() {
         this(null);
     }
 
