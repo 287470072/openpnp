@@ -112,16 +112,16 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
 
     public void webCamDis() {
         for (Webcam webcam : Webcam.getWebcams()) {
-            System.out.println("Webcam detected: " + webcam.getName());
+            //System.out.println("Webcam detected: " + webcam.getName());
         }
         Webcam.addDiscoveryListener(this);
-        System.out.println("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
+        //System.out.println("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
     }
 
     @Override
     public void webcamFound(WebcamDiscoveryEvent event) {
         if (camera.getDeviceId().equals(event.getWebcam().getName())) {
-            System.out.format("Webcam connected: %s \n", event.getWebcam().getName());
+            //System.out.format("Webcam connected: %s \n", event.getWebcam().getName());
         }
         updateList();
     }
@@ -129,7 +129,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
     @Override
     public void webcamGone(WebcamDiscoveryEvent event) {
         if (camera.getDeviceId().equals(event.getWebcam().getName())) {
-            System.out.format("Webcam disconnected: %s \n", event.getWebcam().getName());
+            //System.out.format("Webcam disconnected: %s \n", event.getWebcam().getName());
         }
         updateList();
     }

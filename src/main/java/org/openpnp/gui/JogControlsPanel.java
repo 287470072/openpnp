@@ -35,6 +35,8 @@ import java.util.Map;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
@@ -88,6 +90,24 @@ public class JogControlsPanel extends JPanel {
     private JTextField s2YValue;
 
     private JTextField s2ZValue;
+
+    private JTextField s3XValue;
+
+    private JTextField s3YValue;
+
+    private JTextField s3ZValue;
+
+    private JTextField s4XValue;
+
+    private JTextField s4YValue;
+
+    private JTextField s4ZValue;
+
+    private JTextField s5XValue;
+
+    private JTextField s5YValue;
+
+    private JTextField s5ZValue;
 
     private JButton btnApply;
     private JButton btnReset;
@@ -513,41 +533,158 @@ public class JogControlsPanel extends JPanel {
         s1XValue = new JTextField();
         panelXYZ.add(s1XValue, "4, 4");
         s1XValue.setColumns(10);
+        s1XValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
 
         s1YValue = new JTextField();
         panelXYZ.add(s1YValue, "6, 4");
         s1YValue.setColumns(10);
+        s1YValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
 
         s1ZValue = new JTextField();
         panelXYZ.add(s1ZValue, "8, 4");
         s1ZValue.setColumns(10);
+        s1ZValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
 
 
-        s2XValue = new JTextField();
-        panelXYZ.add(s2XValue, "4, 6");
-        s2XValue.setColumns(10);
+        s5XValue = new JTextField();
+        panelXYZ.add(s5XValue, "4, 6");
+        s5XValue.setColumns(10);
+        s5XValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
 
-        s2YValue = new JTextField();
-        panelXYZ.add(s2YValue, "6, 6");
-        s2YValue.setColumns(10);
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
 
-        s2ZValue = new JTextField();
-        panelXYZ.add(s2ZValue, "8, 6");
-        s2ZValue.setColumns(10);
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
+
+        s5YValue = new JTextField();
+        panelXYZ.add(s5YValue, "6, 6");
+        s5YValue.setColumns(10);
+
+        s5YValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
+
+        s5ZValue = new JTextField();
+        panelXYZ.add(s5ZValue, "8, 6");
+        s5ZValue.setColumns(10);
+
+        s5ZValue.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                btnApply.setEnabled(true);
+                btnReset.setEnabled(true);
+            }
+        });
 
 
         JLabel lblFeed = new JLabel("1号位坐标");
         panelXYZ.add(lblFeed, "2, 4, right, default");
 
 
-        JLabel lblPostPick = new JLabel("2号位坐标");
+        JLabel lblPostPick = new JLabel("5号位坐标");
         panelXYZ.add(lblPostPick, "2, 6, right, default");
 
 
         LocationButtonsPanel locationButtonsLeft = new LocationButtonsPanel(s1XValue, s1YValue, s1ZValue, null);
         panelXYZ.add(locationButtonsLeft, "10, 4");
 
-        LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(s2XValue, s2YValue, s2ZValue, null);
+        LocationButtonsPanel locationButtonsRight = new LocationButtonsPanel(s5XValue, s5YValue, s5ZValue, null);
         panelXYZ.add(locationButtonsRight, "10, 6");
 
         JPanel panelActions = new JPanel();
@@ -578,21 +715,137 @@ public class JogControlsPanel extends JPanel {
 
 
             List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
-            for (NozzleTip nozzle : nozzles) {
-                Location test = nozzle.getChangerStartLocation();
-                test.setX(Double.parseDouble(s1XValue.getText()));
-                test.setY(Double.parseDouble(s1YValue.getText()));
-                test.setZ(Double.parseDouble(s1ZValue.getText()));
-                nozzle.setChangerStartLocation(test);
-
-                test = nozzle.getChangerEndLocation();
-                test.setX(Double.parseDouble(s2XValue.getText()));
-                test.setY(Double.parseDouble(s2YValue.getText()));
-                test.setZ(Double.parseDouble(s2ZValue.getText()));
-                nozzle.setChangerEndLocation(test);
+            if (nozzles.size() < 5) {
+                Logger.warn("请添加5个吸嘴！");
+                return;
             }
-            Logger.trace("1");
 
+            boolean oneToFive = true;
+            double valueDiff = 0;
+            if (Double.parseDouble(s1XValue.getText()) > Double.parseDouble(s5XValue.getText())) {
+                oneToFive = true;
+            } else {
+                oneToFive = false;
+            }
+
+            if (oneToFive) {
+                valueDiff = -(Double.parseDouble(s1XValue.getText()) - Double.parseDouble(s5XValue.getText())) / 4;
+            } else {
+                valueDiff = (Double.parseDouble(s1XValue.getText()) - Double.parseDouble(s5XValue.getText())) / 4;
+            }
+
+
+            Location nT1 = nozzles.get(0).getChangerMidLocation2();
+            nT1.setX(Double.parseDouble(s1XValue.getText()));
+            nT1.setY(Double.parseDouble(s1YValue.getText()));
+            nT1.setZ(Double.parseDouble(s1ZValue.getText()));
+
+            Location nT1First = nozzles.get(0).getChangerStartLocation();
+            nT1First.setX(Double.parseDouble(s1XValue.getText()));
+            nT1First.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT1First.setZ(-5.00);
+
+            Location nT1Mid = nozzles.get(0).getChangerMidLocation();
+            nT1Mid.setX(Double.parseDouble(s1XValue.getText()));
+            nT1Mid.setY(Double.parseDouble(s1YValue.getText()));
+            nT1Mid.setZ(-5.00);
+
+            Location nT1End = nozzles.get(0).getChangerEndLocation();
+            nT1End.setX(Double.parseDouble(s1XValue.getText()));
+            nT1End.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT1End.setZ(Double.parseDouble(s1ZValue.getText()));
+
+
+            Location nT2 = nozzles.get(1).getChangerMidLocation2();
+
+            nT2.setX(Double.parseDouble(s1XValue.getText()) + valueDiff);
+            nT2.setY(Double.parseDouble(s1YValue.getText()));
+            nT2.setZ(Double.parseDouble(s1ZValue.getText()));
+
+
+            Location nT2First = nozzles.get(1).getChangerStartLocation();
+            nT2First.setX(Double.parseDouble(s1XValue.getText()) + valueDiff);
+            nT2First.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT2First.setZ(-5.00);
+
+            Location nT2Mid = nozzles.get(1).getChangerMidLocation();
+            nT2Mid.setX(Double.parseDouble(s1XValue.getText()) + valueDiff);
+            nT2Mid.setY(Double.parseDouble(s1YValue.getText()));
+            nT2Mid.setZ(-5.00);
+
+            Location nT2End = nozzles.get(1).getChangerEndLocation();
+            nT2End.setX(Double.parseDouble(s1XValue.getText()) + valueDiff);
+            nT2End.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT2End.setZ(Double.parseDouble(s1ZValue.getText()));
+
+
+            Location nT3 = nozzles.get(2).getChangerMidLocation2();
+
+            nT3.setX(Double.parseDouble(s1XValue.getText()) + 2 * valueDiff);
+            nT3.setY(Double.parseDouble(s1YValue.getText()));
+            nT3.setZ(Double.parseDouble(s1ZValue.getText()));
+
+            Location nT3First = nozzles.get(2).getChangerStartLocation();
+            nT3First.setX(Double.parseDouble(s1XValue.getText()) + 2 * valueDiff);
+            nT3First.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT3First.setZ(-5.00);
+
+            Location nT3Mid = nozzles.get(2).getChangerMidLocation();
+            nT3Mid.setX(Double.parseDouble(s1XValue.getText()) + 2 * valueDiff);
+            nT3Mid.setY(Double.parseDouble(s1YValue.getText()));
+            nT3Mid.setZ(-5.00);
+
+            Location nT3End = nozzles.get(2).getChangerEndLocation();
+            nT3End.setX(Double.parseDouble(s1XValue.getText()) + 2 * valueDiff);
+            nT3End.setY(Double.parseDouble(s1YValue.getText()) - 20.00);
+            nT3End.setZ(Double.parseDouble(s1ZValue.getText()));
+
+
+            Location nT4 = nozzles.get(3).getChangerMidLocation2();
+
+            nT4.setX(Double.parseDouble(s1XValue.getText()) + 3 * valueDiff);
+            nT4.setY(Double.parseDouble(s5YValue.getText()));
+            nT4.setZ(Double.parseDouble(s5ZValue.getText()));
+
+
+            Location nT4First = nozzles.get(3).getChangerStartLocation();
+            nT4First.setX(Double.parseDouble(s1XValue.getText()) + 3 * valueDiff);
+            nT4First.setY(Double.parseDouble(s5YValue.getText()) - 20.00);
+            nT4First.setZ(-5.00);
+
+            Location nT4Mid = nozzles.get(3).getChangerMidLocation();
+            nT4Mid.setX(Double.parseDouble(s1XValue.getText()) + 3 * valueDiff);
+            nT4Mid.setY(Double.parseDouble(s5YValue.getText()));
+            nT4Mid.setZ(-5.00);
+
+            Location nT4End = nozzles.get(3).getChangerEndLocation();
+            nT4End.setX(Double.parseDouble(s1XValue.getText()) + 3 * valueDiff);
+            nT4End.setY(Double.parseDouble(s5YValue.getText()) - 20.00);
+            nT4End.setZ(Double.parseDouble(s5ZValue.getText()));
+
+            Location nT5 = nozzles.get(4).getChangerMidLocation2();
+
+            nT5.setX(Double.parseDouble(s5XValue.getText()));
+            nT5.setY(Double.parseDouble(s5YValue.getText()));
+            nT5.setZ(Double.parseDouble(s5ZValue.getText()));
+
+            Location nT5First = nozzles.get(4).getChangerStartLocation();
+            nT5First.setX(Double.parseDouble(s5XValue.getText()));
+            nT5First.setY(Double.parseDouble(s5YValue.getText()) - 20.00);
+            nT5First.setZ(-5.00);
+
+            Location nT5Mid = nozzles.get(4).getChangerMidLocation();
+            nT5Mid.setX(Double.parseDouble(s5XValue.getText()));
+            nT5Mid.setY(Double.parseDouble(s5YValue.getText()));
+            nT5Mid.setZ(-5.00);
+
+            Location nT5End = nozzles.get(4).getChangerEndLocation();
+            nT5End.setX(Double.parseDouble(s5XValue.getText()));
+            nT5End.setY(Double.parseDouble(s5YValue.getText()) - 20.00);
+            nT5End.setZ(Double.parseDouble(s5ZValue.getText()));
+
+            btnApply.setEnabled(false);
+            btnReset.setEnabled(false);
         }
     };
 
@@ -600,21 +853,13 @@ public class JogControlsPanel extends JPanel {
             "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
-            for (NozzleTip nozzle : nozzles) {
-                Location test = nozzle.getChangerStartLocation();
-                //addWrappedBinding(nozzle, "enableDynamicSafeZ", chckbxDynamicsafez, "selected");
-                s1XValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getX()));
-                s1YValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getY()));
-                s1ZValue.setText(String.valueOf(nozzles.get(0).getChangerStartLocation().getZ()));
-                Logger.trace("!111");
+            s1XValue.setText("");
+            s1YValue.setText("");
+            s1ZValue.setText("");
+            s5XValue.setText("");
+            s5YValue.setText("");
+            s5ZValue.setText("");
 
-                s2XValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getX()));
-                s2YValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getY()));
-                s2ZValue.setText(String.valueOf(nozzles.get(0).getChangerEndLocation().getZ()));
-                Logger.trace("!111");
-            }
-            //loadFromModel();
         }
     };
 

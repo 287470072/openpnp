@@ -914,7 +914,7 @@ public class JobPanel extends JPanel {
                 while (state == State.Pausing);
 
                 //每隔一定运行的数量就归位一次
-                if (state != State.Stopped) {
+/*                if (state != State.Stopped) {
                     String currentStepName = jobProcessor.currentStepName();
                     if (currentStepName.equals("org.openpnp.machine.reference.ReferencePnpJobProcessor$FinishCycle")) {
                         i++;
@@ -926,7 +926,7 @@ public class JobPanel extends JPanel {
                         i = 0;
 
                     }
-                }
+                }*/
             } while (state == State.Running);
 
             if (state == State.Pausing) {

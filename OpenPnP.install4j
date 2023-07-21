@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="10.0.5" transformSequenceNumber="10">
+<install4j version="10.0.6" transformSequenceNumber="10">
   <directoryPresets config="./.github/OpenPnP-Developer-ID-Application.p12" />
   <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
+    <languages>
+      <principalLanguage id="zh_CN" />
+    </languages>
     <variables>
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
     <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" />
-    <jreBundles jdkProviderId="AdoptOpenJDK" release="17/latest" />
+    <jreBundles jdkProviderId="Corretto" release="17/latest" />
   </application>
   <files>
     <roots>
@@ -978,6 +981,7 @@ if (context.isUnattended()) {
       <variables>
         <variable name="native_path" value="windows/x64" />
       </variables>
+      <jreBundle includedJre="windows-amd64-17" />
     </windows>
     <macosArchive name="macOS Single Bundle Archive" id="337" architecture="universal" launcherId="23" />
     <unixInstaller name="Unix Installer" id="121" installDir="openpnp">
@@ -994,6 +998,6 @@ if (context.isUnattended()) {
     </linuxDeb>
   </mediaSets>
   <buildIds buildAll="false">
-    <mediaSet refId="337" />
+    <mediaSet refId="28" />
   </buildIds>
 </install4j>

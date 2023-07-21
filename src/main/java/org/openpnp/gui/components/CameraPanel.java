@@ -134,28 +134,6 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
         relayoutPanel();
     }
 
-    public void addCamera2(Camera camera) {
-        CameraView cameraView = new CameraView();
-        cameraView.setCamera(camera);
-
-        cameraViews.put(camera, cameraView);
-        camerasCombo.addItem(new CameraItem(camera));
-        if (camera instanceof AbstractCamera) {
-            ((AbstractCamera) camera).addPropertyChangeListener("shownInMultiCameraView",
-                    new PropertyChangeListener() {
-
-                        @Override
-                        public void propertyChange(PropertyChangeEvent evt) {
-                            if (evt.getOldValue() == null
-                                    || !evt.getOldValue().equals(evt.getNewValue())) {
-                                SwingUtilities.invokeLater(() -> relayoutPanel());
-                            }
-                        }
-                    });
-        }
-        relayoutPanel();
-    }
-
     public void removeCamera(Camera camera) {
         CameraView cameraView = cameraViews.remove(camera);
         if (cameraView == null) {
@@ -286,10 +264,11 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
     };
 
     public void webcamDiscoveryListener() {
-        for (Webcam webcam : Webcam.getWebcams()) {
+/*        for (Webcam webcam : Webcam.getWebcams()) {
             Logger.info("Webcam detected: " + webcam.getName());
-        }
+        }*/
         Webcam.addDiscoveryListener(this);
+
         //Logger.info("\n\nPlease connect additional webcams, or disconnect already connected ones. Listening for events...");
     }
 
@@ -320,31 +299,5 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
 
         webcams.add(event.getWebcam());
         Logger.info("Webcam disconnected: " + event.getWebcam().getName());
-    }
-
-    /**
-     * 根据标准javaBean对象的属性名获取其属性值
-     *
-     * @param obj
-     * @param propertyName
-     * @return
-     */
-    public static Object getValueByPropertyName(Object obj, String propertyName) {
-        // 1.根据属性名称就可以获取其get方法
-        String getMethodName = "get"
-                + propertyName.substring(0, 1).toUpperCase()
-                + propertyName.substring(1);
-        //2.获取方法对象
-        Class c = obj.getClass();
-        try {
-            //get方法都是public的且无参数
-            Method m = c.getMethod(getMethodName);
-            //3 通过方法的反射操作方法
-            Object value = m.invoke(obj);
-            return value;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }

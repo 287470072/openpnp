@@ -353,7 +353,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
             String[] portNames = SerialPortCommunications.getPortNames();
             for (String portName : portNames) {
                 comboBoxPort.addItem(portName);
-                String driverName = driver.getPortName();
+                String driverName = driver.getName();
                 if (portName.equals(driver.getPortName())) {
                     exists = true;
                 }

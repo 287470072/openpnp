@@ -102,7 +102,7 @@ public class OtherPanel extends JPanel {
         panelXYZ.add(lblFeed, "2, 4, right, default");
 
 
-        JLabel lblPostPick = new JLabel("2号位坐标");
+        JLabel lblPostPick = new JLabel("5号位坐标");
         panelXYZ.add(lblPostPick, "2, 6, right, default");
 
 

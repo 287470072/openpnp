@@ -54,9 +54,17 @@ public interface NozzleTip extends Identifiable, Named, Solutions.Subject, Wizar
 
     Location getChangerStartLocation();
 
+    Location getChangerMidLocation();
+
+    Location getChangerMidLocation2();
+
     Location getChangerEndLocation();
 
     void setChangerStartLocation(Location changerStartLocation);
+
+    void setChangerMidLocation(Location changerStartLocation);
+
+    void setChangerMidLocation2(Location changerStartLocation);
 
     void setChangerEndLocation(Location changerStartLocation);
 

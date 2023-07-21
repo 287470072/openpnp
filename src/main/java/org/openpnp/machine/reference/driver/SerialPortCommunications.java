@@ -1,18 +1,18 @@
 package org.openpnp.machine.reference.driver;
 
-import java.awt.*;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeoutException;
-
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-import com.fazecast.jSerialComm.SerialPort;
-
 import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A class for SerialPort Communications. Includes functions for connecting,
@@ -104,6 +104,22 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         disconnect();
         serialPort = SerialPort.getCommPort(portName);
         serialPort.openPort(0);
+        if (serialPort.isOpen()) {
+            serialPort.addDataListener(new SerialPortDataListener() {
+                @Override
+                public int getListeningEvents() {
+                    return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+                    //返回要监听的事件类型，以供回调函数使用。可发回的事件包括：SerialPort.LISTENING_EVENT_DATA_AVAILABLE，SerialPort.LISTENING_EVENT_DATA_WRITTEN,SerialPort.LISTENING_EVENT_DATA_RECEIVED。分别对应有数据在串口（不论是读的还是写的），有数据写入串口，从串口读取数据。如果AVAILABLE和RECEIVED同时被监听，优先触发RECEIVED
+                }
+
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+                        Logger.warn(serialPort.getSystemPortName() + "断开连接！！");
+                    }
+                }
+            });
+        }
         serialPort.setComPortParameters(baud, dataBits.mask, stopBits.mask, parity.mask);
         serialPort.setFlowControl(flowControl.mask);
         if (setDtr) {
@@ -114,6 +130,8 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         }
         serialPort.setComPortTimeouts(
                 SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
+
+
     }
 
     public synchronized void disconnect() throws Exception {

@@ -370,6 +370,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             return;
         }
         Solutions.Severity maxSeverity = Solutions.Severity.None;
+        //获取问题&解决方案
         for (Solutions.Issue issue : machine.getSolutions().getIssues()) {
             if (issue.getSeverity().ordinal() >= maxSeverity.ordinal() 
                     && issue.getState() == Solutions.State.Open) {

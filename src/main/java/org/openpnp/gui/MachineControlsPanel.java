@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -27,6 +27,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -51,17 +52,13 @@ import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
+import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.machine.reference.driver.SerialPortCommunications;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.*;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -92,7 +89,7 @@ public class MachineControlsPanel extends JPanel {
 
     private Color droNormalColor = new Color(0xBDFFBE);
     private Color droSavedColor = new Color(0x90cce0);
-    
+
     /**
      * Create the panel.
      */
@@ -116,8 +113,7 @@ public class MachineControlsPanel extends JPanel {
         }
         try {
             return configuration.getMachine().getDefaultHead().getDefaultNozzle();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -126,7 +122,7 @@ public class MachineControlsPanel extends JPanel {
     /**
      * Currently returns the selected Nozzle. Intended to eventually return either the selected
      * Nozzle or PasteDispenser.
-     * 
+     *
      * @return
      */
     public HeadMountable getSelectedTool() {
@@ -140,7 +136,7 @@ public class MachineControlsPanel extends JPanel {
             lastSelectedNonCamera = hm;
         }
         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
-            HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i); 
+            HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
             if (item.getItem() == hm) {
                 comboBoxHeadMountable.setSelectedItem(item);
                 break;
@@ -161,8 +157,7 @@ public class MachineControlsPanel extends JPanel {
                 head = Configuration.get().getMachine().getDefaultHead();
             }
             camera = head.getDefaultCamera();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
         boolean enabled = Configuration.get().getMachine().isEnabled();
         homeAction.setEnabled(enabled);
@@ -174,9 +169,9 @@ public class MachineControlsPanel extends JPanel {
     public JogControlsPanel getJogControlsPanel() {
         return jogControlsPanel;
     }
-    
+
     public JobPanel getJobPanel() {
-    	return jobPanel;
+        return jobPanel;
     }
 
     @Override
@@ -245,9 +240,9 @@ public class MachineControlsPanel extends JPanel {
         JPanel panel = new JPanel();
         add(panel);
         panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),}, //$NON-NLS-1$
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxHeadMountable = new JComboBox();
         comboBoxHeadMountable.setMaximumRowCount(20);
@@ -276,6 +271,7 @@ public class MachineControlsPanel extends JPanel {
     @SuppressWarnings("serial")
     public Action startStopMachineAction = new AbstractAction(Translations.getString("MachineControls.Action.Stop"), Icons.powerOn) { //$NON-NLS-1$
         {
+
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('E',
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         }
@@ -284,12 +280,12 @@ public class MachineControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
             final Machine machine = Configuration.get().getMachine();
+            bindSerial();
             final boolean enable = !machine.isEnabled();
             Runnable task = () -> {
                 try {
                     machine.setEnabled(enable);
-                }
-                catch (Exception t1) {
+                } catch (Exception t1) {
                     UiUtils.showError(t1);
                 }
                 // TODO STOPSHIP move setEnabled into a binding.
@@ -302,19 +298,35 @@ public class MachineControlsPanel extends JPanel {
                 Thread thread = new Thread(task);
                 thread.setDaemon(true);
                 thread.start();
-            }
-            else {
+            } else {
                 // Not an emergency stop. Run as regular machine task.  
                 UiUtils.submitUiMachineTask(() -> {
                             task.run();
                             return null;
-                        }, 
-                        (result) -> {} , 
-                        (t) -> UiUtils.showError(t), 
+                        },
+                        (result) -> {
+                        },
+                        (t) -> UiUtils.showError(t),
                         true); // Allow for disabled machine.
             }
         }
     };
+
+    //根据COM口名称自动绑定GcodeDriver
+    public void bindSerial() {
+        List<Driver> drivers = configuration.getMachine().getDrivers();
+        String[] portNames = SerialPortCommunications.getPortNames();
+        for (Driver driver : drivers) {
+            String driverName = driver.getName();
+            for (String portName : portNames) {
+                if (driverName.equals(portName)) {
+                    AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
+                    referenceDriver.setPortName(portName);
+
+                }
+            }
+        }
+    }
 
     public class HomeAction extends AbstractAction {
         public HomeAction() {
@@ -322,6 +334,7 @@ public class MachineControlsPanel extends JPanel {
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         }
+
         public void setHomed(boolean homed) {
             putValue(Action.SMALL_ICON, homed ? Icons.home : Icons.homeWarning);
         }
@@ -334,6 +347,7 @@ public class MachineControlsPanel extends JPanel {
             });
         }
     }
+
     public HomeAction homeAction = new HomeAction();
 
     @SuppressWarnings("serial")
@@ -378,8 +392,7 @@ public class MachineControlsPanel extends JPanel {
         if (lastSelectedNonCamera == null) {
             try {
                 lastSelectedNonCamera = getSelectedTool().getHead().getDefaultNozzle();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
             }
         }
         return lastSelectedNonCamera;
@@ -423,25 +436,23 @@ public class MachineControlsPanel extends JPanel {
 
         @Override
         public void machineTargetedUserAction(Machine machine, HeadMountable hm, boolean jogging) {
-            if (hm != null 
+            if (hm != null
                     && hm.getHead() != null) { // Do this only if this is a true HeadMountable 
-                                               // i.e. not for bottom cameras or Machine actuators.
+                // i.e. not for bottom cameras or Machine actuators.
 
                 if (MovableUtils.isInSafeZZone(hm)) {
                     lastUserActionLocation = null;
-                }
-                else if (lastUserActionLocation == null || getSelectedTool() != hm || !jogging) {
+                } else if (lastUserActionLocation == null || getSelectedTool() != hm || !jogging) {
                     lastUserActionLocation = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
-                }
-                else {
+                } else {
                     // Jogging the same selected tool. Apply auto-Safe Z.
                     if (hm.getAxisZ() instanceof ReferenceVirtualAxis) {
                         Length distance = lastUserActionLocation.getLinearLengthTo(hm.getLocation());
                         if (distance.compareTo(machine.getUnsafeZRoamingDistance()) > 0) {
                             // Distance is too large to retain virtual Z. Make it safe.
-                            Logger.debug(hm.getName()+" exceeded roaming distance at non-safe Z, going to safe Z. "
-                                    + "Last user action at "+lastUserActionLocation+" roamed to "+hm.getLocation()+" distance "+distance+"mm.");
-                            UiUtils.submitUiMachineTask(()-> hm.moveToSafeZ());
+                            Logger.debug(hm.getName() + " exceeded roaming distance at non-safe Z, going to safe Z. "
+                                    + "Last user action at " + lastUserActionLocation + " roamed to " + hm.getLocation() + " distance " + distance + "mm.");
+                            UiUtils.submitUiMachineTask(() -> hm.moveToSafeZ());
                             lastUserActionLocation = null;
                         }
                     }
@@ -470,8 +481,7 @@ public class MachineControlsPanel extends JPanel {
                         if (markLocation == null) {
                             markLocation = getCurrentLocation();
                             MainFrame.get().getDroLabel().setBackground(droSavedColor);
-                        }
-                        else {
+                        } else {
                             markLocation = null;
                             MainFrame.get().getDroLabel().setBackground(droNormalColor);
                         }
@@ -493,7 +503,7 @@ public class MachineControlsPanel extends JPanel {
                 for (Camera camera : head.getCameras()) {
                     comboBoxHeadMountable.addItem(new CameraItem(camera));
                 }
-                
+
                 for (Actuator actuator : head.getActuators()) {
                     comboBoxHeadMountable.addItem(new ActuatorItem(actuator));
                 }
@@ -506,7 +516,7 @@ public class MachineControlsPanel extends JPanel {
             updateStartStopButton(machine.isEnabled());
 
             setEnabled(machine.isEnabled());
-            
+
             BeanUtils.bind(UpdateStrategy.READ, machine, "homed", homeAction, "homed");
 
             for (Head head : machine.getHeads()) {
@@ -518,8 +528,7 @@ public class MachineControlsPanel extends JPanel {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Nozzle nozzle = (Nozzle) e.getNewValue();
                         comboBoxHeadMountable.addItem(new NozzleItem(nozzle));
-                    }
-                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                    } else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
                             HeadMountableItem item = (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
                             if (item.getItem() == e.getOldValue()) {
@@ -533,8 +542,7 @@ public class MachineControlsPanel extends JPanel {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Camera camera = (Camera) e.getNewValue();
                         comboBoxHeadMountable.addItem(new CameraItem(camera));
-                    }
-                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                    } else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
                             HeadMountableItem item =
                                     (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
@@ -552,8 +560,7 @@ public class MachineControlsPanel extends JPanel {
                     if (e.getOldValue() == null && e.getNewValue() != null) {
                         Actuator actuator = (Actuator) e.getNewValue();
                         comboBoxHeadMountable.addItem(new ActuatorItem(actuator));
-                    }
-                    else if (e.getOldValue() != null && e.getNewValue() == null) {
+                    } else if (e.getOldValue() != null && e.getNewValue() == null) {
                         for (int i = 0; i < comboBoxHeadMountable.getItemCount(); i++) {
                             HeadMountableItem item =
                                     (HeadMountableItem) comboBoxHeadMountable.getItemAt(i);
