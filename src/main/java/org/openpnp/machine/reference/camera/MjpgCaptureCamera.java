@@ -282,4 +282,5 @@ public class MjpgCaptureCamera extends ReferenceCamera {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
     }
+
 }

@@ -29,6 +29,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -315,16 +316,17 @@ public class MachineControlsPanel extends JPanel {
     //根据COM口名称自动绑定GcodeDriver
     public void bindSerial() {
         List<Driver> drivers = configuration.getMachine().getDrivers();
-        String[] portNames = SerialPortCommunications.getPortNames();
+        Map<String, String> portNames = SerialPortCommunications.getPortDescribe();
         for (Driver driver : drivers) {
             String driverName = driver.getName();
-            for (String portName : portNames) {
-                if (driverName.equals(portName)) {
+            portNames.forEach((key,value)->{
+                Logger.trace("key:"+key+"| value:"+value);
+                if (driverName.equals(key)) {
                     AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
-                    referenceDriver.setPortName(portName);
+                    referenceDriver.setPortName(value);
 
                 }
-            }
+            });
         }
     }
 

@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -54,6 +54,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.Bindings;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
@@ -174,84 +175,85 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
             putValue(NAME, "Reapply to Camera");
             putValue(SHORT_DESCRIPTION, "Reapply the frozen properties to the camera.");
         }
+
         public void actionPerformed(ActionEvent e) {
             camera.reapplyProperties();
             MovableUtils.fireTargetedUserAction(camera);
         }
     };
-    
+
     public OpenPnpCaptureCameraConfigurationWizard(OpenPnpCaptureCamera camera) {
         this.camera = camera;
         createUi();
     }
 
     private void createUi() {
-        
+
         panelGeneral = new JPanel();
         panelGeneral.setBorder(new TitledBorder(null, "Device", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
-        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("left:default"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                lblDevice = new JLabel("Device");
-                panelGeneral.add(lblDevice, "2, 2, right, default");
-                
-                        deviceCb = new JComboBox();
-                        panelGeneral.add(deviceCb, "4, 2");
-                        
-                                lblFormat = new JLabel("Format");
-                                panelGeneral.add(lblFormat, "2, 4, right, default");
-                                
-                                        formatCb = new JComboBox();
-                                        panelGeneral.add(formatCb, "4, 4");
-                                                        
-                                                        lblCaptureFps = new JLabel("Capture FPS");
-                                                        lblCaptureFps.setToolTipText("<html>\r\n<p>The test captures frames as fast as possible and computes the average FPS obtained.</p>\r\n<p>Frames are copied from the camera buffer and converted to Java images, <br/>\r\nbut no additional processing is done (no lens calibration, no transforms etc.)</p>\r\n<p>For most accurate results, set Preview PFS to 0.</p>\r\n</html>");
-                                                        panelGeneral.add(lblCaptureFps, "2, 6, right, default");
-                                                        
-                                                        nativeFps = new JTextField();
-                                                        nativeFps.setEditable(false);
-                                                        panelGeneral.add(nativeFps, "4, 6, fill, default");
-                                                        nativeFps.setColumns(10);
-                                                        
-                                                        btnTest = new JButton("Test");
-                                                        btnTest.addActionListener(new ActionListener() {
-                                                            public void actionPerformed(ActionEvent e) {
-                                                                applyAction.actionPerformed(e); 
-                                                                testNativeFps();
-                                                            }
-                                                        });
-                                                        panelGeneral.add(btnTest, "6, 6");
-                        
-                                deviceCb.addActionListener(l -> {
-                                    formatCb.removeAllItems();
-                                    CaptureDevice dev = (CaptureDevice) deviceCb.getSelectedItem();
-                                    if (dev == null) {
-                                        return;
-                                    }
-                                    for (CaptureFormat format : dev.getFormats()) {
-                                        // Note: due to an instability of the CaptureFormat.equals() 
-                                        // method, we use the String representation as selection.
-                                        formatCb.addItem(format.toString());
-                                    }
-                                });
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        lblDevice = new JLabel("Device");
+        panelGeneral.add(lblDevice, "2, 2, right, default");
+
+        deviceCb = new JComboBox();
+        panelGeneral.add(deviceCb, "4, 2");
+
+        lblFormat = new JLabel("Format");
+        panelGeneral.add(lblFormat, "2, 4, right, default");
+
+        formatCb = new JComboBox();
+        panelGeneral.add(formatCb, "4, 4");
+
+        lblCaptureFps = new JLabel("Capture FPS");
+        lblCaptureFps.setToolTipText("<html>\r\n<p>The test captures frames as fast as possible and computes the average FPS obtained.</p>\r\n<p>Frames are copied from the camera buffer and converted to Java images, <br/>\r\nbut no additional processing is done (no lens calibration, no transforms etc.)</p>\r\n<p>For most accurate results, set Preview PFS to 0.</p>\r\n</html>");
+        panelGeneral.add(lblCaptureFps, "2, 6, right, default");
+
+        nativeFps = new JTextField();
+        nativeFps.setEditable(false);
+        panelGeneral.add(nativeFps, "4, 6, fill, default");
+        nativeFps.setColumns(10);
+
+        btnTest = new JButton("Test");
+        btnTest.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                applyAction.actionPerformed(e);
+                testNativeFps();
+            }
+        });
+        panelGeneral.add(btnTest, "6, 6");
+
+        deviceCb.addActionListener(l -> {
+            formatCb.removeAllItems();
+            CaptureDevice dev = (CaptureDevice) deviceCb.getSelectedItem();
+            if (dev == null) {
+                return;
+            }
+            for (CaptureFormat format : dev.getFormats()) {
+                // Note: due to an instability of the CaptureFormat.equals()
+                // method, we use the String representation as selection.
+                formatCb.addItem(format.toString());
+            }
+        });
 
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelProperties);
-        panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
+        panelProperties.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -274,39 +276,39 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblAuto = new JLabel("Auto");
         panelProperties.add(lblAuto, "4, 2, center, default");
@@ -347,29 +349,29 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
         brightnessDefault = new JLabel("def");
         panelProperties.add(brightnessDefault, "22, 4");
-        
+
         backLightCompensation = new JLabel("Backlight Compensation");
         panelProperties.add(backLightCompensation, "2, 6, right, default");
-        
+
         backLightCompensationAuto = new JCheckBox("");
         panelProperties.add(backLightCompensationAuto, "4, 6, center, default");
-        
+
         backLightCompensationMin = new JLabel("min");
         panelProperties.add(backLightCompensationMin, "8, 6");
-        
+
         backLightCompensationSlider = new JSlider();
         backLightCompensationSlider.setPaintTicks(true);
         backLightCompensationSlider.setPaintLabels(true);
         panelProperties.add(backLightCompensationSlider, "12, 6, fill, default");
-        
+
         backLightCompensationValue = new JTextField();
         backLightCompensationValue.setText("00000");
         backLightCompensationValue.setColumns(5);
         panelProperties.add(backLightCompensationValue, "14, 6, center, default");
-        
+
         backLightCompensationMax = new JLabel("max");
         panelProperties.add(backLightCompensationMax, "18, 6");
-        
+
         backLightCompensationDefault = new JLabel("def");
         panelProperties.add(backLightCompensationDefault, "22, 6");
 
@@ -453,54 +455,54 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
         gammaDefault = new JLabel("def");
         panelProperties.add(gammaDefault, "22, 16");
-        
+
         hue = new JLabel("Hue");
         panelProperties.add(hue, "2, 18, right, default");
-        
+
         hueAuto = new JCheckBox("");
         panelProperties.add(hueAuto, "4, 18, center, default");
-        
+
         hueMin = new JLabel("min");
         panelProperties.add(hueMin, "8, 18");
-        
+
         hueSlider = new JSlider();
         hueSlider.setPaintTicks(true);
         hueSlider.setPaintLabels(true);
         panelProperties.add(hueSlider, "12, 18, fill, default");
-        
+
         hueValue = new JTextField();
         hueValue.setText("00000");
         hueValue.setColumns(5);
         panelProperties.add(hueValue, "14, 18, center, default");
-        
+
         hueMax = new JLabel("max");
         panelProperties.add(hueMax, "18, 18");
-        
+
         hueDefault = new JLabel("def");
         panelProperties.add(hueDefault, "22, 18");
-        
+
         powerLineFrequency = new JLabel("Power Line Freq.");
         panelProperties.add(powerLineFrequency, "2, 20, right, default");
-        
+
         powerLineFrequencyAuto = new JCheckBox("");
         panelProperties.add(powerLineFrequencyAuto, "4, 20, center, default");
-        
+
         powerLineFrequencyMin = new JLabel("min");
         panelProperties.add(powerLineFrequencyMin, "8, 20");
-        
+
         powerLineFrequencySlider = new JSlider();
         powerLineFrequencySlider.setPaintTicks(true);
         powerLineFrequencySlider.setPaintLabels(true);
         panelProperties.add(powerLineFrequencySlider, "12, 20, fill, default");
-        
+
         powerLineFrequencyValue = new JTextField();
         powerLineFrequencyValue.setText("00000");
         powerLineFrequencyValue.setColumns(5);
         panelProperties.add(powerLineFrequencyValue, "14, 20, center, default");
-        
+
         powerLineFrequencyMax = new JLabel("max");
         panelProperties.add(powerLineFrequencyMax, "18, 20");
-        
+
         powerLineFrequencyDefault = new JLabel("def");
         panelProperties.add(powerLineFrequencyDefault, "22, 20");
 
@@ -528,29 +530,29 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
         saturationDefault = new JLabel("def");
         panelProperties.add(saturationDefault, "22, 22");
-        
+
         sharpness = new JLabel("Sharpness");
         panelProperties.add(sharpness, "2, 24, right, default");
-        
+
         sharpnessAuto = new JCheckBox("");
         panelProperties.add(sharpnessAuto, "4, 24, center, default");
-        
+
         sharpnessMin = new JLabel("min");
         panelProperties.add(sharpnessMin, "8, 24");
-        
+
         sharpnessSlider = new JSlider();
         sharpnessSlider.setPaintTicks(true);
         sharpnessSlider.setPaintLabels(true);
         panelProperties.add(sharpnessSlider, "12, 24, fill, default");
-        
+
         sharpnessValue = new JTextField();
         sharpnessValue.setText("00000");
         sharpnessValue.setColumns(5);
         panelProperties.add(sharpnessValue, "14, 24, center, default");
-        
+
         sharpnessMax = new JLabel("max");
         panelProperties.add(sharpnessMax, "18, 24");
-        
+
         sharpnessDefault = new JLabel("def");
         panelProperties.add(sharpnessDefault, "22, 24");
 
@@ -647,14 +649,14 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
         zoomDefault = new JLabel("def");
         panelProperties.add(zoomDefault, "22, 28");
-        
+
         lblFreezeProperties = new JLabel("Freeze Properties?");
         lblFreezeProperties.setToolTipText("<html>\n<p>Freeze properties as applied, and reapply them to the camera<br/>\nwhenever reopened. Never query properties back from the camera.<p/>\n<p>Use this when properties are not properly persisted by the camera<p/>\ndriver, or when you use this camera in different configurations <p/>\nor apps.\n</html>");
         panelProperties.add(lblFreezeProperties, "2, 32, right, default");
-        
+
         freezeProperties = new JCheckBox("");
         panelProperties.add(freezeProperties, "4, 32, center, default");
-        
+
         btnReapplyToCamera = new JButton(reapplyPropertiesToCameraAction);
         panelProperties.add(btnReapplyToCamera, "12, 32");
         //获取摄像头列表
@@ -674,7 +676,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         // method, we use the String representation (Name) as selection.
         addWrappedBinding(camera, "formatName", formatCb, "selectedItem");
 
-        bindProperty("backLightCompensation", backLightCompensationAuto, backLightCompensationMin, 
+        bindProperty("backLightCompensation", backLightCompensationAuto, backLightCompensationMin,
                 backLightCompensationMax, backLightCompensationSlider,
                 backLightCompensation, backLightCompensationValue, backLightCompensationDefault);
         bindProperty("brightness", brightnessAuto, brightnessMin, brightnessMax, brightnessSlider,
@@ -687,7 +689,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         bindProperty("gain", gainAuto, gainMin, gainMax, gainSlider, gain, gainValue, gainDefault);
         bindProperty("gamma", gammaAuto, gammaMin, gammaMax, gammaSlider, gamma, gammaValue, gammaDefault);
         bindProperty("hue", hueAuto, hueMin, hueMax, hueSlider, hue, hueValue, hueDefault);
-        bindProperty("powerLineFrequency", powerLineFrequencyAuto, powerLineFrequencyMin, 
+        bindProperty("powerLineFrequency", powerLineFrequencyAuto, powerLineFrequencyMin,
                 powerLineFrequencyMax, powerLineFrequencySlider, powerLineFrequency, powerLineFrequencyValue, powerLineFrequencyDefault);
         bindProperty("saturation", saturationAuto, saturationMin, saturationMax, saturationSlider,
                 saturation, saturationValue, saturationDefault);
@@ -701,7 +703,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     }
 
     private void bindProperty(String property, JCheckBox auto, JLabel min, JLabel max,
-            JSlider slider, JLabel label, JTextField value, JLabel def) {
+                              JSlider slider, JLabel label, JTextField value, JLabel def) {
         IntegerConverter intConverter = new IntegerConverter();
 
         bind(UpdateStrategy.READ_WRITE, camera, property + ".auto", auto, "selected");
@@ -719,7 +721,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         bind(UpdateStrategy.READ, camera, property + ".supported", slider, "enabled");
         bind(UpdateStrategy.READ, camera, property + ".supported", label, "enabled");
         bind(UpdateStrategy.READ, camera, property + ".supported", value, "enabled");
-        
+
         ComponentDecorators.decorateWithAutoSelect(value);
     }
 
@@ -727,11 +729,11 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     protected void saveToModel() {
         super.saveToModel();
         UiUtils.messageBoxOnException(() -> {
-            camera.reinitialize(); 
+            camera.reinitialize();
         });
     }
 
-    protected void testNativeFps() { 
+    protected void testNativeFps() {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         nativeFps.setText("Testing...");
         SwingUtilities.invokeLater(() -> {
@@ -739,8 +741,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 try {
                     double fps = camera.estimateCaptureFps();
                     nativeFps.setText(String.format(Locale.US, "%.0f", fps));
-                }
-                finally {
+                } finally {
                     setCursor(Cursor.getDefaultCursor());
                 }
             });
@@ -758,6 +759,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
             return !arg0;
         }
     }
+
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
         BeanProperty<JButton, Boolean> jButtonBeanProperty = BeanProperty.create("enabled");

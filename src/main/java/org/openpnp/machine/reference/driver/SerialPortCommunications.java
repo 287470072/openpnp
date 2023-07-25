@@ -12,6 +12,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -116,6 +118,11 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
                 public void serialEvent(SerialPortEvent event) {
                     if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
                         Logger.warn(serialPort.getSystemPortName() + "断开连接！！");
+                        try {
+                            disconnect();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             });
@@ -155,6 +162,17 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             portNames.add(port.getSystemPortName());
         }
         return portNames.toArray(new String[]{});
+    }
+
+    public static Map<String, String> getPortDescribe() {
+        Map<String, String> map = new HashMap<>();
+        SerialPort[] ports = SerialPort.getCommPorts();
+        ArrayList<String> portNames = new ArrayList<>();
+        for (SerialPort port : ports) {
+            portNames.add(port.getPortDescription());
+            map.put(port.getPortDescription(), port.getSystemPortName());
+        }
+        return map;
     }
 
     //这部分是我自己加的->

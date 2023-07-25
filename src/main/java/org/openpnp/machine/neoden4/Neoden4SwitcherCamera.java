@@ -78,6 +78,7 @@ public class Neoden4SwitcherCamera extends ReferenceCamera {
         return getCamera().hasNewFrame();
     }
 
+
     @Override
     protected synchronized boolean ensureOpen() {
         if (getCamera() == null) {

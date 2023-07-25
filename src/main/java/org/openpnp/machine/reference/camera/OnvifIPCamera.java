@@ -360,5 +360,4 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         return null;
     }
 
-
 }

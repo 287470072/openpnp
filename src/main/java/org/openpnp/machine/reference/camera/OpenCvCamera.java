@@ -212,6 +212,7 @@ public class OpenCvCamera extends ReferenceCamera implements Runnable {
         return properties;
     }
 
+
     public enum OpenCvCaptureProperty {
         CAP_PROP_POS_MSEC(0), // !< Current position of the video file in milliseconds.
         CAP_PROP_POS_FRAMES(1), // !< 0-based index of the frame to be decoded/captured next.
