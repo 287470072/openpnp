@@ -728,9 +728,12 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     @Override
     protected void saveToModel() {
         super.saveToModel();
+        //camera.reapplyProperties();
         UiUtils.messageBoxOnException(() -> {
             camera.reinitialize();
+            panelProperties.validate();
         });
+
     }
 
     protected void testNativeFps() {

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.Area;
@@ -37,6 +38,7 @@ import com.google.zxing.MultiFormatReader;
 import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
+import org.pmw.tinylog.Logger;
 
 public class VisionUtils {
     final public static String PIPELINE_RESULTS_NAME = "results";
@@ -46,15 +48,15 @@ public class VisionUtils {
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
      * center to the coordinates in Camera space and units. The resulting value is the distance the
      * Camera can be moved to be centered over the pixel coordinates.
-     * 
+     * <p>
      * Example: If the x, y coordinates describe a position above and to the left of the center of
      * the camera the offsets will be -,+.
-     * 
+     * <p>
      * If the coordinates position are below and to the right of center the offsets will be +, -.
-     * 
+     * <p>
      * Calling camera.getLocation().add(getPixelCenterOffsets(...) will give you the location of x,
      * y with respect to the center of the camera.
-     * 
+     *
      * @param camera
      * @param x
      * @param y
@@ -74,7 +76,7 @@ public class VisionUtils {
 
     /**
      * Given pixel offset coordinates, get the same offsets in Camera space and units.
-     * 
+     *
      * @param camera
      * @param offsetX
      * @param offsetY
@@ -94,7 +96,7 @@ public class VisionUtils {
      * This is a helper method that simply adds the offsets from
      * {@link VisionUtils#getPixelCenterOffsets(Camera, double, double)} to the Camera's current
      * location.
-     * 
+     *
      * @param camera
      * @param x
      * @param y
@@ -106,7 +108,7 @@ public class VisionUtils {
 
     /**
      * Same as getPixelLocation() but including the tool specific calibration offset.
-     *  
+     *
      * @param camera
      * @param tool
      * @param x
@@ -118,14 +120,14 @@ public class VisionUtils {
     }
 
     /**
-     * Get an angle in the OpenPNP coordinate system from an angle in the camera pixel  
-     * coordinate system. 
+     * Get an angle in the OpenPNP coordinate system from an angle in the camera pixel
+     * coordinate system.
      * The angle needs to be sign reversed to reflect the fact that the Z and Y axis are sign reversed.
      * OpenPNP uses a coordinate system with Z pointing towards the viewer, Y pointing up. OpenCV
      * however uses one with Z pointing away from the viewer, Y pointing downwards. Right-handed
-     * rotation must be sign-reversed.   
+     * rotation must be sign-reversed.
      * See {@link VisionUtils#getPixelCenterOffsets(Camera, double, double)}.
-     * 
+     *
      * @param camera
      * @param angle
      * @return
@@ -133,9 +135,9 @@ public class VisionUtils {
     public static double getPixelAngle(Camera camera, double angle) {
         return -angle;
     }
-    
+
     public static List<Location> sortLocationsByDistance(final Location origin,
-            List<Location> locations) {
+                                                         List<Location> locations) {
         // sort the results by distance from center ascending
         Collections.sort(locations, new Comparator<Location>() {
             public int compare(Location o1, Location o2) {
@@ -146,7 +148,7 @@ public class VisionUtils {
         });
         return locations;
     }
-    
+
     public static Camera getBottomVisionCamera() throws Exception {
         for (Camera camera : Configuration.get().getMachine().getCameras()) {
             if (camera.getLooking() == Camera.Looking.Up) {
@@ -155,7 +157,18 @@ public class VisionUtils {
         }
         throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
     }
-    
+
+    public static Camera getTopVisionCamera() throws Exception {
+        List<Camera> camers = Configuration.get().getMachine().getHeads().get(0).getCameras();
+        for (Camera camera : camers) {
+                if (camera.getLooking() == Camera.Looking.Down) {
+                    return camera;
+                }
+
+        }
+        throw new Exception("No up-looking camera found on the machine to use for top vision.");
+    }
+
     public static double toPixels(Length length, Camera camera) {
         // convert inputs to the same units
         Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
@@ -167,7 +180,7 @@ public class VisionUtils {
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
     }
-    
+
     public static double toPixels(Area area, Camera camera) {
         // convert inputs to the same units
         Location unitsPerPixel = camera.getUnitsPerPixel();
@@ -179,7 +192,7 @@ public class VisionUtils {
 
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation().
-     *  
+     *
      * @param location
      * @param camera
      * @return
@@ -190,8 +203,8 @@ public class VisionUtils {
 
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation(tool).
-     * This overload includes the tool specific calibration offset. 
-     * 
+     * This overload includes the tool specific calibration offset.
+     *
      * @param camera
      * @param tool
      * @param location
@@ -199,12 +212,12 @@ public class VisionUtils {
      */
     public static Point getLocationPixels(Camera camera, HeadMountable tool, Location location) {
         Point center = getLocationPixelCenterOffsets(camera, tool, location);
-        return new Point(center.getX()+camera.getWidth()/2, center.getY()+camera.getHeight()/2);
+        return new Point(center.getX() + camera.getWidth() / 2, center.getY() + camera.getHeight() / 2);
     }
 
     /**
-     * Get a location camera center offsets in pixels. 
-     *  
+     * Get a location camera center offsets in pixels.
+     *
      * @param location
      * @param camera
      * @return
@@ -214,9 +227,9 @@ public class VisionUtils {
     }
 
     /**
-     * Get a location camera center offsets in pixels. 
-     * This overload includes the tool specific calibration offset. 
-     * 
+     * Get a location camera center offsets in pixels.
+     * This overload includes the tool specific calibration offset.
+     *
      * @param camera
      * @param tool
      * @param location
@@ -228,7 +241,7 @@ public class VisionUtils {
         // convert inputs to the same units, center on camera and scale
         location = location.convertToUnits(unitsPerPixel.getUnits())
                 .subtract(camera.getLocation(tool))
-                .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
+                .multiply(1. / unitsPerPixel.getX(), -1. / unitsPerPixel.getY(), 0., 0.);
         // relative center of camera in pixels
         return new Point(location.getX(), location.getY());
     }
@@ -236,20 +249,22 @@ public class VisionUtils {
     /**
      * Using the given camera, try to find a QR code and return it's text. This is just a wrapper
      * for the generic scanBarcode(Camera) function. This one was added before the other and I don't
-     * want to remove it in case people are using it, but it does the same thing. 
+     * want to remove it in case people are using it, but it does the same thing.
+     *
      * @param camera
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
     public static String readQrCode(Camera camera) throws Exception {
         return scanBarcode(camera);
     }
-    
+
     /**
-     * Using the given camera, try to find any supported barcode and return it's text. 
+     * Using the given camera, try to find any supported barcode and return it's text.
+     *
      * @param camera
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
     public static String scanBarcode(Camera camera) throws Exception {
         BufferedImage image = camera.lightSettleAndCapture();
@@ -257,13 +272,12 @@ public class VisionUtils {
                 new BufferedImageLuminanceSource(image)));
         try {
             Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
-            return qrCodeResult.getText();    
-        }
-        catch (Exception e) {
+            return qrCodeResult.getText();
+        } catch (Exception e) {
             return null;
         }
     }
-    
+
     public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
         Map<String, Object> globals = new HashMap<>();
         globals.put("part", part);
@@ -274,8 +288,7 @@ public class VisionUtils {
         try {
             offsets = p.findOffsets(part, boardLocation, placement, nozzle);
             return offsets;
-        }
-        finally {
+        } finally {
             globals.put("offsets", offsets);
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }
@@ -283,7 +296,7 @@ public class VisionUtils {
 
     /**
      * Compute an RGB histogram over the provided image.
-     * 
+     *
      * @param image
      * @return the histogram as long[channel][value] with channel 0=Red 1=Green 2=Blue and value 0...255.
      */
@@ -305,7 +318,7 @@ public class VisionUtils {
 
     /**
      * Compute an HSV histogram over the provided image.
-     * 
+     *
      * @param image
      * @return the histogram as long[channel][value] with channel 0=Hue 1=Saturation 2=Value and value 0...255.
      */
@@ -318,9 +331,9 @@ public class VisionUtils {
                 int g = (rgb >> 8) & 0xff;
                 int b = (rgb >> 0) & 0xff;
                 float[] hsb = Color.RGBtoHSB(r, g, b, null);
-                int h = (int)(hsb[0]*255.999);
-                int s = (int)(hsb[1]*255.999);
-                int v = (int)(hsb[2]*255.999);
+                int h = (int) (hsb[0] * 255.999);
+                int s = (int) (hsb[1] * 255.999);
+                int v = (int) (hsb[2] * 255.999);
                 histogram[0][h]++;
                 histogram[1][s]++;
                 histogram[2][v]++;
@@ -332,12 +345,12 @@ public class VisionUtils {
     /**
      * Ready the FIDUCIAL-HOME, either by returning the existing part or creating a new
      * part with the given circular fiducialDiameter.
-     * 
-     * @param fiducialDiameter 
-     * @param overwrite If the FIDUCIAL-HOME already exists, overwrite it and make sure it has the given fiducialDiameter
-     * and circular shape.
+     *
+     * @param fiducialDiameter
+     * @param overwrite        If the FIDUCIAL-HOME already exists, overwrite it and make sure it has the given fiducialDiameter
+     *                         and circular shape.
      * @return The FIDUCIAL-HOME part.
-     * @throws Exception 
+     * @throws Exception
      */
     static public Part readyHomingFiducialWithDiameter(Length fiducialDiameter, boolean overwrite) throws Exception {
         Configuration configuration = Configuration.get();
@@ -345,8 +358,7 @@ public class VisionUtils {
         if (part == null) {
             part = new Part("FIDUCIAL-HOME");
             configuration.addPart(part);
-        }
-        else if (!overwrite) {
+        } else if (!overwrite) {
             return part;
         }
         org.openpnp.model.Package pkg = configuration.getPackage("FIDUCIAL-HOME");
@@ -371,13 +383,11 @@ public class VisionUtils {
         FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
         if (pipeline.equals(visionSettings.getPipeline())) {
             // Already the right vision settings.
-        }
-        else {
-            if (visionSettings.getUsedFiducialVisionIn().size() == 1 
+        } else {
+            if (visionSettings.getUsedFiducialVisionIn().size() == 1
                     && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
                 // Already a special setting on the part. Modify it.
-            }
-            else {
+            } else {
                 // Needs new settings (likely means the default was changed by the user).
                 FiducialVisionSettings newSettings = new FiducialVisionSettings();
                 newSettings.setValues(visionSettings);

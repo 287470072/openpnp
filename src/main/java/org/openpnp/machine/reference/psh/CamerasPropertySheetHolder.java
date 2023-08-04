@@ -12,6 +12,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.vision.OpenCvVisionProvider;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -77,6 +78,7 @@ public class CamerasPropertySheetHolder extends SimplePropertySheetHolder {
                     head.addCamera(camera);
                 }
                 else {
+
                     configuration.getMachine().addCamera(camera);
                 }
 

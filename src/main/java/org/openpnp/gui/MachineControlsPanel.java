@@ -19,14 +19,13 @@
 
 package org.openpnp.gui;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -47,12 +46,17 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.swingx.JXCollapsiblePane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.capture.CaptureDevice;
+import org.openpnp.capture.CaptureFormat;
+import org.openpnp.gui.components.CameraPanel;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.ActuatorItem;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
 import org.openpnp.model.Configuration;
@@ -63,6 +67,7 @@ import org.openpnp.spi.*;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -281,7 +286,6 @@ public class MachineControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
             final Machine machine = Configuration.get().getMachine();
-            bindSerial();
             final boolean enable = !machine.isEnabled();
             Runnable task = () -> {
                 try {
@@ -300,6 +304,8 @@ public class MachineControlsPanel extends JPanel {
                 thread.setDaemon(true);
                 thread.start();
             } else {
+                bindSerial();
+                changeCamera();
                 // Not an emergency stop. Run as regular machine task.  
                 UiUtils.submitUiMachineTask(() -> {
                             task.run();
@@ -313,15 +319,21 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
+    public void changeCamera() {
+        MainFrame.get().getCameraViews().cameraPanelBind();
+
+    }
+
+
     //根据COM口名称自动绑定GcodeDriver
     public void bindSerial() {
         List<Driver> drivers = configuration.getMachine().getDrivers();
         Map<String, String> portNames = SerialPortCommunications.getPortDescribe();
         for (Driver driver : drivers) {
             String driverName = driver.getName();
-            portNames.forEach((key,value)->{
-                Logger.trace("key:"+key+"| value:"+value);
-                if (driverName.equals(key)) {
+            portNames.forEach((key, value) -> {
+                Logger.trace("key:" + key.replaceAll("\\s\\(.*?\\)", "") + "| value:" + value);
+                if (driverName.equals(key.replaceAll("\\s\\(.*?\\)", ""))) {
                     AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
                     referenceDriver.setPortName(value);
 

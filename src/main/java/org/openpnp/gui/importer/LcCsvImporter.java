@@ -433,7 +433,7 @@ public abstract class LcCsvImporter {
      * @return
      */
     private String filtPackage(String str) {
-        String regEx = "(0201|0402|0603|0805|1206)";
+        String regEx = "(0201|0402|0603|0805|1206|^[a-zA-Z0-9]{1,7}-[a-zA-Z0-9]{1,3})";
         Pattern pattern = Pattern.compile(regEx);
         Matcher matcher = pattern.matcher(str);
         if (matcher.find())

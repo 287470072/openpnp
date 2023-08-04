@@ -2,20 +2,20 @@
  * Copyright (C) 2021 <mark@makr.zone>
  * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -72,6 +72,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class IssuesAndSolutionsPanel extends JPanel {
@@ -93,7 +94,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         JPanel toolbar = new JPanel();
         add(toolbar, BorderLayout.NORTH);
-        toolbar.setLayout(new FormLayout(new ColumnSpec[] {
+        toolbar.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -117,15 +118,15 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,}));
 
         JLabel lblMilestone = new JLabel(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.text")); //$NON-NLS-1$
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
@@ -141,7 +142,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
-        .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -156,7 +157,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         JPanel panel = new JPanel();
         issuePane.add(panel, BorderLayout.SOUTH);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
+        panel.setLayout(new FormLayout(new ColumnSpec[]{
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -169,7 +170,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 ColumnSpec.decode("53px"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,},
-                new RowSpec[] {
+                new RowSpec[]{
                         FormSpecs.LINE_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -192,11 +193,12 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         configuration.addListener(new ConfigurationListener() {
             @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {}
+            public void configurationLoaded(Configuration configuration) throws Exception {
+            }
 
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
-                machine = (ReferenceMachine)configuration.getMachine();
+                machine = (ReferenceMachine) configuration.getMachine();
                 solutions = machine.getSolutions();
                 initDataBindings();
 
@@ -251,11 +253,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
                 // Execute the first issue search after a delay (the delay prevents a
                 // race condition with configuration loading and camera startup).
-                new java.util.Timer().schedule( 
+                new java.util.Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                SwingUtilities.invokeLater(()->findIssuesAndSolutions()); 
+                                SwingUtilities.invokeLater(() -> findIssuesAndSolutions());
                             }
                         },
                         5000
@@ -265,35 +267,35 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         JButton btnFindSolutions = new JButton(findSolutionsAction);
         toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
-        
+
         JLabel lblSolved = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.text")); //$NON-NLS-1$
         lblSolved.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblSolved, "9, 3, right, default");
-        
+
         showSolved = new JCheckBox("");
         showSolved.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                findIssuesAndSolutions(); 
+                findIssuesAndSolutions();
             }
         });
         toolbar.add(showSolved, "11, 3");
-        
+
         JLabel lblDismissed = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeDismissedLabel.text")); //$NON-NLS-1$
         lblDismissed.setToolTipText(Translations.getString(
                 "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblDismissed, "15, 3, right, default");
-        
+
         showDismissed = new JCheckBox("");
         showDismissed.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                findIssuesAndSolutions(); 
+                findIssuesAndSolutions();
             }
         });
         toolbar.add(showDismissed, "17, 3");
-        
+
         JLabel label_2 = new JLabel(" ");
         toolbar.add(label_2, "19, 3");
-        
+
         JButton btnInfoMilestone = new JButton(infoMilestoneAction);
         toolbar.add(btnInfoMilestone, "21, 3, 1, 3");
 
@@ -371,8 +373,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
         Solutions.Severity maxSeverity = Solutions.Severity.None;
         //获取问题&解决方案
+        List<Solutions.Issue> issues = machine.getSolutions().getIssues();
         for (Solutions.Issue issue : machine.getSolutions().getIssues()) {
-            if (issue.getSeverity().ordinal() >= maxSeverity.ordinal() 
+
+            if (issue.getSeverity().ordinal() >= maxSeverity.ordinal()
                     && issue.getState() == Solutions.State.Open) {
                 maxSeverity = issue.getSeverity();
             }
@@ -388,10 +392,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     //"<html>Issues &amp; Solutions <span style=\"color:#"
                     tabs.setTitleAt(index, Translations.getString(
                             "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml") //$NON-NLS-1$
-                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()) //$NON-NLS-1$
-                            +";\">&#"+(indicatorUnicode)+";</span></html>"); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                else {
+                            + String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()) //$NON-NLS-1$
+                            + ";\">&#" + (indicatorUnicode) + ";</span></html>"); //$NON-NLS-1$ //$NON-NLS-2$
+                } else {
                     tabs.setTitleAt(index, Translations.getString(
                             "MainFrame.RightComponent.tabs.IssuesAndSolutions")); //$NON-NLS-1$
                 }
@@ -400,10 +403,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     public Color saturate(Color color) {
-        int minChannel = (int)(Math.min(Math.min(color.getRed(), color.getGreen()), color.getBlue())*1);
-        int maxChannel = (int)(Math.max(Math.max(color.getRed(), color.getGreen()), color.getBlue())*1);
-        double f = 200.0/(maxChannel-minChannel);
-        color = new Color((int)((color.getRed()-minChannel)*f), (int)((color.getGreen()-minChannel)*f), (int)((color.getBlue()-minChannel)*f));
+        int minChannel = (int) (Math.min(Math.min(color.getRed(), color.getGreen()), color.getBlue()) * 1);
+        int maxChannel = (int) (Math.max(Math.max(color.getRed(), color.getGreen()), color.getBlue()) * 1);
+        double f = 200.0 / (maxChannel - minChannel);
+        color = new Color((int) ((color.getRed() - minChannel) * f), (int) ((color.getGreen() - minChannel) * f), (int) ((color.getBlue() - minChannel) * f));
         return color;
     }
 
@@ -432,49 +435,48 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Action findSolutionsAction =
             new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.FindSolution"), //$NON-NLS-1$
                     Icons.solutions) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.FindSolution.Description")); //$NON-NLS-1$
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "IssuesAndSolutionsPanel.Action.FindSolution.Description")); //$NON-NLS-1$
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            findIssuesAndSolutions();
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    findIssuesAndSolutions();
+                }
+            };
 
     private Action acceptSolutionAction =
             new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.AcceptSolution"), //$NON-NLS-1$
                     Icons.accept) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description")); //$NON-NLS-1$
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> { 
-                labelWarn.setVisible(true);
-                List<Solutions.Issue> issues = getSelections();
-                for (Solutions.Issue issue : issues) {
-                    if (issue.canBeAccepted() ) {
-                        if (issue.getState() != Solutions.State.Solved) {
-                            issue.setStateCall(Solutions.State.Solved);
-                        }
-                    }
-                    else {
-                        // Be tolerant, we handle a PlainIssue with no auto-solution as dismissal.
-                        if (issue.getState() != Solutions.State.Dismissed) {
-                            issue.setStateCall(Solutions.State.Dismissed);
-                        }
-                    }
+                {
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "IssuesAndSolutionsPanel.Action.AcceptSolution.Description")); //$NON-NLS-1$
                 }
-            });
-        }
-    };
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        labelWarn.setVisible(true);
+                        List<Solutions.Issue> issues = getSelections();
+                        for (Solutions.Issue issue : issues) {
+                            if (issue.canBeAccepted()) {
+                                if (issue.getState() != Solutions.State.Solved) {
+                                    issue.setStateCall(Solutions.State.Solved);
+                                }
+                            } else {
+                                // Be tolerant, we handle a PlainIssue with no auto-solution as dismissal.
+                                if (issue.getState() != Solutions.State.Dismissed) {
+                                    issue.setStateCall(Solutions.State.Dismissed);
+                                }
+                            }
+                        }
+                    });
+                }
+            };
 
     private Action dismissSolutionAction = new AbstractAction(Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) { //$NON-NLS-1$
+            "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
                     "IssuesAndSolutionsPanel.Action.DismissSolution.Description")); //$NON-NLS-1$
@@ -482,7 +484,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> { 
+            UiUtils.messageBoxOnException(() -> {
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
                     if (issue.getState() != Solutions.State.Dismissed) {
@@ -502,7 +504,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> { 
+            UiUtils.messageBoxOnException(() -> {
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
                     if (issue.getState() != Solutions.State.Open) {
@@ -511,38 +513,38 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 }
             });
         }
-    }; 
+    };
 
     private Action infoAction =
             new AbstractAction("", Icons.info) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.Info.Description")); //$NON-NLS-1$
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            List<Solutions.Issue> issues = getSelections();
-            for (Solutions.Issue issue : issues) {
-                if (issue.getUri() != null) {
-                    UiUtils.browseUri(issue.getUri());
+                {
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "IssuesAndSolutionsPanel.Action.Info.Description")); //$NON-NLS-1$
                 }
-            }
-        }
-    };
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    List<Solutions.Issue> issues = getSelections();
+                    for (Solutions.Issue issue : issues) {
+                        if (issue.getUri() != null) {
+                            UiUtils.browseUri(issue.getUri());
+                        }
+                    }
+                }
+            };
 
     private Action infoMilestoneAction =
             new AbstractAction("", Icons.info) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description")); //$NON-NLS-1$
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "IssuesAndSolutionsPanel.Action.InfoMilestone.Description")); //$NON-NLS-1$
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"); 
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions");
+                }
+            };
 
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;

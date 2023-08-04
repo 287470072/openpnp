@@ -559,6 +559,7 @@ public class Solutions extends AbstractTableModel {
         return machine;
     }
 
+
     /**
      * Perform the Issues & Solutions search. This opens a list of pending issues, i.e. it does not
      * directly affect the table model. Pending issues will only be made visible when 

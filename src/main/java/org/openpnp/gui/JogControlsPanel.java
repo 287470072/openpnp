@@ -27,10 +27,7 @@ import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -38,27 +35,20 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.OtherConfigurationWizard;
-import org.openpnp.gui.support.WrapLayout;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
+import org.openpnp.gui.support.*;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.solutions.VisionSolutions;
+import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
-import org.openpnp.model.Part;
 import org.openpnp.spi.*;
 import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.base.AbstractNozzle;
-import org.openpnp.util.BeanUtils;
-import org.openpnp.util.Cycles;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
+import org.openpnp.util.*;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -702,6 +692,39 @@ public class JogControlsPanel extends JPanel {
         tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
                 null, panelXYZ, null);
 
+
+        JPanel panelCalibrate = new JPanel();
+
+        JPanel panelAction = new JPanel();
+        panelAction.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+        //顶部相机校正
+        JButton topCameraCalibrateBtn = new JButton(topCameraCalibrate);
+        panelAction.add(topCameraCalibrateBtn);
+
+        //吸嘴偏移量填写
+        JButton nozzleOffsetBtn = new JButton(nozzleOffseAction);
+        panelAction.add(nozzleOffsetBtn);
+
+        //吸嘴偏移量教校正
+        JButton nozzleN1OffsetCalibrateBtn = new JButton(nozzleN1OffsetCalibrateAction);
+        panelAction.add(nozzleN1OffsetCalibrateBtn);
+
+        //吸嘴偏移量教校正
+        JButton nozzleN2OffsetCalibrateBtn = new JButton(nozzleN2OffsetCalibrateAction);
+        panelAction.add(nozzleN2OffsetCalibrateBtn);
+
+        //底部相机校正
+        JButton bottomCameraCalibrateBtn = new JButton(bottomCameraCalibrate);
+        panelAction.add(bottomCameraCalibrateBtn);
+
+
+        panelCalibrate.add(panelAction);
+
+        tabbedPane_1.addTab("一键校准设置", //$NON-NLS-1$
+                null, panelCalibrate, null);
+
+
 /*        JPanel panelXYZ = new OtherPanel();
 
         tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
@@ -848,6 +871,116 @@ public class JogControlsPanel extends JPanel {
             btnReset.setEnabled(false);
         }
     };
+
+    protected Action topCameraCalibrate = new AbstractAction("顶部相机校正") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            UiUtils.messageBoxOnException(() -> {
+
+                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
+
+                List<Solutions.Issue> issues = machine.getAllSolutions().getIssues();
+
+                for (Solutions.Issue issue : issues) {
+                    if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
+                        issue.setStateCall(Solutions.State.Solved);
+                    }
+                }
+            });
+        }
+    };
+
+    protected Action nozzleOffseAction = new AbstractAction("吸嘴偏移") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            UiUtils.messageBoxOnException(() -> {
+                Camera topCamera = VisionUtils.getTopVisionCamera();
+                //移动相机到二维码上方
+                Location offsetLocation = new Location();
+                offsetLocation = topCamera.getLocation();
+                offsetLocation.setX(-60);
+                offsetLocation.setY(15);
+                MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
+                MovableUtils.fireTargetedUserAction(topCamera);
+                //识别二维码
+                String qrString = VisionUtils.readQrCode(topCamera);
+                if (qrString != null) {
+                    JSONObject jsonObject = new JSONObject(qrString);
+                    JSONArray pixelData = jsonObject.getJSONArray("data");
+                    for (Object obj : pixelData) {
+
+                        JSONObject temp = (JSONObject) obj;
+                        String name = temp.get("name").toString();
+                        List<Nozzle> nozzles = configuration.getMachine().getHeads().get(0).getNozzles();
+                        for (Nozzle nozzle : nozzles) {
+                            if (nozzle.getName().equals(name)) {
+                                //填充到nozzle offset配置中
+                                Location offset = nozzle.getHeadOffsets();
+                                offset.setX(Double.parseDouble(temp.get("x").toString()));
+                                offset.setY(Double.parseDouble(temp.get("y").toString()));
+                                offset.setZ(Double.parseDouble(temp.get("z").toString()));
+                            }
+                        }
+                    }
+                    MessageBoxes.infoBox("消息", "偏移坐标写入成功！");
+                } else {
+                    throw new Exception("二维码识别失败，请重新尝试!");
+                }
+            });
+        }
+    };
+
+    protected Action nozzleN1OffsetCalibrateAction = new AbstractAction("N1吸嘴校正") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            UiUtils.messageBoxOnException(() -> {
+
+                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
+                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
+
+                for (Solutions.Issue issue : issues) {
+                    if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
+                        issue.setStateCall(Solutions.State.Solved);
+                    }
+                }
+            });
+        }
+    };
+
+    protected Action nozzleN2OffsetCalibrateAction = new AbstractAction("N2吸嘴校正") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            UiUtils.messageBoxOnException(() -> {
+
+                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
+                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
+
+                for (Solutions.Issue issue : issues) {
+                    if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
+                        issue.setStateCall(Solutions.State.Solved);
+                    }
+                }
+            });
+        }
+    };
+
+    protected Action bottomCameraCalibrate = new AbstractAction("底部相机校正") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            UiUtils.messageBoxOnException(() -> {
+
+                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
+                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
+
+                for (Solutions.Issue issue : issues) {
+                    if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
+                        issue.setStateCall(Solutions.State.Solved);
+                    }
+                }
+            });
+        }
+    };
+
 
     protected Action resetAction = new AbstractAction(Translations.getString(
             "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$

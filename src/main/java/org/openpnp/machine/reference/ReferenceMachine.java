@@ -96,20 +96,8 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Driver;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.MotionPlanner;
+import org.openpnp.spi.*;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PnpJobProcessor;
-import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Signaler;
 import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
@@ -617,6 +605,14 @@ public class ReferenceMachine extends AbstractMachine {
             dismissedSolutions = null;
         }
         return solutions;
+    }
+
+    public Solutions getAllSolutions() {
+        List<Solutions.Issue> pendingIssues = new ArrayList<>();
+        Solutions test = new Solutions();
+        Machine machine = Configuration.get().getMachine();
+        machine.findIssues(test);
+        return test;
     }
 
     //@Element(required = false)

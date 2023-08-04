@@ -45,6 +45,7 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -137,7 +138,13 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
 
 
     public void addCamera2(Camera camera) {
-        CameraView cameraView = new CameraView();
+        cameraViews.forEach((key, value) -> {
+            CameraView cameraView = value;
+            if (value.getCamera().getName().equals(camera.getName())) {
+                cameraView.setCamera(camera);
+            }
+        });
+/*        CameraView cameraView = new CameraView();
         cameraView.setCamera(camera);
         cameraViews.put(camera, cameraView);
         camerasCombo.addItem(new CameraItem(camera));
@@ -153,7 +160,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                             }
                         }
                     });
-        }
+        }*/
         relayoutPanel();
     }
 
@@ -224,7 +231,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
         return cameraViews.get(camera);
     }
 
-    private void relayoutPanel() {
+    public void relayoutPanel() {
         selectedCameraView = null;
         camerasPanel.removeAll();
         if (camerasCombo.getSelectedItem().equals(SHOW_NONE_ITEM)) {
@@ -298,25 +305,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
     @Override
     public void webcamFound(WebcamDiscoveryEvent event) {
 
-        //更换USB口时，摄像头自动匹配
-        OpenPnpCaptureCamera openPnpCaptureCamera = new OpenPnpCaptureCamera();
-        List<CaptureDevice> captureDevices = openPnpCaptureCamera.getCaptureDevices();
-        List<Camera> cameras = Configuration.get().getMachine().getAllCameras();
-        for (Camera camera1 : cameras) {
-            String cameraName = camera1.getClass().getName();
-            if (cameraName.equals("org.openpnp.machine.reference.camera.OpenPnpCaptureCamera")) {
-                OpenPnpCaptureCamera openPnpCaptureCamera1 = (OpenPnpCaptureCamera) camera1;
-                String openPnpCaptureCamera1Name = openPnpCaptureCamera1.getName();
-                for (CaptureDevice captureDevice : captureDevices) {
-                    String captureDeviceName = captureDevice.getName();
-                    if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
-                        ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
-                        List<CaptureFormat> formats = captureDevice.getFormats();
-                        ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
-                    }
-                }
-            }
-        }
+        cameraBind();
 
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
             String webCamera = event.getWebcam().getDevice().getName().substring(0, event.getWebcam().getDevice().getName().length() - 2);
@@ -329,6 +318,68 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
         }
     }
 
+    public void cameraPanelBind() {
+        //摄像头自动匹配
+        OpenPnpCaptureCamera openPnpCaptureCamera = new OpenPnpCaptureCamera();
+        List<CaptureDevice> captureDevices = openPnpCaptureCamera.getCaptureDevices();
+        List<Camera> cameras = Configuration.get().getMachine().getAllCameras();
+
+
+        for (Camera camera1 : cameras) {
+            if (camera1 instanceof OpenPnpCaptureCamera) {
+                OpenPnpCaptureCamera openPnpCaptureCamera1 = (OpenPnpCaptureCamera) camera1;
+                OpenPnpCaptureCamera.CapturePropertyHolder gamma = openPnpCaptureCamera1.getGamma();
+                gamma.setValue(100);
+                String openPnpCaptureCamera1Name = openPnpCaptureCamera1.getName();
+                for (CaptureDevice captureDevice : captureDevices) {
+                    String captureDeviceName = captureDevice.getName();
+                    if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
+                        ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
+                        List<CaptureFormat> formats = captureDevice.getFormats();
+                        if (camera1.getLooking() == Camera.Looking.Up) {
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
+
+                        } else {
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
+
+                        }
+
+                        addCamera2(camera1);
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    public void cameraBind() {
+        //更换USB口时，摄像头自动匹配
+        OpenPnpCaptureCamera openPnpCaptureCamera = new OpenPnpCaptureCamera();
+        List<CaptureDevice> captureDevices = openPnpCaptureCamera.getCaptureDevices();
+        List<Camera> cameras = Configuration.get().getMachine().getAllCameras();
+        for (Camera camera1 : cameras) {
+            if (camera1 instanceof OpenPnpCaptureCamera) {
+                OpenPnpCaptureCamera openPnpCaptureCamera1 = (OpenPnpCaptureCamera) camera1;
+                String openPnpCaptureCamera1Name = openPnpCaptureCamera1.getName();
+                for (CaptureDevice captureDevice : captureDevices) {
+                    String captureDeviceName = captureDevice.getName();
+                    if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
+                        ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
+                        List<CaptureFormat> formats = captureDevice.getFormats();
+                        if (camera1.getLooking() == Camera.Looking.Up) {
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
+
+                        } else {
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public void webcamGone(WebcamDiscoveryEvent event) {
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
@@ -336,7 +387,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
             String camName = camera.getName();
             String cameraName = camera.getName();
             if (cameraName != null & webCamera.equals(cameraName)) {
-                removeCamera(camera);
+                //removeCamera(camera);
             }
         }
 
