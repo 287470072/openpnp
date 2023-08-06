@@ -200,6 +200,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             public void configurationComplete(Configuration configuration) throws Exception {
                 machine = (ReferenceMachine) configuration.getMachine();
                 solutions = machine.getSolutions();
+                List<Solutions.Issue> sols = solutions.getIssues();
                 initDataBindings();
 
                 tableSorter = new TableRowSorter<>(solutions);

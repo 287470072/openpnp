@@ -879,9 +879,13 @@ public class JogControlsPanel extends JPanel {
 
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
 
-                List<Solutions.Issue> issues = machine.getAllSolutions().getIssues();
+                Solutions solutions = machine.getSolutions();
+                List<Solutions.Issue> pendingIssues = new ArrayList<>();
+                solutions.setPendingIssues(pendingIssues);
 
-                for (Solutions.Issue issue : issues) {
+                machine.findIssues(solutions);
+
+                for (Solutions.Issue issue : pendingIssues) {
                     if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
                         issue.setStateCall(Solutions.State.Solved);
                     }
@@ -936,9 +940,14 @@ public class JogControlsPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
 
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
 
-                for (Solutions.Issue issue : issues) {
+                Solutions solutions = machine.getSolutions();
+                List<Solutions.Issue> pendingIssues = new ArrayList<>();
+                solutions.setPendingIssues(pendingIssues);
+
+                machine.findIssues(solutions);
+
+                for (Solutions.Issue issue : pendingIssues) {
                     if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
                         issue.setStateCall(Solutions.State.Solved);
                     }
@@ -953,9 +962,14 @@ public class JogControlsPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
 
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
 
-                for (Solutions.Issue issue : issues) {
+                Solutions solutions = machine.getSolutions();
+                List<Solutions.Issue> pendingIssues = new ArrayList<>();
+                solutions.setPendingIssues(pendingIssues);
+
+                machine.findIssues(solutions);
+
+                for (Solutions.Issue issue : pendingIssues) {
                     if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
                         issue.setStateCall(Solutions.State.Solved);
                     }
@@ -970,10 +984,15 @@ public class JogControlsPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
 
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-                List<Solutions.Issue> issues = machine.getSolutions().getIssues();
 
-                for (Solutions.Issue issue : issues) {
-                    if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
+                Solutions solutions = machine.getSolutions();
+                List<Solutions.Issue> pendingIssues = new ArrayList<>();
+                solutions.setPendingIssues(pendingIssues);
+
+                machine.findIssues(solutions);
+
+                for (Solutions.Issue issue : pendingIssues) {
+                    if (issue.getIssue().equals("Determine the up-looking camera Bottom Vision position and initial calibration.")) {
                         issue.setStateCall(Solutions.State.Solved);
                     }
                 }

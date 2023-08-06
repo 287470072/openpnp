@@ -520,7 +520,19 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
+
     private List<Issue> pendingIssues = null;
+
+    public List<Issue> getPendingIssues() {
+        return pendingIssues;
+    }
+
+    public void setPendingIssues(List<Issue> pendingIssues) {
+        this.pendingIssues = pendingIssues;
+    }
+
+
+
     private List<Issue> issues = new ArrayList<>();
 
     public boolean isSolutionsIssueDismissed(Issue issue) {
@@ -565,7 +577,7 @@ public class Solutions extends AbstractTableModel {
      * directly affect the table model. Pending issues will only be made visible when 
      * {@link #publishIssues()} is called.    
      */
-    public synchronized void findIssues() {
+    public synchronized void  findIssues() {
         pendingIssues = new ArrayList<>();
         Machine machine = getMachine();
         machine.findIssues(this);
