@@ -60,7 +60,7 @@
     </entries>
   </files>
   <launchers>
-    <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
+    <launcher name="OpenPnP" id="23" menuName="OpenPnP" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
       <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
       <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
@@ -78,8 +78,8 @@
 
 </infoPlist>
       <iconImageFiles>
-        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
-        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_school_32x32.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_school_128x128.png" />
       </iconImageFiles>
     </launcher>
   </launchers>

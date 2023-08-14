@@ -38,6 +38,8 @@ import org.openpnp.spi.*;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -944,6 +946,50 @@ public class JobPanel extends JPanel {
              * the current placement in the thrown error and add this feature.
              */
 
+
+            if (t instanceof JobProcessorException) {
+                JobProcessorException jpe = (JobProcessorException) t;
+                Object source = jpe.getSource();
+
+                // decode the source of the exception and try to select as much as possible
+                if (source instanceof BoardLocation) {
+                    BoardLocation b = (BoardLocation) source;
+                    // select the board
+                    Helpers.selectObjectTableRow(jobTable, b);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
+                } else if (source instanceof Placement) {
+                    Placement p = (Placement) source;
+
+                    // select the board this placement belongs to
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        if (boardLocation.getBoard().getPlacements().contains(p)) {
+                            // this is the board, that contains the placement that caused the error
+                            Helpers.selectObjectTableRow(jobTable, boardLocation);
+                        }
+                    }
+
+                    // select the placement itself
+                    Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
+                } else if (source instanceof Part) {
+                    Part p = (Part) source;
+                    // select part in parts tab
+                    MainFrame.get().getPartsTab().selectPartInTable(p);
+                    // focus the parts tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getPartsTab());
+                } else if (source instanceof Feeder) {
+                    Feeder f = (Feeder) source;
+                    // select the feeder in the feeders tab
+                    MainFrame.get().getFeedersTab().selectFeederInTable(f);
+                    // focus the feeder tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getFeedersTab());
+                } else {
+                    Logger.debug("Exception contains an unsupported source: {}", source.getClass());
+                }
+            }
+
             MessageBoxes.errorBox(getTopLevelAncestor(),
                     Translations.getString("JobPanel.JobRun.Error.ErrorBox.Title"), t.getMessage()); //$NON-NLS-1$
             if (state == State.Running || state == State.Pausing) {
@@ -1127,6 +1173,7 @@ public class JobPanel extends JPanel {
     protected void addBoard(File file) throws Exception {
         Board board = new Board(configuration.getBoard(file));
         BoardLocation boardLocation = new BoardLocation(board);
+        boardLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
 
         Configuration.get().resolveBoard(job, boardLocation);
 
@@ -1209,6 +1256,7 @@ public class JobPanel extends JPanel {
     protected void addPanel(File file) throws Exception {
         Panel panel = new Panel(configuration.getPanel(file));
         PanelLocation panelLocation = new PanelLocation(panel);
+        panelLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
 
         Configuration.get().resolvePanel(job, panelLocation);
 

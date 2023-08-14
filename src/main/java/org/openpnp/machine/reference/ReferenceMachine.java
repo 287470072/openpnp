@@ -607,14 +607,6 @@ public class ReferenceMachine extends AbstractMachine {
         return solutions;
     }
 
-    public Solutions getAllSolutions() {
-        List<Solutions.Issue> pendingIssues = new ArrayList<>();
-        Solutions test = new Solutions();
-        Machine machine = Configuration.get().getMachine();
-        machine.findIssues(test);
-        return test;
-    }
-
     //@Element(required = false)
     private KinematicSolutions kinematicSolutions = new KinematicSolutions();
 

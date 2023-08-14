@@ -90,7 +90,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited. 
     @Attribute(required = false)
-    protected Double rotationInFeeder = new Double(0.0);
+    protected Double rotationInFeeder = new Double(90.0);
 
 
     @Attribute(required = false)
@@ -244,7 +244,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected OcrWrongPartAction ocrWrongPartAction = OcrWrongPartAction.SwapOrCreate;
     @Attribute(required = false)
-    protected boolean ocrDiscoverOnJobStart = true;
+    protected boolean ocrDiscoverOnJobStart = false;
     @Attribute(required = false)
     protected boolean ocrStopAfterWrongPart = false;
 
@@ -304,7 +304,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     @Attribute(required = false)
-    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
+    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.None;
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
@@ -536,7 +536,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public Double getRotationInFeeder() {
         if (rotationInFeeder == null) {
-            rotationInFeeder = new Double(0.0);
+            rotationInFeeder = new Double(90.0);
         }
         return rotationInFeeder;
     }

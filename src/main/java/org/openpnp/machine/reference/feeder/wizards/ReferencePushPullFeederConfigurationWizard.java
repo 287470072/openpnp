@@ -90,7 +90,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, "位置", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelLocations);
@@ -124,8 +124,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
-        btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
-        btnShowVisionFeatures.setText("Preview Vision Features");
+        btnShowVisionFeatures.setToolTipText("预览视觉识别特征。");
+        btnShowVisionFeatures.setText("预览视觉功能");
         panelLocations.add(btnShowVisionFeatures, "2, 2, default, fill");
 
         btnAutoSetup = new JButton(autoSetupAction);
@@ -143,7 +143,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         lblZ_1 = new JLabel("Z");
         panelLocations.add(lblZ_1, "8, 4");
 
-        lblPickLocation = new JLabel("Pick Location");
+        lblPickLocation = new JLabel("拾取位置");
         lblPickLocation.setToolTipText("<html>Pick Location of the part. If multiple are produced by a feed operation<br/>\r\nthis must be the last one picked i.e. the one closest to the the tape reel.</html>");
         panelLocations.add(lblPickLocation, "2, 6, right, default");
 
@@ -170,7 +170,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(checkBoxNormalizePickLocation, "4, 8");
         checkBoxNormalizePickLocation.setSelected(true);
 
-        lblHole1Location = new JLabel("Hole 1 Location");
+        lblHole1Location = new JLabel("孔 1 位置");
         lblHole1Location.setToolTipText("<html>Choose Hole 1 closer to the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
         panelLocations.add(lblHole1Location, "2, 10, right, default");
 
@@ -185,7 +185,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         locationButtonsPanelHole1 = new LocationButtonsPanel(textFieldHole1LocationX, textFieldHole1LocationY, (JTextField) null, (JTextField) null);
         panelLocations.add(locationButtonsPanelHole1, "10, 10");
 
-        lblHole2Location = new JLabel("Hole 2 Location");
+        lblHole2Location = new JLabel("孔 2 位置");
         lblHole2Location.setToolTipText("<html>Choose Hole 2 further away from the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
         panelLocations.add(lblHole2Location, "2, 12, right, default");
 
@@ -208,12 +208,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         checkBoxSnapToAxis.setToolTipText("Snap rows of sprocket holes to the Axis parallel.");
         panelLocations.add(checkBoxSnapToAxis, "4, 14");
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, "料带设置", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelTape = new JPanel();
         panelFields.add(panelTape);
-        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelTape.setBorder(new TitledBorder(null, "料带设置", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTape.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -233,7 +233,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch = new JLabel("元件间距");
         panelTape.add(lblPartPitch, "2, 2, right, default");
         lblPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
 
@@ -242,7 +242,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
         textFieldPartPitch.setColumns(5);
 
-        lblRotation = new JLabel("Rotation in Tape");
+        lblRotation = new JLabel("料带旋转");
+
         panelTape.add(lblRotation, "6, 2, right, default");
         lblRotation.setToolTipText("<html>Rotation of the part inside the tape as seen when the sprocket holes <br/>\r\nare on top. Your E-CAD part orientation is the reference.<br/>\r\nSee also: \r\n<ul>\r\n<li>EIA-481</li>\r\n<li>Component Zero Orientations for CAD Libraries</li>\r\n</ul>\r\n</html>");
 
@@ -251,7 +252,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
         textFieldRotationInTape.setColumns(10);
 
-        lblFeedPitch = new JLabel("Feed Pitch");
+        lblFeedPitch = new JLabel("给料间距");
         panelTape.add(lblFeedPitch, "2, 4, right, default");
         lblFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
 
@@ -260,7 +261,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         textFieldFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
         textFieldFeedPitch.setColumns(10);
 
-        lblMultiplier = new JLabel("Multiplier");
+        lblMultiplier = new JLabel("倍数");
         panelTape.add(lblMultiplier, "6, 4, right, default");
         lblMultiplier.setToolTipText("To improve efficiency you can actuate the feeder multiple times to feed more parts per feed cycle.");
 
@@ -273,13 +274,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         btnDiscardParts.setToolTipText("<html>Discard parts left over in the (multi-part) feed cycle.<br/>\r\nStarts with a fresh feed cycle including vision calibration (if enabled). \r\n</html>");
         panelTape.add(btnDiscardParts, "10, 4");
 
-        lblFeedCount = new JLabel("Feed Count");
+        lblFeedCount = new JLabel("供料计数");
         panelTape.add(lblFeedCount, "6, 6, right, default");
         lblFeedCount.setToolTipText("Total feed count of the feeder.");
 
         textFieldFeedCount = new JTextField();
         panelTape.add(textFieldFeedCount, "8, 6");
-        textFieldFeedCount.setToolTipText("Total feed count of the feeder.");
+        textFieldFeedCount.setToolTipText("飞达的总供料数");
         textFieldFeedCount.setColumns(10);
 
         btnReset = new JButton(resetFeedCountAction);
@@ -295,7 +296,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         //
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, "视觉", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelFields.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
@@ -335,13 +336,13 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblCalibrationTrigger = new JLabel("Calibration Trigger");
+        lblCalibrationTrigger = new JLabel("校准触发器");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
 
         comboBoxCalibrationTrigger = new JComboBox(ReferencePushPullFeeder.CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
 
-        lblPrecisionAverage = new JLabel("Precision Average");
+        lblPrecisionAverage = new JLabel("平均精度");
         lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
         panelVisionEnabled.add(lblPrecisionAverage, "8, 2, right, default");
 
@@ -351,7 +352,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(textFieldPrecisionAverage, "10, 2");
         textFieldPrecisionAverage.setColumns(10);
 
-        lblCalibrationCount = new JLabel("Calibration Count");
+        lblCalibrationCount = new JLabel("校准计数");
         panelVisionEnabled.add(lblCalibrationCount, "12, 2, right, default");
 
         textFieldCalibrationCount = new JTextField();
@@ -359,7 +360,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(textFieldCalibrationCount, "14, 2");
         textFieldCalibrationCount.setColumns(10);
 
-        lblPrecisionWanted = new JLabel("Precision wanted");
+        lblPrecisionWanted = new JLabel("需要的精度");
         lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
         panelVisionEnabled.add(lblPrecisionWanted, "2, 4, right, default");
 
@@ -380,7 +381,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         btnResetStatistics = new JButton(resetStatisticsAction);
         panelVisionEnabled.add(btnResetStatistics, "12, 4, 3, 1");
 
-        lblOcrWrongPart = new JLabel("OCR Wrong Part Action");
+        lblOcrWrongPart = new JLabel("OCR识别错误操作");
         lblOcrWrongPart.setToolTipText("<html>Determines what action should be taken when OCR detects the wrong Part ID in the feeder.<br/> \r\n<ul>\r\n<li>\r\n<strong>None</strong>: Use this setting if you don't want to use OCR.</li>\r\n<li>\r\n<strong>SwapFeeders</strong>: If a wrong part is detected but the right part is selected<br/>\r\nin a different ReferencePushPullFeeder, the locations of the two feeders are swapped. The<br/>\r\nswapped-in feeder will be enabled. This will happen, if you unload/reload/rearrange your<br/>\r\nfeeders on the machine.</li>\r\n<li>\r\n<strong>SwapOrCreate</strong>: Works like <strong>SwapFeeders</strong>, but if no<br/>\r\nother feeder with the right part is found, a new one will be created and swapped-in at the<br/>\r\ncurrent feeder's location. The current feeder is then disabled in turn (they are now sitting at<br/>\r\nthe same location and only one must be enabled).</li>\r\n<li>\r\n<strong>ChangePart</strong>: The part in the current feeder is changed. This will only<br/>\r\nwork correctly, if the tape settings etc. remain the same between the parts i.e. if you restrict<br/>\r\nany reloading/rearranging to groups of feeders with the same settings.</li>\r\n<li>\r\n<strong>ChangePartAndClone</strong>: The part in the current feeder is changed but<br/>\r\nsettings are cloned from a template feeder.</li>\r\n</ul>\r\n</html>\r\n");
         panelVisionEnabled.add(lblOcrWrongPart, "2, 8, right, default");
 
@@ -389,7 +390,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         List<String> fontList = OcrUtils.createFontSelectionList(feeder.getOcrFontName(), true);
 
-        lblOcrFontName = new JLabel("OCR Font Name");
+        lblOcrFontName = new JLabel("OCR字体名称");
         lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized or [Barcode].<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
         panelVisionEnabled.add(lblOcrFontName, "8, 8, right, default");
         comboBoxFontName = new JComboBox(fontList.toArray());
@@ -398,13 +399,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         btnSetupocrregion = new JButton(setupOcrRegionAction);
         panelVisionEnabled.add(btnSetupocrregion, "12, 8, 3, 1");
 
-        lblStopAfterWrong = new JLabel("Stop after wrong part?");
+        lblStopAfterWrong = new JLabel("元件识别错误后是否停止");
         panelVisionEnabled.add(lblStopAfterWrong, "2, 10, right, default");
 
         checkBoxStopAfterWrongPart = new JCheckBox("");
         panelVisionEnabled.add(checkBoxStopAfterWrongPart, "4, 10");
 
-        lblFontSizept = new JLabel("OCR Font Size [pt]");
+        lblFontSizept = new JLabel("OCR 字体大小 [pt]");
         lblFontSizept.setToolTipText("The OCR font size in typographic points (1 pt = 1/72 in).");
         panelVisionEnabled.add(lblFontSizept, "8, 10, right, default");
 
@@ -421,7 +422,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         btnSetPartByOcr = new JButton(performOcrAction);
         panelVisionEnabled.add(btnSetPartByOcr, "12, 10, 3, 1");
 
-        lblDiscoverOnJobStart = new JLabel("Check on Job Start?");
+        lblDiscoverOnJobStart = new JLabel("任务开始时是否检查");
         lblDiscoverOnJobStart.setToolTipText("<html>On Job Start, check that the correct parts are selected in OCR-enabled feeders at their locations. <br/>\r\nOtherwise the Job is stopped.<br/>\r\nThis will also vision-calibrate the feeders' locations, if calibration is enabled.</html>");
         panelVisionEnabled.add(lblDiscoverOnJobStart, "2, 12, right, default");
 
@@ -432,7 +433,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(btnOcrAllFeeders, "12, 12, 3, 1");
         panelVisionEnabled.add(btnEditPipeline, "2, 16");
 
-        lblVisionType = new JLabel("Vision Type");
+        lblVisionType = new JLabel("视觉类型");
         lblVisionType.setToolTipText("<html>\r\n<p>Choose the vision type, then press <strong>Reset Pipeline</strong> to assign the<br/>\r\ndefault pipeline of that type. Sprocket holes are detected as follows:</p>\r\n<ul>\r\n<li><strong>ColorKeyed</strong>: the background under the holes must be of a vivid color<br/>\r\n(green by default).</li>\r\n<li><strong>CircularSymmetry</strong>: the shape of the holes must be circular, their<br/>\r\ninside/outside must be plain.</li>\r\n</ul>\r\n<p>Both types of pipeline will further assess detected holes by size, alignment, pitch<br/>\r\nand expected distance.</p>\r\n</html>");
         panelVisionEnabled.add(lblVisionType, "8, 16, right, default");
 
@@ -446,7 +447,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         contentPanel.add(panelFields);
 
         panelCloning = new JPanel();
-        panelCloning.setBorder(new TitledBorder(null, "Clone Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelCloning.setBorder(new TitledBorder(null, "克隆设置", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelFields.add(panelCloning);
         panelCloning.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -620,10 +621,10 @@ extends AbstractReferenceFeederConfigurationWizard {
     }
 
     private Action editPipelineAction =
-            new AbstractAction("Edit Pipeline") {
+            new AbstractAction("编辑视觉管道") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Edit the Pipeline to be used for all vision operations of this feeder.");
+                    "编辑用于该飞达的所有视觉操作的管道。");
         }
 
         @Override
@@ -642,10 +643,10 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetPipelineAction =
-            new AbstractAction("Reset Pipeline") {
+            new AbstractAction("重置视觉管道") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the Pipeline for this feeder to the selected type default.");
+                    "将此飞达的视觉管道重置为选定的默认类型。");
         }
 
         @Override
@@ -664,10 +665,10 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetStatisticsAction =
-            new AbstractAction("Reset Statistics") {
+            new AbstractAction("重置统计数据") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the average obtained precision statistics.");
+                    "重置获得的平均精度统计。");
         }
 
         @Override
@@ -679,7 +680,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetFeedCountAction =
-            new AbstractAction("Reset Feed Count") {
+            new AbstractAction("重置供料计数") {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Reset the feed count e.g. when a tape has been changed.");
@@ -701,7 +702,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action discardPartsAction =
-            new AbstractAction("Discard Parts") {
+            new AbstractAction("丢弃元件") {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Discard parts that have been produced by the last tape transport.");
@@ -719,7 +720,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action showVisionFeaturesAction =
-            new AbstractAction("Preview Vision Features") {
+            new AbstractAction("预览视觉功能") {
         {
             putValue(Action.SHORT_DESCRIPTION,
                     "Preview the features recognized by Computer Vision.");
@@ -733,11 +734,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action autoSetupAction =
-            new AbstractAction("Auto-Setup with Camera at Pick Location", Icons.captureCamera) {
+            new AbstractAction("在拾取位置使用相机自动设置", Icons.captureCamera) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Center the camera on the pick location and press this button to Auto-Setup <br/>"
-                            +"If there are multiple picks per feed cycle, choose the one closest to the tape reel.</html>");
+                    "<html>将摄像机置于拾取位置中心，然后按此按钮进行自动设置 如果每个进给周期有多个拾取，请选择最靠近卷带盘的一个。</html>");
         }
 
         @Override
@@ -768,10 +768,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action allFeederOcrAction =
-            new AbstractAction("All Feeder OCR") {
+            new AbstractAction("所有飞达OCR") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Go to all the feeders with OCR and rediscover the parts loaded in them. </html>");
+                    "<html>通过OCR前往所有飞达并重新发现其中装载的元件。</html>");
         }
 
         @Override
@@ -791,10 +791,10 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action setupOcrRegionAction =
-            new AbstractAction("Setup OCR Region") {
+            new AbstractAction("设置OCR区域") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Moves the camera to the vision location and lets you select the OCR region of interest.</html>");
+                    "<html>将相机移动到视觉位置并让您选择 OCR 区域。</html>");
         }
 
         @Override
@@ -818,10 +818,10 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action performOcrAction =
-            new AbstractAction("Part by OCR") {
+            new AbstractAction("OCR元件识别") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Perform OCR and assign the recognized part.</html>");
+                    "<html>执行 OCR 并分配识别的元件。</html>");
         }
 
         @Override

@@ -293,6 +293,7 @@ public class VisionSolutions implements Solutions.Subject {
             super(subject, issue, solution, severity, uri);
             this.camera = camera;
             featureDiameter = 20;
+
             if (camera.getUnitsPerPixelPrimary().getX() != 0
                     && featureDiameterIfKnown != null
                     && featureDiameterIfKnown.getValue() != 0) {
@@ -301,8 +302,19 @@ public class VisionSolutions implements Solutions.Subject {
             }
         }
 
-        private ReferenceCamera camera; 
+        private ReferenceCamera camera;
+
+
         protected int featureDiameter;
+
+        public int getFeatureDiameter() {
+            return featureDiameter;
+        }
+
+        public void setFeatureDiameter(int featureDiameter) {
+            this.featureDiameter = featureDiameter;
+        }
+
 
         @Override 
         public void activate() throws Exception {

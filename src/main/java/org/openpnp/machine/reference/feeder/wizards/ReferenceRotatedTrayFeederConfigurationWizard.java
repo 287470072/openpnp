@@ -113,7 +113,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		this.includePickLocation = includePickLocation;
 
 		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(null, "General Settings",
+		panelPart.setBorder(new TitledBorder(null, "常规设置",
 				TitledBorder.LEADING, TitledBorder.TOP, null));
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -144,18 +144,18 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		contentPanel.add(warningPanel, 0);
 
 		JLabel lblWarningThisFeeder = new JLabel(
-				"Warning: This feeder is incomplete and experimental. Use at your own risk.");
+				"警告：此飞达功能不完整且处于实验阶段。使用风险自负。");
 		lblWarningThisFeeder.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		lblWarningThisFeeder.setForeground(Color.RED);
 		lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
 		warningPanel.add(lblWarningThisFeeder);
 
-		JLabel lblPart = new JLabel("Part");
+		JLabel lblPart = new JLabel("元件");
 		panelPart.add(lblPart, "2, 2, right, default");
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "4, 2, left, default");
 
-		JLabel lblRetryCount = new JLabel("Feed Retry Count");
+		JLabel lblRetryCount = new JLabel("供料尝试次数");
 		panelPart.add(lblRetryCount, "2, 4, right, default");
 
 		retryCountTf = new JTextField();
@@ -163,7 +163,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
 		
-		lblPickRetryCount = new JLabel("Pick Retry Count");
+		lblPickRetryCount = new JLabel("拾取尝试次数");
 		panelPart.add(lblPickRetryCount, "2, 6, right, default");
 		
 		pickRetryCount = new JTextField();
@@ -174,7 +174,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(null,
-					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"托盘组件位置", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelLocation);
 			panelLocation.setLayout(new FormLayout(
 					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
@@ -188,7 +188,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
 			JLabel firstComponent = new JLabel(
-					"<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>");
+					"<html><b>点 A:</b><br /><span style='font-size:7px'>第一行 - 第一个组件</span></html>");
 			panelLocation.add(firstComponent, "2, 4");
 
 			lblX_1 = new JLabel("X");
@@ -209,7 +209,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelLocation.add(locationButtonsPanel, "8, 4");
 
 			JLabel firstRowLastComponent = new JLabel(
-					"<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>");
+					"<html><b>点 B:</b><br /><span style='font-size:8px'>第一行 - 最后一个组件</span></html>");
 			panelLocation.add(firstRowLastComponent, "2, 6");
 
 			textFieldFirstRowLastLocationX = new JTextField();
@@ -225,7 +225,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelLocation.add(lastLocationButtonsPanel, "8, 6");
 
 			JLabel lastComponent = new JLabel(
-					"<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>");
+					"<html><b>点 C:</b><br /><span style='font-size:8px'>最后一行 - 最后一个组件</span></html>");
 			panelLocation.add(lastComponent, "2, 8");
 
 			textFieldLastLocationX = new JTextField();
@@ -242,7 +242,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelParameters = new JPanel();
 			panelParameters.setBorder(new TitledBorder(null,
-					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"托盘参数", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelParameters);
 
 			panelParameters.setLayout(new FormLayout(
@@ -259,28 +259,28 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 							FormSpecs.DEFAULT_ROWSPEC }));
 
-			JLabel lblTrayRows = new JLabel("Number of Tray Rows");
+			JLabel lblTrayRows = new JLabel("托盘行数");
 			panelParameters.add(lblTrayRows, "2, 2");
 
 			textFieldTrayCountRows = new JTextField();
 			panelParameters.add(textFieldTrayCountRows, "4, 2");
 			textFieldTrayCountRows.setColumns(10);
 
-			JLabel lblTrayCols = new JLabel("Number of Tray Columns");
+			JLabel lblTrayCols = new JLabel("托盘列数");
 			panelParameters.add(lblTrayCols, "6, 2");
 
 			textFieldTrayCountCols = new JTextField();
 			panelParameters.add(textFieldTrayCountCols, "8, 2");
 			textFieldTrayCountCols.setColumns(10);
 
-			JLabel lblFeedCount = new JLabel("Feed Count");
+			JLabel lblFeedCount = new JLabel("供料计数");
 			panelParameters.add(lblFeedCount, "2, 4");
 
 			textFieldFeedCount = new JTextField();
 			panelParameters.add(textFieldFeedCount, "4, 4");
 			textFieldFeedCount.setColumns(10);
 
-			lblComponentCount = new JLabel("Components left:");
+			lblComponentCount = new JLabel("元件剩余：");
 			panelParameters.add(lblComponentCount, "6, 4");
 
 			JButton btnResetFeedCount = new JButton(new AbstractAction("Reset") {
@@ -290,21 +290,21 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 					int componentleft = Integer.parseInt(textFieldTrayCountCols.getText())
 							* Integer.parseInt(textFieldTrayCountRows.getText())
 							- Integer.parseInt(textFieldFeedCount.getText());
-					lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
+					lblComponentCount.setText("元件剩余: " + String.valueOf(componentleft));
 					applyAction.actionPerformed(e);
 				}
 			});
 			btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
 			panelParameters.add(btnResetFeedCount, "8, 4, left, default");
 
-			JLabel lblComponentRotation = new JLabel("Component Rotation [°]");
+			JLabel lblComponentRotation = new JLabel("元件旋转 [°]");
 			panelParameters.add(lblComponentRotation, "2, 6");
 
 			textFieldComponentRotation = new JTextField();
 			panelParameters.add(textFieldComponentRotation, "4, 6");
 			textFieldComponentRotation.setColumns(10);
 
-			JLabel lblComponentZHeight = new JLabel("Z Height");
+			JLabel lblComponentZHeight = new JLabel("Z轴高度");
 			panelParameters.add(lblComponentZHeight, "6, 6");
 
 			textFieldComponentZHeight = new JTextField();
@@ -314,14 +314,14 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			JSeparator separator = new JSeparator();
 			panelParameters.add(separator, "1, 9, 8, 1");
 
-			JButton btnCalcOffsetsRotation = new JButton(new AbstractAction("Calculate Offsets & Tray Rotation") {
+			JButton btnCalcOffsetsRotation = new JButton(new AbstractAction("计算偏移和托盘旋转") {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
 					if ((Integer.parseInt(textFieldTrayCountCols.getText())
 							* Integer.parseInt(textFieldTrayCountRows.getText()) <= 1)) {
-						MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-								"Need at least 2 components in tray to calculate offsets. Please increase Number of Tray Rows or Columns.");
+						MessageBoxes.errorBox(getTopLevelAncestor(), "错误",
+								"托盘中至少需要 2 个组件才能计算偏移。请增加托盘行数或列数。");
 					}
 
 					// Distance Point A -> Point B
@@ -362,21 +362,21 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			btnCalcOffsetsRotation.setHorizontalAlignment(SwingConstants.LEFT);
 			panelParameters.add(btnCalcOffsetsRotation, "2, 12");
 
-			JLabel lblRowOffset = new JLabel("Row Offset");
+			JLabel lblRowOffset = new JLabel("行偏移");
 			panelParameters.add(lblRowOffset, "2, 14");
 
 			textFieldOffsetsX = new JTextField();
 			panelParameters.add(textFieldOffsetsX, "4, 14");
 			textFieldOffsetsX.setColumns(10);
 
-			JLabel lblColOffset = new JLabel("Column Offset");
+			JLabel lblColOffset = new JLabel("列偏移");
 			panelParameters.add(lblColOffset, "6, 14");
 
 			textFieldOffsetsY = new JTextField();
 			panelParameters.add(textFieldOffsetsY, "8, 14, ");
 			textFieldOffsetsY.setColumns(10);
 
-			JLabel lblTrayRotation = new JLabel("Tray Rotation [°]");
+			JLabel lblTrayRotation = new JLabel("托盘旋转 [°]");
 			panelParameters.add(lblTrayRotation, "2, 16");
 
 			textFieldTrayRotation = new JTextField();
@@ -385,7 +385,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelIllustration = new JPanel();
 			panelIllustration.setBorder(new TitledBorder(null,
-					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null));
+					"托盘插图", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelIllustration);
 
 			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");

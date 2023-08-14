@@ -42,6 +42,7 @@ import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
@@ -876,19 +877,28 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {
-
+                Camera topCamera = VisionUtils.getTopVisionCamera();
+                //移动相机到校准点上方
+                Location offsetLocation = new Location();
+                offsetLocation = topCamera.getLocation();
+                offsetLocation.setX(-44.3);
+                offsetLocation.setY(27);
+                MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
+                MovableUtils.fireTargetedUserAction(topCamera);
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-
                 Solutions solutions = machine.getSolutions();
                 List<Solutions.Issue> pendingIssues = new ArrayList<>();
                 solutions.setPendingIssues(pendingIssues);
-
                 machine.findIssues(solutions);
-
                 for (Solutions.Issue issue : pendingIssues) {
-                    if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
-                        issue.setStateCall(Solutions.State.Solved);
+                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
+                        if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
+                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
+                            visionIssue.setFeatureDiameter(18);
+                            visionIssue.setStateCall(Solutions.State.Solved);
+                        }
                     }
+
                 }
             });
         }
@@ -948,9 +958,12 @@ public class JogControlsPanel extends JPanel {
                 machine.findIssues(solutions);
 
                 for (Solutions.Issue issue : pendingIssues) {
-                    if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
-                        issue.setStateCall(Solutions.State.Solved);
-                    }
+                        if (issue.getIssue().equals("Calibrate precise camera ↔ nozzle N1 offsets.")) {
+                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
+                            visionIssue.setFeatureDiameter(67);
+                            visionIssue.setStateCall(Solutions.State.Solved);
+                        }
+
                 }
             });
         }
@@ -970,8 +983,12 @@ public class JogControlsPanel extends JPanel {
                 machine.findIssues(solutions);
 
                 for (Solutions.Issue issue : pendingIssues) {
-                    if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
-                        issue.setStateCall(Solutions.State.Solved);
+                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
+                        if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
+                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
+                            visionIssue.setFeatureDiameter(67);
+                            issue.setStateCall(Solutions.State.Solved);
+                        }
                     }
                 }
             });
@@ -992,8 +1009,12 @@ public class JogControlsPanel extends JPanel {
                 machine.findIssues(solutions);
 
                 for (Solutions.Issue issue : pendingIssues) {
-                    if (issue.getIssue().equals("Determine the up-looking camera Bottom Vision position and initial calibration.")) {
-                        issue.setStateCall(Solutions.State.Solved);
+                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
+                        if (issue.getIssue().equals("Determine the up-looking camera Bottom Vision position and initial calibration.")) {
+                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
+                            visionIssue.setFeatureDiameter(43);
+                            issue.setStateCall(Solutions.State.Solved);
+                        }
                     }
                 }
             });
