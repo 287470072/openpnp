@@ -97,8 +97,10 @@ public class ImageCapture extends CvStage {
         }
         try {
             // Light, settle and capture the image. Keep the lights on for possible averaging.
+            // 打开灯光
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
+                //相机获取图像
                 BufferedImage bufferedImage = camera.settleAndCapture(settleOption); 
                 // Remember the last captured image. This specifically records the native camera image, 
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).

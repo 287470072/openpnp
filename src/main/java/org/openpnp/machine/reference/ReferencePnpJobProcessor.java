@@ -1164,40 +1164,34 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to the caller.
          */
         public Step step() throws JobProcessorException {
-            /**
-             * Get the first planned placement from the list that is still in processing status
-             * and that is not marked completed.
-             */
-            PlannedPlacement plannedPlacement = plannedPlacements
-                    .stream()
-                    .filter(p -> {
-                        return p.jobPlacement.getStatus() == Status.Processing;
-                    })
-                    .filter(p -> {
-                        return !completed.contains(p);
-                    })
-                    .findFirst()
-                    .orElse(null);
-            try {
-                Step result = stepImpl(plannedPlacement);
-                completed.add(plannedPlacement);
-                return result;
-            } catch (JobProcessorException e) {
-                switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
-                    case Alert:
-                        throw e;
-                    case Defer:
-                        if (e.isInterrupting()) {
+            Step result = null;
+            for (int i = 0; i < plannedPlacements.size(); i++) {
+                PlannedPlacement plannedPlacement = plannedPlacements
+                        .stream()
+                        .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
+                        .filter(p -> !completed.contains(p))
+                        .findFirst()
+                        .orElse(null);
+                try {
+                    result = stepImpl(plannedPlacement);
+                    completed.add(plannedPlacement);
+                } catch (JobProcessorException e) {
+                    switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
+                        case Alert:
                             throw e;
-                        }
-                        plannedPlacement.jobPlacement.setError(e);
-                        return this;
-                    default:
-                        throw new Error("Unhandled Error Handling case " + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());
+                        case Defer:
+                            if (e.isInterrupting()) {
+                                throw e;
+                            }
+                            plannedPlacement.jobPlacement.setError(e);
+                            return this;
+                        default:
+                            throw new Error("Unhandled Error Handling case " + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());
+                    }
+
                 }
-
             }
-
+            return result;
         }
     }
 
