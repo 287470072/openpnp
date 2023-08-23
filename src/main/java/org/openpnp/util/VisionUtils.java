@@ -63,8 +63,16 @@ public class VisionUtils {
      * @return
      */
     public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
-        double imageWidth = camera.getWidth();
-        double imageHeight = camera.getHeight();
+        double imageWidth;
+        double imageHeight;
+        if (camera.getLooking() == Camera.Looking.Up) {
+            imageWidth = (double) camera.getWidth() / 2;
+            imageHeight = camera.getHeight();
+        } else {
+            imageWidth = camera.getWidth();
+            imageHeight = camera.getHeight();
+        }
+
 
         // Calculate the difference between the center of the image to the
         // center of the match.
@@ -161,9 +169,9 @@ public class VisionUtils {
     public static Camera getTopVisionCamera() throws Exception {
         List<Camera> camers = Configuration.get().getMachine().getHeads().get(0).getCameras();
         for (Camera camera : camers) {
-                if (camera.getLooking() == Camera.Looking.Down) {
-                    return camera;
-                }
+            if (camera.getLooking() == Camera.Looking.Down) {
+                return camera;
+            }
 
         }
         throw new Exception("No up-looking camera found on the machine to use for top vision.");

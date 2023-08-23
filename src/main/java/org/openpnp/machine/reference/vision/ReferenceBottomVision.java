@@ -3,8 +3,10 @@ package org.openpnp.machine.reference.vision;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -48,6 +50,8 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.stages.AffineUnwarp;
 import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -524,13 +528,36 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
-                        if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                .compareTo(camera.getRoamingRadius()) > 0) {
-                            // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                            MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                        //判断是N1嘴还是N2嘴
+                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+                        Nozzle n1 = nozzles
+                                .stream()
+                                .findFirst()
+                                .orElse(null);
+                        if (nozzle == n1) {
+                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                    .compareTo(camera.getRoamingRadius()) > 0) {
+                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                            } else {
+                                nozzle.moveTo(shotLocation);
+                            }
                         } else {
-                            nozzle.moveTo(shotLocation);
+/*                            Location n2Location = nozzles.get(1).getLocation();
+                            double xOffset = n2Location.getX() - n1.getHeadOffsets().getX();
+                            Location n2ShotLocation = n2Location;
+                            double shotOffset = shotLocation.getX() + 29;
+                            n2ShotLocation.setX(shotOffset);
+                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                    .compareTo(camera.getRoamingRadius()) > 0) {
+                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, n2ShotLocation);
+                            } else {
+                                nozzle.moveTo(n2ShotLocation);
+                            }*/
                         }
+
+
                         super.apply();
                     });
                 }
@@ -557,15 +584,41 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             //移动吸嘴到摄像头上方
             pipelineShot.apply();
-            AffineWarp affineWarp=new AffineWarp();
-            //左半边
-            affineWarp.setX0(-20.250438);
-            affineWarp.setY0(5.852280);
-            affineWarp.setX1(0);
-            affineWarp.setY1(5.852280);
-            affineWarp.setX2(-20.250438);
-            affineWarp.setY2(-5.852280);
-            pipeline.add(affineWarp);
+            AffineWarp affineWarp = new AffineWarp();
+            //判断是N1嘴还是N2嘴
+            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+            Nozzle n1 = nozzles
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            List<CvStage> stages = pipeline.getStages();
+            for (int i = 0; i < stages.size(); i++) {
+                if (stages.get(i) instanceof AffineWarp) {
+                    pipeline.remove(stages.get(i));
+                }
+            }
+
+            if (nozzle == n1) {
+                //左半边
+                affineWarp.setX0(-20.250438);
+                affineWarp.setY0(5.852280);
+                affineWarp.setX1(0);
+                affineWarp.setY1(5.852280);
+                affineWarp.setX2(-20.250438);
+                affineWarp.setY2(-5.852280);
+            } else {
+                //左半边
+                affineWarp.setX0(0.00);
+                affineWarp.setY0(5.852280);
+                affineWarp.setX1(20.250438);
+                affineWarp.setY1(5.852280);
+                affineWarp.setX2(0.00);
+                affineWarp.setY2(-5.852280);
+            }
+            pipeline.insert(affineWarp, 3);
+            pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+            //firePropertyChange("pipeline", oldValue, pipeline);
+
             //识别
             pipeline.process();
             //取结果
