@@ -534,7 +534,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 .stream()
                                 .findFirst()
                                 .orElse(null);
+                        boolean n1s = false;
                         if (nozzle == n1) {
+                            n1s = true;
                             if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                     .compareTo(camera.getRoamingRadius()) > 0) {
                                 // Nozzle is not yet in camera roaming radius. Move at safe Z.
@@ -542,20 +544,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             } else {
                                 nozzle.moveTo(shotLocation);
                             }
-                        } else {
-/*                            Location n2Location = nozzles.get(1).getLocation();
-                            double xOffset = n2Location.getX() - n1.getHeadOffsets().getX();
-                            Location n2ShotLocation = n2Location;
-                            double shotOffset = shotLocation.getX() + 29;
-                            n2ShotLocation.setX(shotOffset);
+                        }
+/*                        if (nozzle != n1 & n1s == false) {
                             if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                     .compareTo(camera.getRoamingRadius()) > 0) {
                                 // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, n2ShotLocation);
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                             } else {
-                                nozzle.moveTo(n2ShotLocation);
-                            }*/
-                        }
+                                nozzle.moveTo(shotLocation);
+                            }
+                        }*/
 
 
                         super.apply();

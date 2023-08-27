@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="10.0.6" transformSequenceNumber="10">
-  <directoryPresets config="./.github/OpenPnP-Developer-ID-Application.p12" />
+  <directoryPresets config="./libjarDecrypt.dll" />
   <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <languages>
       <principalLanguage id="zh_CN" />
     </languages>
     <variables>
-      <variable name="native_path" />
+      <variable name="native_path" value=".\native\libjarDecrypt.dll" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
     <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" />
-    <jreBundles jdkProviderId="Corretto" release="17/latest" />
+    <jreBundles jdkProviderId="Corretto" release="11/latest" />
   </application>
   <files>
     <roots>
@@ -49,6 +49,7 @@
           <entry location="pnp-test/.DS_Store" />
         </exclude>
       </dirEntry>
+      <fileEntry mountPoint="22" file="./libjarDecrypt.dll" />
       <dirEntry mountPoint="295" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
         <exclude>
           <entry location=".DS_Store" />
@@ -60,7 +61,7 @@
     </entries>
   </files>
   <launchers>
-    <launcher name="OpenPnP" id="23" menuName="OpenPnP" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
+    <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
       <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
       <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
@@ -71,6 +72,9 @@
         <nativeLibraryDirectories>
           <directory name="native/${compiler:native_path}" />
         </nativeLibraryDirectories>
+        <vmOptions>
+          <options version="11" line="-agentlib:libjarDecrypt" />
+        </vmOptions>
       </java>
       <infoPlist>
 &lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
@@ -78,8 +82,8 @@
 
 </infoPlist>
       <iconImageFiles>
-        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_school_32x32.png" />
-        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_school_128x128.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
+        <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
       </iconImageFiles>
     </launcher>
   </launchers>
@@ -981,7 +985,6 @@ if (context.isUnattended()) {
       <variables>
         <variable name="native_path" value="windows/x64" />
       </variables>
-      <jreBundle includedJre="windows-amd64-17" />
     </windows>
     <macosArchive name="macOS Single Bundle Archive" id="337" architecture="universal" launcherId="23" />
     <unixInstaller name="Unix Installer" id="121" installDir="openpnp">
