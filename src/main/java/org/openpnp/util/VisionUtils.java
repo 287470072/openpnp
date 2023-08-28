@@ -65,13 +65,30 @@ public class VisionUtils {
     public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
         double imageWidth;
         double imageHeight;
-        if (camera.getLooking() == Camera.Looking.Up) {
+        //判断相机分辨率宽度是否大于2000，用于识别是否是双目
+        if (camera.getLooking() == Camera.Looking.Up & camera.getWidth() > 2000) {
             imageWidth = (double) camera.getWidth() / 2;
             imageHeight = camera.getHeight();
         } else {
             imageWidth = camera.getWidth();
             imageHeight = camera.getHeight();
         }
+
+
+        // Calculate the difference between the center of the image to the
+        // center of the match.
+        double offsetX = x - (imageWidth / 2);
+        double offsetY = y - (imageHeight / 2);
+
+        return getPixelOffsets(camera, offsetX, offsetY);
+    }
+
+    public static Location getPixelCenterOffsets2(Camera camera, double x, double y) {
+        double imageWidth;
+        double imageHeight;
+
+        imageWidth = camera.getWidth();
+        imageHeight = camera.getHeight();
 
 
         // Calculate the difference between the center of the image to the

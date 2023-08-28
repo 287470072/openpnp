@@ -53,6 +53,7 @@ import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.Stage;
 import org.openpnp.vision.pipeline.stages.AffineUnwarp;
 import org.openpnp.vision.pipeline.stages.AffineWarp;
+import org.openpnp.vision.pipeline.stages.MaskRectangle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -596,27 +597,54 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
             }
 
-            if (nozzle == n1) {
-                //左半边
-                affineWarp.setX0(-20.250438);
-                affineWarp.setY0(5.852280);
-                affineWarp.setX1(0);
-                affineWarp.setY1(5.852280);
-                affineWarp.setX2(-20.250438);
-                affineWarp.setY2(-5.852280);
-            } else {
-                //左半边
-                affineWarp.setX0(0.00);
-                affineWarp.setY0(5.852280);
-                affineWarp.setX1(20.250438);
-                affineWarp.setY1(5.852280);
-                affineWarp.setX2(0.00);
-                affineWarp.setY2(-5.852280);
-            }
-            pipeline.insert(affineWarp, 3);
-            pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
-            //firePropertyChange("pipeline", oldValue, pipeline);
+/*
+            org.openpnp.model.Point cameraPoint = VisionUtils.getLocationPixels(camera, camera.getLocation());
+            */
+            /*         VisionUtils.getPixelLocation(camera, n1.getHeadOffsets().getX(), )*//*
 
+            double cameraCenterX = cameraPoint.getX();
+            double cameraCenterY = cameraPoint.getY();
+            cameraCenterX = cameraCenterX / 2;
+*/
+
+            if (camera.getWidth() > 2000) {
+                if (nozzle == n1) {
+
+
+                    //左半边
+                    //左上角
+                    Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, 0);
+                    Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, camera.getHeight());
+                    Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
+                    affineWarp.setX0(cameraLeftUpperLocation.getX());
+                    affineWarp.setY0(cameraLeftUpperLocation.getY());
+                    //右上角
+                    affineWarp.setX1(cameraRightUpperLocation.getX());
+                    affineWarp.setY1(cameraRightUpperLocation.getY());
+                    //左下角
+                    affineWarp.setX2(cameraLeftLowerLocation.getX());
+                    affineWarp.setY2(cameraLeftLowerLocation.getY());
+                } else {
+
+                    Location n2LocationOffset = nozzle.getHeadOffsets();
+                    Location n1locationOffset = n1.getHeadOffsets();
+                    Location offset = VisionUtils.getPixelOffsets(camera, n2LocationOffset.getX() - n1locationOffset.getX(), n2LocationOffset.getY() - n1locationOffset.getY());
+
+                    //右半边
+                    Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
+                    Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, camera.getHeight());
+                    Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, camera.getWidth(), 0);
+
+                    affineWarp.setX0(cameraLeftUpperLocation.getX() + offset.getX());
+                    affineWarp.setY0(cameraLeftUpperLocation.getY());
+                    affineWarp.setX1(cameraRightUpperLocation.getX() + offset.getX());
+                    affineWarp.setY1(cameraRightUpperLocation.getY());
+                    affineWarp.setX2(cameraLeftLowerLocation.getX() + offset.getX());
+                    affineWarp.setY2(cameraLeftLowerLocation.getY());
+                }
+                pipeline.insert(affineWarp, 3);
+                pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+            }
             //识别
             pipeline.process();
             //取结果
