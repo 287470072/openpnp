@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -62,6 +63,8 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+
+import javax.imageio.ImageIO;
 
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
@@ -550,6 +553,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return new Align(plannedPlacements);
             }
 
+            //在底部识别后面一个步骤，对文件夹内的文件进行删除
+            String filePath = System.getProperty("java.class.path");
+            String pathSplit = System.getProperty("path.separator");
+            if (filePath.contains(pathSplit)) {
+                filePath = filePath.substring(0, filePath.indexOf(pathSplit));
+            } else if (filePath.endsWith(".jar")) {
+                //截取路径中的jar包名,可执行jar包运行的结果里包含".jar"
+                filePath = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1);
+            }
+            String bufferedImagePath = filePath + "temp\\";
+            File outputfile = new File(bufferedImagePath + "saved.png");
+            if (outputfile.exists()) {
+                outputfile.delete();
+            }
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -811,6 +829,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (plannedPlacement == null) {
                 return new FinishCycle();
             }
+
 
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;

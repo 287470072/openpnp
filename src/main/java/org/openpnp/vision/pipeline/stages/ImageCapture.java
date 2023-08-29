@@ -1,6 +1,8 @@
 package org.openpnp.vision.pipeline.stages;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -20,30 +22,32 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
+import javax.imageio.ImageIO;
+
 
 @Stage(
-        category   ="Image Processing", 
-        description="Capture an image from the pipeline camera.")
+        category = "Image Processing",
+        description = "Capture an image from the pipeline camera.")
 
 public class ImageCapture extends CvStage {
-    @Attribute(required=false)
-    @Property(description="Use the default camera lighting.")
+    @Attribute(required = false)
+    @Property(description = "Use the default camera lighting.")
     private boolean defaultLight = true;
 
-    @Element(required=false)
-    @Property(description="Light actuator value or profile, if default camera lighting is disabled.")
+    @Element(required = false)
+    @Property(description = "Light actuator value or profile, if default camera lighting is disabled.")
     private Object light = null;
 
     @Deprecated
-    @Attribute(required=false)
+    @Attribute(required = false)
     private Boolean settleFirst;
 
-    @Attribute(required=false)
-    @Property(description="Wait for the camera to settle before capturing an image.")
+    @Attribute(required = false)
+    @Property(description = "Wait for the camera to settle before capturing an image.")
     private SettleOption settleOption;
 
-    @Attribute(required=false)
-    @Property(description="Number of camera images to average.")
+    @Attribute(required = false)
+    @Property(description = "Number of camera images to average.")
     private int count = 1;
 
     @Commit
@@ -53,7 +57,7 @@ public class ImageCapture extends CvStage {
             settleFirst = null;
         }
     }
-    
+
     public boolean isDefaultLight() {
         return defaultLight;
     }
@@ -89,6 +93,7 @@ public class ImageCapture extends CvStage {
             this.count = 1;
         }
     }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
@@ -96,20 +101,48 @@ public class ImageCapture extends CvStage {
             throw new Exception("No Camera set on pipeline.");
         }
         try {
-            // Light, settle and capture the image. Keep the lights on for possible averaging.
-            // 打开灯光
-            camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
+            BufferedImage bufferedImage = new BufferedImage(camera.getWidth(), camera.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+            //判断指定目录下的图片文件是否存在
             try {
-                //相机获取图像
-                BufferedImage bufferedImage = camera.settleAndCapture(settleOption); 
-                // Remember the last captured image. This specifically records the native camera image, 
+                if (camera.getLooking() == Camera.Looking.Up) {
+                    String filePath = System.getProperty("java.class.path");
+                    String pathSplit = System.getProperty("path.separator");
+                    if (filePath.contains(pathSplit)) {
+                        filePath = filePath.substring(0, filePath.indexOf(pathSplit));
+                    } else if (filePath.endsWith(".jar")) {
+                        //截取路径中的jar包名,可执行jar包运行的结果里包含".jar"
+                        filePath = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1);
+                    }
+                    String bufferedImagePath = filePath + "temp\\";
+                    File outputfile = new File(bufferedImagePath + "saved.png");
+                    if (!outputfile.exists()) {
+                        File outputfiledir = new File(bufferedImagePath);
+                        if (!outputfiledir.exists()) {
+                            outputfiledir.mkdirs();
+                        }
+                        outputfile.createNewFile();
+                        // 打开灯光
+                        camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
+                        //获取图像
+                        bufferedImage = camera.settleAndCapture(settleOption);
+                        //写入文件
+                        ImageIO.write(bufferedImage, "png", outputfile);
+                    } else {
+                        bufferedImage = ImageIO.read(new FileInputStream(outputfile));
+                    }
+
+                } else {
+                    camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
+                    bufferedImage = camera.settleAndCapture(settleOption);
+                }
+
+                // Remember the last captured image. This specifically records the native camera image,
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).
                 pipeline.setLastCapturedImage(bufferedImage);
                 Mat image = OpenCvUtils.toMat(bufferedImage);
-                if (count <= 1) { 
+                if (count <= 1) {
                     return new Result(image, ColorSpace.Bgr);
-                }
-                else {
+                } else {
                     // Perform averaging in channel type double.
                     image.convertTo(image, CvType.CV_64F);
                     Mat avgImage = image;
@@ -125,16 +158,16 @@ public class ImageCapture extends CvStage {
                     avgImage.convertTo(avgImage, CvType.CV_8U);
                     return new Result(avgImage, ColorSpace.Bgr);
                 }
-            }
-            finally {
-                // Always switch off the light. 
+            } finally {
+                // Always switch off the light.
                 camera.actuateLightAfterCapture();
             }
-        }
-        catch (Exception e) {
+        } catch (
+                Exception e) {
             // These machine exceptions are terminal to the pipeline.
             throw new TerminalException(e);
         }
+
     }
 
     @Override

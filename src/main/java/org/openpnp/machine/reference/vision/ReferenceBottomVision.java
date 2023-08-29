@@ -536,6 +536,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 .findFirst()
                                 .orElse(null);
                         boolean n1s = false;
+                        //如果是N1吸嘴的，将N1移动到相机上方
                         if (nozzle == n1) {
                             n1s = true;
                             if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
@@ -546,15 +547,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 nozzle.moveTo(shotLocation);
                             }
                         }
-/*                        if (nozzle != n1 & n1s == false) {
-                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                        //判断是否是单独N2运行，如果是，将N1移动到shotlocation
+                        if (nozzle != n1 & !n1s) {
+                            if (n1.getLocation().getLinearLengthTo(camera.getLocation())
                                     .compareTo(camera.getRoamingRadius()) > 0) {
                                 // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                MovableUtils.moveToLocationAtSafeZ(n1, shotLocation);
                             } else {
-                                nozzle.moveTo(shotLocation);
+                                n1.moveTo(shotLocation);
                             }
-                        }*/
+                        }
 
 
                         super.apply();
@@ -583,6 +585,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             //移动吸嘴到摄像头上方
             pipelineShot.apply();
+
+
             AffineWarp affineWarp = new AffineWarp();
             //判断是N1嘴还是N2嘴
             List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
@@ -591,26 +595,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     .findFirst()
                     .orElse(null);
             List<CvStage> stages = pipeline.getStages();
+            //清空所有AffineWarp，为下面添加stage做准备
             for (int i = 0; i < stages.size(); i++) {
                 if (stages.get(i) instanceof AffineWarp) {
                     pipeline.remove(stages.get(i));
                 }
             }
 
-/*
-            org.openpnp.model.Point cameraPoint = VisionUtils.getLocationPixels(camera, camera.getLocation());
-            */
-            /*         VisionUtils.getPixelLocation(camera, n1.getHeadOffsets().getX(), )*//*
-
-            double cameraCenterX = cameraPoint.getX();
-            double cameraCenterY = cameraPoint.getY();
-            cameraCenterX = cameraCenterX / 2;
-*/
 
             if (camera.getWidth() > 2000) {
                 if (nozzle == n1) {
-
-
                     //左半边
                     //左上角
                     Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, 0);
@@ -636,11 +630,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, camera.getWidth(), 0);
 
                     affineWarp.setX0(cameraLeftUpperLocation.getX() + offset.getX());
-                    affineWarp.setY0(cameraLeftUpperLocation.getY());
+                    affineWarp.setY0(cameraLeftUpperLocation.getY() + offset.getY());
                     affineWarp.setX1(cameraRightUpperLocation.getX() + offset.getX());
-                    affineWarp.setY1(cameraRightUpperLocation.getY());
+                    affineWarp.setY1(cameraRightUpperLocation.getY() + offset.getY());
                     affineWarp.setX2(cameraLeftLowerLocation.getX() + offset.getX());
-                    affineWarp.setY2(cameraLeftLowerLocation.getY());
+                    affineWarp.setY2(cameraLeftLowerLocation.getY() + offset.getY());
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);

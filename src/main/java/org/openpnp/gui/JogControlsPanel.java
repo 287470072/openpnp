@@ -722,7 +722,7 @@ public class JogControlsPanel extends JPanel {
 
         panelCalibrate.add(panelAction);
 
-        tabbedPane_1.addTab("一键校准设置", //$NON-NLS-1$
+        tabbedPane_1.addTab("校准设置", //$NON-NLS-1$
                 null, panelCalibrate, null);
 
 
@@ -883,8 +883,8 @@ public class JogControlsPanel extends JPanel {
                 offsetLocation = topCamera.getLocation();
                 offsetLocation.setX(-44.3);
                 offsetLocation.setY(27);
-                MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
-                MovableUtils.fireTargetedUserAction(topCamera);
+                //MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
+                //MovableUtils.fireTargetedUserAction(topCamera);
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
                 Solutions solutions = machine.getSolutions();
                 List<Solutions.Issue> pendingIssues = new ArrayList<>();
