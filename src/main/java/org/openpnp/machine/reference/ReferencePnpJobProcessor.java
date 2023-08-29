@@ -554,15 +554,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             //在底部识别后面一个步骤，对文件夹内的文件进行删除
-            String filePath = System.getProperty("java.class.path");
-            String pathSplit = System.getProperty("path.separator");
-            if (filePath.contains(pathSplit)) {
-                filePath = filePath.substring(0, filePath.indexOf(pathSplit));
-            } else if (filePath.endsWith(".jar")) {
-                //截取路径中的jar包名,可执行jar包运行的结果里包含".jar"
-                filePath = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1);
-            }
-            String bufferedImagePath = filePath + "temp\\";
+            String filePath = System.getProperty("user.dir");
+            String bufferedImagePath = filePath + "\\temp\\";
             File outputfile = new File(bufferedImagePath + "saved.png");
             if (outputfile.exists()) {
                 outputfile.delete();

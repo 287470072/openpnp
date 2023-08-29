@@ -3,6 +3,7 @@ package org.openpnp.vision.pipeline.stages;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -23,6 +24,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 
 
 @Stage(
@@ -101,19 +103,12 @@ public class ImageCapture extends CvStage {
             throw new Exception("No Camera set on pipeline.");
         }
         try {
-            BufferedImage bufferedImage = new BufferedImage(camera.getWidth(), camera.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+            BufferedImage bufferedImage;
             //判断指定目录下的图片文件是否存在
             try {
                 if (camera.getLooking() == Camera.Looking.Up) {
-                    String filePath = System.getProperty("java.class.path");
-                    String pathSplit = System.getProperty("path.separator");
-                    if (filePath.contains(pathSplit)) {
-                        filePath = filePath.substring(0, filePath.indexOf(pathSplit));
-                    } else if (filePath.endsWith(".jar")) {
-                        //截取路径中的jar包名,可执行jar包运行的结果里包含".jar"
-                        filePath = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1);
-                    }
-                    String bufferedImagePath = filePath + "temp\\";
+                    String filePath = System.getProperty("user.dir");
+                    String bufferedImagePath = filePath + "\\temp\\";
                     File outputfile = new File(bufferedImagePath + "saved.png");
                     if (!outputfile.exists()) {
                         File outputfiledir = new File(bufferedImagePath);
@@ -126,10 +121,18 @@ public class ImageCapture extends CvStage {
                         //获取图像
                         bufferedImage = camera.settleAndCapture(settleOption);
                         //写入文件
-                        ImageIO.write(bufferedImage, "png", outputfile);
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                ImageIO.write(bufferedImage, "png", outputfile);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+
                     } else {
                         bufferedImage = ImageIO.read(new FileInputStream(outputfile));
                     }
+
 
                 } else {
                     camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
