@@ -1,10 +1,5 @@
 package org.openpnp.vision.pipeline.stages;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -13,18 +8,14 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv.ColorSpace;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.Property;
-import org.openpnp.vision.pipeline.Stage;
-import org.openpnp.vision.pipeline.TerminalException;
+import org.openpnp.vision.pipeline.*;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.util.List;
 
 
 @Stage(
@@ -42,7 +33,7 @@ public class ImageCapture extends CvStage {
 
     @Deprecated
     @Attribute(required = false)
-    private Boolean settleFirst;
+    private Boolean settleFirst = false;
 
     @Attribute(required = false)
     @Property(description = "Wait for the camera to settle before capturing an image.")
@@ -103,41 +94,9 @@ public class ImageCapture extends CvStage {
             throw new Exception("No Camera set on pipeline.");
         }
         try {
-            BufferedImage bufferedImage;
-            //判断指定目录下的图片文件是否存在
+            camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
-                if (camera.getLooking() == Camera.Looking.Up) {
-                    String filePath = System.getProperty("user.dir");
-                    String bufferedImagePath = filePath + "\\temp\\";
-                    File outputfile = new File(bufferedImagePath + "saved.png");
-                    if (!outputfile.exists()) {
-                        File outputfiledir = new File(bufferedImagePath);
-                        if (!outputfiledir.exists()) {
-                            outputfiledir.mkdirs();
-                        }
-                        outputfile.createNewFile();
-                        // 打开灯光
-                        camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
-                        //获取图像
-                        bufferedImage = camera.settleAndCapture(settleOption);
-                        //写入文件
-                        SwingUtilities.invokeLater(() -> {
-                            try {
-                                ImageIO.write(bufferedImage, "png", outputfile);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-
-                    } else {
-                        bufferedImage = ImageIO.read(new FileInputStream(outputfile));
-                    }
-
-
-                } else {
-                    camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
-                    bufferedImage = camera.settleAndCapture(settleOption);
-                }
+                BufferedImage  bufferedImage = camera.settleAndCapture(settleOption);
 
                 // Remember the last captured image. This specifically records the native camera image,
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).

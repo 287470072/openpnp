@@ -58,7 +58,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     @ElementList(required = false)
     protected List<String> compatibleNozzleTipIds = new ArrayList<>();
 
-    protected Set<NozzleTip> compatibleNozzleTips; 
+    protected Set<NozzleTip> compatibleNozzleTips;
 
     protected Head head;
 
@@ -71,7 +71,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         this.id = Configuration.createId("NOZ");
         this.name = getClass().getSimpleName();
     }
-    
+
     @Override
     public String getId() {
         return id;
@@ -150,18 +150,18 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
             if (refAxis.isLimitRotation()) {
                 // Lower limit.
                 AxesLocation axesLimitLow = getMappedAxes(getMachine())
-                        .put(new AxesLocation(refAxis, 
-                                (refAxis.isSoftLimitLowEnabled() 
-                                        ? refAxis.getSoftLimitLow() 
+                        .put(new AxesLocation(refAxis,
+                                (refAxis.isSoftLimitLowEnabled()
+                                        ? refAxis.getSoftLimitLow()
                                         : new Length(-180, AxesLocation.getUnits()))));
                 Location limitLow = toTransformed(axesLimitLow, LocationOption.Quiet);
                 limitLow = toHeadMountableLocation(limitLow, LocationOption.Quiet);
                 limit0 = limitLow.getRotation();
                 // Higher limit.
                 AxesLocation axesLimitHigh = getMappedAxes(getMachine())
-                        .put(new AxesLocation(refAxis, 
-                                (refAxis.isSoftLimitHighEnabled() 
-                                        ? refAxis.getSoftLimitHigh() 
+                        .put(new AxesLocation(refAxis,
+                                (refAxis.isSoftLimitHighEnabled()
+                                        ? refAxis.getSoftLimitHigh()
                                         : new Length(180, AxesLocation.getUnits()))));
                 Location limitHigh = toTransformed(axesLimitHigh, LocationOption.Quiet);
                 limitHigh = toHeadMountableLocation(limitHigh, LocationOption.Quiet);
@@ -169,10 +169,9 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
             }
         }
         if (limit0 <= limit1) {
-            return new double [] {limit0, limit1};
-        }
-        else {
-            return new double [] {limit1, limit0};
+            return new double[]{limit0, limit1};
+        } else {
+            return new double[]{limit1, limit0};
         }
     }
 
@@ -193,30 +192,28 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                 newRotationModeOffset = Utils2D.angleNorm(getLocation().getRotation() - pickLocation.getRotation(), 180);
                 break;
             case LimitedArticulation:
-                double [] rotationLimits = getRotationModeLimits();
+                double[] rotationLimits = getRotationModeLimits();
                 double articulation = rotationLimits[1] - rotationLimits[0];
                 // Axis has limited articulation, rotation is centered around the mid-range. 
                 double pickToPlaceRotation = Utils2D.angleNorm(placementLocation.getRotation() - pickLocation.getRotation(), 180.0);
                 double maxTolerance = maxPickArticulationAngle + maxAlignmentArticulationAngle;
-                double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation)*maxTolerance;
+                double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation) * maxTolerance;
                 double angleStart;
                 if (Math.abs(maximumRotation) < articulation) {
                     // The needed rotation is lower than the available articulation, therefore limit it 
                     // around the mid-point. 
-                    double midPoint = (rotationLimits[0] + rotationLimits[1])*0.5;
-                    angleStart = midPoint - maximumRotation*0.5;
-                }
-                else if (pickToPlaceRotation > 0) {
+                    double midPoint = (rotationLimits[0] + rotationLimits[1]) * 0.5;
+                    angleStart = midPoint - maximumRotation * 0.5;
+                } else if (pickToPlaceRotation > 0) {
                     // A positive rotation is wanted. Start at the axis lower limit, plus proportional pick tolerance.
                     double availableTolerance = articulation - pickToPlaceRotation;
-                    angleStart = rotationLimits[0] + availableTolerance*maxPickArticulationAngle/maxTolerance;
-                }
-                else {
+                    angleStart = rotationLimits[0] + availableTolerance * maxPickArticulationAngle / maxTolerance;
+                } else {
                     // A negative rotation is wanted. Start at the axis higher limit, minus proportional pick tolerance.
                     double availableTolerance = articulation + pickToPlaceRotation;
-                    angleStart = rotationLimits[1] - availableTolerance*maxPickArticulationAngle/maxTolerance;
+                    angleStart = rotationLimits[1] - availableTolerance * maxPickArticulationAngle / maxTolerance;
                 }
-                newRotationModeOffset = 
+                newRotationModeOffset =
                         Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
                 break;
         }
@@ -224,15 +221,17 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         setRotationModeOffset(newRotationModeOffset);
     }
 
+    @Override
     public Double getRotationModeOffset() {
         return rotationModeOffset;
     }
 
+    @Override
     public void setRotationModeOffset(Double rotationModeOffset) {
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;
         firePropertyChange("rotationModeOffset", oldValue, rotationModeOffset);
-        Logger.trace("Set rotation mode offset: "+(rotationModeOffset != null ? rotationModeOffset+"°." : "none."));
+        Logger.trace("Set rotation mode offset: " + (rotationModeOffset != null ? rotationModeOffset + "°." : "none."));
         // Note, we do not 
         //  fireMachineHeadActivity(head); 
         // as only the upcoming coordinate changes will really make sense and matter.
@@ -242,7 +241,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     public Icon getPropertySheetHolderIcon() {
         return Icons.captureTool;
     }
-    
+
     protected void syncCompatibleNozzleTipIds() {
         compatibleNozzleTipIds.clear();
         for (NozzleTip nt : compatibleNozzleTips) {

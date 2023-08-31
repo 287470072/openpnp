@@ -749,8 +749,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (plannedPlacement == null) {
                 return new Place(plannedPlacements);
             }
-
-
+            List<PlannedPlacement> plannedPlacements1 = plannedPlacements;
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();

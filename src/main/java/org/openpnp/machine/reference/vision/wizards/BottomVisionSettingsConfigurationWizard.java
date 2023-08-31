@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private JCheckBox chckbxCenterAfterTest;
 
-    private JLabel usedIn;  
+    private JLabel usedIn;
     private JTextField name;
     private JLabel lblName;
 
@@ -86,8 +87,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private JLabel lblY;
     private JLabel lblVisionCenterOffset;
 
-    public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
-            PartSettingsHolder settingsHolder) {
+    public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings,
+                                                   PartSettingsHolder settingsHolder) {
         this.visionSettings = visionSettings;
         this.settingsHolder = settingsHolder;
         this.bottomVision = (ReferenceBottomVision) AbstractPartAlignment.getPartAlignment(settingsHolder, true);
@@ -108,9 +109,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         JPanel panelAssignedTo = new JPanel();
         panelAssignedTo.setBorder(UIManager.getBorder("TextField.border"));
         panel.add(panelAssignedTo, "4, 4, 11, 1, fill, fill");
-        panelAssignedTo.setLayout(new FormLayout(new ColumnSpec[] {
+        panelAssignedTo.setLayout(new FormLayout(new ColumnSpec[]{
                 ColumnSpec.decode("min(70dlu;default):grow"),},
-                new RowSpec[] {
+                new RowSpec[]{
                         FormSpecs.DEFAULT_ROWSPEC,}));
         usedIn = new JLabel("None");
         panelAssignedTo.add(usedIn, "1, 1, fill, fill");
@@ -128,12 +129,11 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
             btnSpecializeSetting.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeForText") //$NON-NLS-1$
-                    + " " +settingsHolder.getShortName()); //$NON-NLS-1$
+                    + " " + settingsHolder.getShortName()); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTipText") + " " //$NON-NLS-1$ //$NON-NLS-2$
-                    + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
-        }
-        else if (settingsHolder != null) {
+                    + settingsHolder.getClass().getSimpleName() + " " + settingsHolder.getShortName());
+        } else if (settingsHolder != null) {
             btnSpecializeSetting.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.OptimizeText")); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText("<html>Optimize the Bottom Vision Settings and their assignments:<br/>"
@@ -144,8 +144,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     + "<li>Remove assignments where the same settings would be inherited anyway.</li>"
                     + "</ul>"
                     + "</html>");
-        }
-        else {
+        } else {
             btnSpecializeSetting.setEnabled(false);
             btnSpecializeSetting.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeText")); //$NON-NLS-1$
@@ -156,17 +155,16 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             applyAction.actionPerformed(null);
             UiUtils.messageBoxOnException(() -> {
                 if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
-                    if (visionSettings.getUsedBottomVisionIn().size() == 1 
+                    if (visionSettings.getUsedBottomVisionIn().size() == 1
                             && visionSettings.getUsedBottomVisionIn().get(0) == settingsHolder) {
-                        throw new Exception("Vision Settings already specialized for "+settingsHolder.getShortName()+".");
+                        throw new Exception("Vision Settings already specialized for " + settingsHolder.getShortName() + ".");
                     }
                     BottomVisionSettings newSettings = new BottomVisionSettings();
                     newSettings.setValues(visionSettings);
                     newSettings.setName(settingsHolder.getShortName());
                     settingsHolder.setBottomVisionSettings(newSettings);
                     Configuration.get().addVisionSettings(newSettings);
-                }
-                else {
+                } else {
                     ReferenceBottomVision.getDefault().optimizeVisionSettings(Configuration.get());
                     Configuration.get().fireVisionSettingsChanged();
                 }
@@ -181,13 +179,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             UiUtils.messageBoxOnException(() -> {
                 List<PartSettingsHolder> list = settingsHolder.getSpecializedBottomVisionIn();
                 if (list.size() == 0) {
-                    throw new Exception("There are no specializations on "+subjects+" with the "+settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".");
+                    throw new Exception("There are no specializations on " + subjects + " with the " + settingsHolder.getClass().getSimpleName() + " " + settingsHolder.getShortName() + ".");
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will remove the specialized vision settings in:\n\n"+
-                                new AbstractVisionSettings.ListConverter(false).convertForward(list)+"\n\n"+
+                        "This will remove the specialized vision settings in:\n\n" +
+                                new AbstractVisionSettings.ListConverter(false).convertForward(list) + "\n\n" +
                                 "Are you sure?", null,
-                                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
                         applyAction.actionPerformed(null);
@@ -199,15 +197,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panel.add(btnGeneralizeSettings, "8, 6, 3, 1");
         if (settingsHolder == null || settingsHolder instanceof Part) {
             btnGeneralizeSettings.setEnabled(false);
-        }
-        else {
+        } else {
             btnGeneralizeSettings.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.GeneralizeButton.GeneralizeFor.text") //$NON-NLS-1$
                     + settingsHolder.getShortName());
             btnGeneralizeSettings.setToolTipText("<html>Generalize these Bottom Vision Settings for all the "
                     + subjects
-                    + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
-                    + "This will unassign any special Bottom Vision Settings on "+subjects+" and delete those<br/>"
+                    + " with the " + settingsHolder.getClass().getSimpleName() + " " + settingsHolder.getShortName() + ".<br/>"
+                    + "This will unassign any special Bottom Vision Settings on " + subjects + " and delete those<br/>"
                     + "Bottom Vision Settings that are no longer used elsewhere.</html>");
         }
 
@@ -225,8 +222,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         BottomVisionSettings stockVisionSettings = (BottomVisionSettings) Configuration.get()
                                 .getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
                         visionSettings.setValues(stockVisionSettings);
-                    }
-                    else {
+                    } else {
                         visionSettings.setValues(bottomVision.getBottomVisionSettings());
                     }
                 }
@@ -280,7 +276,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         // Accept changes before edit.
                         applyAction.actionPerformed(null);
                     }
-                    pipelineConfiguration(pipeline,pipelineParameterAssignments, edit);
+                    pipelineConfiguration(pipeline, pipelineParameterAssignments, edit);
                 });
             }
 
@@ -296,8 +292,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         if (bottomVision.getBottomVisionSettings() == visionSettings) {
                             // Already the default. Set stock.
                             pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline("Default"));
-                        }
-                        else {
+                        } else {
                             pipelinePanel.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());
                         }
                     });
@@ -313,7 +308,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panelAlign.setBorder(new TitledBorder(null, Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelAlign.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
+        panelAlign.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -324,9 +319,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 1),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblTestPlacementAngle = new JLabel(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelAlign.TestPlacementAngleLabel.text")); //$NON-NLS-1$
@@ -348,7 +343,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         chckbxCenterAfterTest.setSelected(true);
         btnTestAlighment.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
-                applyAction .actionPerformed(null);
+                applyAction.actionPerformed(null);
                 testAlignment(chckbxCenterAfterTest.isSelected());
             });
         });
@@ -358,7 +353,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panelDetectOffset.setBorder(new TitledBorder(null, Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelDetectOffset.setLayout(new FormLayout(new ColumnSpec[] {
+        panelDetectOffset.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -369,18 +364,18 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         lblAsymmetric = new JLabel(Translations.getString("BottomVisionSettingsConfigurationWizard.lblAllowVisionOffsets.text")); //$NON-NLS-1$
         lblAsymmetric.setToolTipText(Translations.getString("BottomVisionSettingsConfigurationWizard.lblAllowVisionOffsets.toolTipText")); //$NON-NLS-1$
         panelDetectOffset.add(lblAsymmetric, "2, 2");
-        
+
         asymmetric = new JCheckBox();
         panelDetectOffset.add(asymmetric, "4, 2");
 
@@ -430,7 +425,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         name.setVisible(settingsHolder != null);
         if (visionSettings.isStockSetting()) {
             for (Component comp : panel.getComponents()) {
-                if (comp != btnSpecializeSetting) { 
+                if (comp != btnSpecializeSetting) {
                     comp.setEnabled(false);
                 }
             }
@@ -440,7 +435,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         }
 
         addWrappedBinding(visionSettings, "name", name, "text");
-        bind(UpdateStrategy.READ, visionSettings, "usedBottomVisionIn", usedIn, "text", 
+        bind(UpdateStrategy.READ, visionSettings, "usedBottomVisionIn", usedIn, "text",
                 new AbstractVisionSettings.ListConverter(true, settingsHolder));
         addWrappedBinding(visionSettings, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(visionSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
@@ -470,7 +465,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 "BottomVisionSettingsConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
+        panel.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -485,24 +480,24 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),}));
     }
 
-    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) 
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit)
             throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
@@ -514,49 +509,45 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         String packageSource = null;
         if (part != null) {
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" loaded on "+nozzle.getName();
-        }
-        else if (settingsHolder instanceof Part) {
+            packageSource = "selected through part " + part.getId() + " loaded on " + nozzle.getName();
+        } else if (settingsHolder instanceof Part) {
             part = (Part) settingsHolder;
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" here";
-        }
-        else if (settingsHolder instanceof Package) {
+            packageSource = "selected through part " + part.getId() + " here";
+        } else if (settingsHolder instanceof Package) {
             pkg = (Package) settingsHolder;
             packageSource = "selected here";
-        }
-        else if (MainFrame.get().getPartsTab().getSelectedPart() != null) {
+        } else if (MainFrame.get().getPartsTab().getSelectedPart() != null) {
             part = MainFrame.get().getPartsTab().getSelectedPart();
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" in the Parts tab";
-        }
-        else if (MainFrame.get().getPackagesTab().getSelectedPackage() != null) {
+            packageSource = "selected through part " + part.getId() + " in the Parts tab";
+        } else if (MainFrame.get().getPackagesTab().getSelectedPackage() != null) {
             pkg = MainFrame.get().getPackagesTab().getSelectedPackage();
             packageSource = "selected in the Packages tab";
         }
         if (pkg == null) {
             throw new Exception("A package must be designated to configure the pipeline. "
-                    + "Please pick a part with selected nozzle "+nozzle.getName()+". "
+                    + "Please pick a part with selected nozzle " + nozzle.getName() + ". "
                     + "Alternatively, you can select a single part or package on the Parts or "
                     + "Packages tab for a \"dry-run\" with empty nozzle (like after a failed pick).");
         }
         NozzleTip nt = nozzle.getNozzleTip();
         if (nt == null) {
-            throw new Exception("A nozzle tip must be loaded on selected nozzle "+nozzle.getName()+".");
+            throw new Exception("A nozzle tip must be loaded on selected nozzle " + nozzle.getName() + ".");
         }
-        if (! pkg.getCompatibleNozzleTips().contains(nt)) {
-            throw new Exception("Nozzle tip "+nt.getName()+" loaded on selected nozzle "+nozzle.getName()
-            +" is not compatible with package "+pkg.getId()+" "+packageSource+".");
+        if (!pkg.getCompatibleNozzleTips().contains(nt)) {
+            throw new Exception("Nozzle tip " + nt.getName() + " loaded on selected nozzle " + nozzle.getName()
+                    + " is not compatible with package " + pkg.getId() + " " + packageSource + ".");
         }
-        Location location = bottomVision.getCameraLocationAtPartHeight(part, 
+        Location location = bottomVision.getCameraLocationAtPartHeight(part,
                 camera,
                 nozzle, angle);
-        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt, 
+        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt,
                 location, location, visionSettings);
         if (edit) {
 
-            pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
-                    "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
+            pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline,
+                    "move nozzle " + nozzle.getName() + " to the camera alignment location before editing the pipeline",
                     nozzle, location);
         }
     }
@@ -573,47 +564,57 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public void alignAndCenter(ReferenceBottomVision bottomVision, Nozzle nozzle, double angle, boolean centerAfterTest)
             throws Exception {
         // perform the alignment
+        Camera camera = VisionUtils.getBottomVisionCamera();
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
+        Double rotationBefore = nozzle.getRotationModeOffset();
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, nozzle.getPart(),
                 null, dummy, nozzle);
         Location offsets = alignmentOffset.getLocation();
+        Double rotationAfter = nozzle.getRotationModeOffset();
 
         if (!centerAfterTest) {
             return;
         }
 
         // Nominal position of the part over camera center
-        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), VisionUtils.getBottomVisionCamera(),
+        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), camera,
                 nozzle, angle);
 
+        // Calculate the centered, rotated and aligned location.
+        Location centeredLocation;
         if (alignmentOffset.getPreRotated()) {
-            Location centeredLocation = cameraLocation.subtractWithRotation(alignmentOffset.getLocation());
-            nozzle.moveTo(centeredLocation);
-            return;
+            centeredLocation = cameraLocation.subtractWithRotation(alignmentOffset.getLocation());
+        } else {
+            // Post-rotate is more complicated.
+            // Rotate the point 0,0 using the bottom offsets as a center point by the angle
+            // that is the difference between the bottom vision angle and the calculated global
+            // placement angle.
+            centeredLocation = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,
+                    cameraLocation.getRotation() - offsets.getRotation());
+
+            // Set the angle to the difference mentioned above, aligning the part to the
+            // same angle as the placement.
+            centeredLocation = centeredLocation.derive(null, null, null, cameraLocation.getRotation() - offsets.getRotation());
+
+            // Add the placement final location to move our local coordinate into global
+            // space
+            centeredLocation = centeredLocation.add(cameraLocation);
+
+            // Subtract the bottom vision offsets to move the part to the final location,
+            // instead of the nozzle.
+            centeredLocation = centeredLocation.subtract(offsets);
         }
-
-        // Rotate the point 0,0 using the bottom offsets as a center point by the angle
-        // that is
-        // the difference between the bottom vision angle and the calculated global
-        // placement angle.
-        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,
-                cameraLocation.getRotation() - offsets.getRotation());
-
-        // Set the angle to the difference mentioned above, aligning the part to the
-        // same angle as
-        // the placement.
-        location = location.derive(null, null, null, cameraLocation.getRotation() - offsets.getRotation());
-
-        // Add the placement final location to move our local coordinate into global
-        // space
-        location = location.add(cameraLocation);
-
-        // Subtract the bottom vision offsets to move the part to the final location,
-        // instead of the nozzle.
-        location = location.subtract(offsets);
-
-        nozzle.moveTo(location);
+        // Center, rotate and align the part.
+        nozzle.moveTo(centeredLocation);
+        // Take a fresh camera shot.
+        BufferedImage image = camera.lightSettleAndCapture();
+        // Wait a moment to let the last alignment pass result display sink in.
+        Thread.sleep(500);
+        // Display with the the final offsets, but also include the rotation mode offset adjustment.
+        double rotationOffset = (rotationAfter != null ? rotationAfter : 0) - (rotationBefore != null ? rotationBefore : 0);
+        Location offsetsDisplayed = offsets.deriveLengths(null, null, null, offsets.getRotation() + rotationOffset);
+        bottomVision.displayResult(image, nozzle.getPart(), offsetsDisplayed, camera, nozzle);
     }
 
     private void determineVisionOffset() throws Exception {
@@ -632,24 +633,23 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     public Nozzle getNozzleWithPart() throws Exception {
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        Part part = nozzle.getPart(); 
+        Part part = nozzle.getPart();
         if (part == null) {
-            throw new Exception("Nozzle "+nozzle.getName()+" does not have a part loaded");
+            throw new Exception("Nozzle " + nozzle.getName() + " does not have a part loaded");
         }
-        if (settingsHolder instanceof Part 
+        if (settingsHolder instanceof Part
                 && part != this.settingsHolder) {
-            throw new Exception("Wrong part "+part.getId()+" on Nozzle "+nozzle.getName());
-        }
-        else if (settingsHolder instanceof Package 
+            throw new Exception("Wrong part " + part.getId() + " on Nozzle " + nozzle.getName());
+        } else if (settingsHolder instanceof Package
                 && part.getPackage() != this.settingsHolder) {
-            throw new Exception("Wrong package "+part.getPackage().getId()+" on Nozzle "+nozzle.getName());
+            throw new Exception("Wrong package " + part.getPackage().getId() + " on Nozzle " + nozzle.getName());
         }
         if (bottomVision == null) {
-            throw new Exception("Bottom Vision for vision settings "+visionSettings.getName()+" not enabled.");
+            throw new Exception("Bottom Vision for vision settings " + visionSettings.getName() + " not enabled.");
         }
         if (bottomVision.getInheritedVisionSettings(part) != visionSettings) {
-            throw new Exception("Present Bottom Vision Settings are not effective for part "+part.getId()+" on Nozzle "+nozzle.getName()+". "
-                    +"Assign to Package of Part.");
+            throw new Exception("Present Bottom Vision Settings are not effective for part " + part.getId() + " on Nozzle " + nozzle.getName() + ". "
+                    + "Assign to Package of Part.");
         }
         return nozzle;
     }
@@ -658,6 +658,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public String getWizardName() {
         return Translations.getString("BottomVisionSettingsConfigurationWizard.wizardName"); //$NON-NLS-1$
     }
+
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
         BeanProperty<JTextField, Boolean> jTextFieldBeanProperty = BeanProperty.create("enabled");

@@ -50,6 +50,19 @@ public interface Nozzle
     public RotationMode getRotationMode();
 
     /**
+     * @return the rotation mode offset currently set.
+     */
+    public Double getRotationModeOffset();
+
+    /**
+     * Set the rotation mode offset to be applied.
+     *
+     * @param rotationModeOffset
+     */
+    void setRotationModeOffset(Double rotationModeOffset);
+
+
+    /**
      * @return Whether the bottom vision aligment of parts adjust the Rotation Mode of the nozzle to include the
      * alignment rotation offset.
      */
