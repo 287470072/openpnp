@@ -35,6 +35,8 @@ public interface Camera extends HeadMountable, WizardConfigurable,
         Down, Up
     }
 
+
+
     /**
      * Get the location of the camera including the calibrated offset for the given tool.   
      * If the bottom camera focal plane is different from the PCB surface plane, the various

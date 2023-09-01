@@ -96,7 +96,18 @@ public class ImageCapture extends CvStage {
         try {
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
-                BufferedImage  bufferedImage = camera.settleAndCapture(settleOption);
+                BufferedImage bufferedImage;
+                boolean needSettle = true;
+                if (camera.getLooking() == Camera.Looking.Up && pipeline.getProperty("needSettle") != null) {
+                    needSettle = (boolean) pipeline.getProperty("needSettle");
+                }
+                if (needSettle) {
+                    bufferedImage = camera.settleAndCapture(settleOption);
+                } else {
+                    bufferedImage = camera.capture();
+                }
+
+                //BufferedImage bufferedImage = camera.settleAndCapture(settleOption);
 
                 // Remember the last captured image. This specifically records the native camera image,
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).

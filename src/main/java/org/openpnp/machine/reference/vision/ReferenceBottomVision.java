@@ -511,7 +511,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 .orElse(null);
                         //如果是N1吸嘴的，将N1移动到相机上方
                         if (nozzle == n1) {
-
                             if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                     .compareTo(camera.getRoamingRadius()) > 0) {
                                 // Nozzle is not yet in camera roaming radius. Move at safe Z.
@@ -521,8 +520,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             }
                         }
                         //判断是否是单独N2运行，如果是，需要根据N1和N2的偏移量，计算出N2需要移动的位置
-                        if (nozzle != n1 & pkg.getCompatibleNozzleTips().size() < 2) {
-
+                        if (nozzle != n1) {
                             Location n2LocationOffset = nozzle.getHeadOffsets();
                             Location n1locationOffset = n1.getHeadOffsets();
                             Location n2NewLocation = shotLocation;
@@ -589,6 +587,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             if (camera.getWidth() > 2000) {
                 if (nozzle == n1) {
+                    pipeline.setProperty("needSettle", true);
                     //左半边
                     //左上角
                     Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, 0);
@@ -603,6 +602,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     affineWarp.setX2(cameraLeftLowerLocation.getX());
                     affineWarp.setY2(cameraLeftLowerLocation.getY());
                 } else {
+                    if (part.getPackage().getCompatibleNozzleTips().size() > 2) {
+                        pipeline.setProperty("needSettle", false);
+                    } else {
+                        pipeline.setProperty("needSettle", true);
+                    }
                     Location n2LocationOffset = nozzle.getHeadOffsets();
                     Location n1locationOffset = n1.getHeadOffsets();
                     Location offset = VisionUtils.getPixelOffsets(camera, n2LocationOffset.getX() - n1locationOffset.getX(), n2LocationOffset.getY() - n1locationOffset.getY());
@@ -621,6 +625,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+            } else {
+                pipeline.setProperty("needSettle", true);
             }
 
             //识别
