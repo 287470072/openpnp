@@ -64,8 +64,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-import javax.imageio.ImageIO;
-
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     interface Step {
@@ -263,12 +261,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             if (compatibleNozzleTips.isEmpty()) {
                 if (part.isPartHeightUnknown()) {
-                    throw new JobProcessorException(part, String.format("No part height sensing method found for part %s. "
-                                    + "Check camera, contact probe nozzle and compatible, loadable nozzle tips for height sensing "
-                                    + "settings or set part height manually.",
+                    throw new JobProcessorException(part, String.format("没有为元件 %s 配置元件高度检测方法。请检查相机、感应探针及兼容的吸嘴尖传感器设置或手动设置元件高度。" +
+                                    "\r\nTips:手动设置元件高度，请在元件页面，元件列表内设置。",
                             part.getId()));
                 } else {
-                    throw new JobProcessorException(part, String.format("No compatible, loadable nozzle tip found for part %s.",
+                    throw new JobProcessorException(part, String.format("没有为元件 %s 找到合适的已装载的吸嘴。\r\nTips:请打开封装页面，勾选合适吸嘴。或者查看教程，常见问题处理。",
                             part.getId()));
                 }
             }
@@ -369,7 +366,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (idlist.contains(placement.getId())) {
                     throw new JobProcessorException(boardLocation,
-                            String.format("This board contains at least one duplicate ID entry: %s ",
+                            String.format("此板至少包含一个ID重复的条目: %s 。\r\nTips:请找到该元件，删除或者修改csv文件并重新导入。",
                                     placement.getId()));
                 } else {
                     idlist.add(placement.getId());
@@ -506,6 +503,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             return this;
         }
+
+        @Override
+        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
+            return null;
+        }
     }
 
     protected class CalibrateNozzleTips extends PlannedPlacementStep {
@@ -537,6 +539,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             return this;
+        }
+
+        @Override
+        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
+            return null;
         }
     }
 
@@ -641,6 +648,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * the recorded error.
              */
             throw lastException;
+        }
+
+        @Override
+        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
+            return null;
         }
 
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
@@ -770,6 +782,68 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return this;
         }
 
+        @Override
+        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
+            //判断是否所有的校正任务都已经完成
+            PlannedPlacement plannedPlacement = plannedPlacements
+                    .stream()
+                    .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
+                    .filter(p -> !completed.contains(p))
+                    .findFirst()
+                    .orElse(null);
+            //如果已经没有需要再校正的任务了，就开始放置任务
+            if (plannedPlacement == null) {
+                return new Place(plannedPlacements);
+            }
+
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+
+            final PartAlignment partAlignment = AbstractPartAlignment.getPartAlignment(part);
+
+            if (partAlignment == null) {
+                plannedPlacement.alignmentOffsets = null;
+                Logger.debug("Not aligning {} as no compatible enabled aligners defined", part);
+                return this;
+            }
+
+
+            if (plannedPlacements.size() == 2) {
+                align2(plannedPlacement, partAlignment);
+
+                checkPartOn(nozzle);
+            } else {
+                align2(plannedPlacement, partAlignment);
+
+                checkPartOn(nozzle);
+            }
+
+
+            return this;
+        }
+
+
+        private void align2(PlannedPlacement plannedPlacement, PartAlignment partAlignment) throws JobProcessorException {
+
+            PartAlignment.PartAlignmentOffset offsets = null;
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+
+            Exception lastException = null;
+            try {
+                offsets = partAlignment.findOffsets(part, boardLocation, placement, nozzle);
+                return;
+            } catch (Exception e) {
+                lastException = e;
+            }
+            throw new JobProcessorException(part, lastException);
+        }
+
         private void align(PlannedPlacement plannedPlacement, PartAlignment partAlignment) throws JobProcessorException {
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
@@ -794,6 +868,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             throw new JobProcessorException(part, lastException);
         }
+
 
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
             if (!nozzle.isPartOnEnabled(Nozzle.PartOnStep.Align)) {
@@ -851,6 +926,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             scriptComplete(plannedPlacement, placementLocation);
 
             return this;
+        }
+
+        @Override
+        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
+            return null;
         }
 
         private void place(Nozzle nozzle, Part part, Placement placement, Location placementLocation) throws JobProcessorException {
@@ -1169,6 +1249,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         protected abstract Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException;
 
+        protected abstract Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException;
+
         /**
          * Find the next uncompleted, non-errored PlannedPlacement and pass it to stepImpl. If stepImpl
          * completes without error the PlannedPlacement is marked complete and control is returned
@@ -1182,8 +1264,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .findFirst()
                     .orElse(null);
             try {
-                Step result = stepImpl(plannedPlacement);
-                completed.add(plannedPlacement);
+                Step result;
+                //针对双目识别Align单独做处理
+                if (currentStep instanceof Align) {
+                    /*result = stepImpl(plannedPlacement);
+                    completed.add(plannedPlacement);*/
+                    result = stepImpl2(plannedPlacements, completed);
+                    completed.add(plannedPlacement);
+                } else {
+                    result = stepImpl(plannedPlacement);
+                    completed.add(plannedPlacement);
+                }
                 return result;
             } catch (JobProcessorException e) {
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {

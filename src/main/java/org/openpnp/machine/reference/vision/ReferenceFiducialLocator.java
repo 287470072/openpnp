@@ -457,7 +457,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 // Get the results
                 List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                         .getExpectedListModel(KeyPoint.class, 
-                                new Exception(partSettingsHolder.getId()+" no matches found."));
+                                new Exception(partSettingsHolder.getId()+" no matches found.\r\nTips:没有找到基准点，请检查基准点坐标是否正确，或查看教程重设基准点。"));
 
                 // Convert to Locations
                 List<Location> locations = new ArrayList<Location>();

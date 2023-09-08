@@ -168,7 +168,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
                 }
             }
             if (device == null) {
-                Logger.warn("No camera found with ID {} for camera {}", uniqueId, getName());
+                Logger.warn("era found with ID {} for camera {}", uniqueId, getName());
                 return;
             }
 

@@ -103,7 +103,7 @@ public class VisionCompositing extends AbstractModelObject{
     }
 
     @Attribute
-    private CompositingMethod compositingMethod = CompositingMethod.Restricted;
+    private CompositingMethod compositingMethod = CompositingMethod.None;
 
     @Element(required = false)
     private Length maxPickTolerance = new Length(0, LengthUnit.Millimeters);

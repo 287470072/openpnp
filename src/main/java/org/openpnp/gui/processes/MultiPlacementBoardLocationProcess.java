@@ -55,14 +55,14 @@ public class MultiPlacementBoardLocationProcess {
 
     private int step = -1;
     private String[] instructionsAuto = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near one of the selected placements.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
+            "<html><body>请在贴片列表内选择至少两个或更多（四个或更多最好）易于识别的贴片元件。他们要尽可能的靠近板子的角落。单击“下一步”继续，相机将移动到所选贴片元件之一附近。</body></html>",
+            "<html><body>现在，请手动将相机的十字线移动到 %s 的中心. 确保尽可能精确。单击“下一步”继续下一个放置。</body></html>",
+            "<html><body>板子的位置和旋转已经设置完毕。单击“完成”将相机定位在板的原点，或单击“取消”拒绝更改。</body></html>",};
 
     private String[] instructionsManual = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
+            "<html><body>请在贴片列表内选择至少两个或更多（四个或更多最好）易于识别的贴片元件。他们要尽可能的靠近板子的角落。单击“下一步”继续。</body></html>",
+            "<html><body>现在，请手动将相机的十字线移动到 %s 的中心. 确保尽可能精确。单击“下一步”继续下一个放置。</body></html>",
+            "<html><body>板子的位置和旋转已经设置完毕。单击“完成”将相机定位在板的原点，或单击“取消”拒绝更改。</body></html>",};
 
     private String placementId;
     private List<Placement> placements;
@@ -164,7 +164,7 @@ public class MultiPlacementBoardLocationProcess {
         placements = jobPanel.getJobPlacementsPanel().getSelections();
         nPlacements = placements.size();
         if (nPlacements < 2) {
-            MessageBoxes.errorBox(mainFrame, "Error", "Please select at least two placements.");
+            MessageBoxes.errorBox(mainFrame, "错误", "请至少选择两个贴片元件。");
             return false;
         }
         
