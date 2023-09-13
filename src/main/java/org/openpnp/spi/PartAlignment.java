@@ -10,6 +10,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Solutions;
 
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 /**
  * A method to allow after-pick, pre-place alignment of parts on the nozzle. Bottom vision
@@ -53,6 +54,8 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
      * @throws Exception if the alignment fails for any reason. The caller may retry.
      */
     PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception;
+
+    PartAlignmentOffset findOffsets2(List<PnpJobPlanner.PlannedPlacement> plannedPlacements) throws Exception;
 
     /**
      * Get a Wizard for configuring the PartAlignment instance properties for a specific

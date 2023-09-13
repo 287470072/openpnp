@@ -401,7 +401,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
         Logger.debug("feed({})", nozzle);
 
-        Head head = nozzle.getHead();
+
         Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
         if (actuator == null) {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
@@ -411,60 +411,40 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     getName()));
         }
 
+        actuator.actuate((Object) actuatorValue);
+
+
+
+        // increment feed count 
+        //setFeedCount(getFeedCount() + 1);
+    }
+
+    @Override
+    public void postPick(Nozzle nozzle) throws Exception {
+        Head head = nozzle.getHead();
+        if (postPickActuatorName == null || postPickActuatorName.equals("")) {
+            return;
+        }
+        Actuator actuator = nozzle.getHead().getActuatorByName(postPickActuatorName);
+        if (actuator == null) {
+            actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
+        }
+        if (actuator == null) {
+            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
+        }
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-            // Modulo of feed count is zero - no more parts there to pick, must feed 
+            // Modulo of feed count is zero - no more parts there to pick, must feed
 
             // Make sure we're calibrated
             //掉过离线校验
             assertCalibrated(false);
-
-            // Create the effective feed locations, applying the vision offset.
-            Location visionOffsets = getVisionOffset()
-                    .multiply(
-                            (isCalibrateMotionX() ? 1 : 0),
-                            (isCalibrateMotionY() ? 1 : 0),
-                            1,  // Z currently not used, but maybe later?
-                            0); // Make sure there is no rotation.
-            Location feedStartLocation = getFeedStartLocation()
-                    .subtractWithRotation(visionOffsets);
-            Location feedMid1Location = getFeedMid1Location()
-                    .subtractWithRotation(visionOffsets);
-            Location feedMid2Location = getFeedMid2Location()
-                    .subtractWithRotation(visionOffsets);
-            Location feedMid3Location = getFeedMid3Location()
-                    .subtractWithRotation(visionOffsets);
-            Location feedEndLocation = getFeedEndLocation()
-                    .subtractWithRotation(visionOffsets);
-
-            MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
-            if (actuator.getAxisRotation() != null && isAdditiveRotation()) {
-                // Reset to the rotation axis to zero.
-                AxesLocation rotation = actuator.toRaw(actuator.toHeadLocation(
-                                actuator.getLocation().multiply(1, 1, 1, 0)))
-                        .byType(Axis.Type.Rotation);
-                motionPlanner.setGlobalOffsets(rotation);
-            }
-
 
             long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
             long n = getFeedMultiplier() * feedsPerPart;
             for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
 
                 actuator.actuate((Object) actuatorValue);
-
-                if (postPickActuatorName == null || postPickActuatorName.equals("")) {
-                    return;
-                }
-                Actuator actuator2 = nozzle.getHead().getActuatorByName(postPickActuatorName);
-                if (actuator2 == null) {
-                    actuator2 = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
-                }
-                if (actuator2 == null) {
-                    throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
-                }
-                // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
-                actuator2.actuate((Object) postPickActuatorValue);
-
 
             }
 
@@ -476,25 +456,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
-
-        // increment feed count 
-        setFeedCount(getFeedCount() + 1);
-    }
-
-    @Override
-    public void postPick(Nozzle nozzle) throws Exception {
-/*        if (postPickActuatorName == null || postPickActuatorName.equals("")) {
-            return;
-        }
-        Actuator actuator = nozzle.getHead().getActuatorByName(postPickActuatorName);
-        if (actuator == null) {
-            actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
-        }
-        if (actuator == null) {
-            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
-        }
-        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
-        actuator.actuate((Object)postPickActuatorValue);*/
     }
 
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {

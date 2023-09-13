@@ -337,7 +337,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                         ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
                         List<CaptureFormat> formats = captureDevice.getFormats();
                         if (camera1.getLooking() == Camera.Looking.Up) {
-                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(2));
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
 
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));

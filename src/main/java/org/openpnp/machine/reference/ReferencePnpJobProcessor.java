@@ -34,15 +34,7 @@ import java.util.stream.Collectors;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Job;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.PanelLocation;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
+import org.openpnp.model.*;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -63,6 +55,8 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+
+import static org.openpnp.machine.reference.vision.AbstractPartAlignment.getInheritedVisionSettings;
 
 @Root
 public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
@@ -660,8 +654,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
-
-                    feeder.feed(nozzle);
+                    feeder.postPick(nozzle);
+                    //feeder.feed(nozzle);
                     return;
                 } catch (Exception e) {
                     lastException = e;
@@ -815,7 +809,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 checkPartOn(nozzle);
             } else {
-                align2(plannedPlacement, partAlignment);
+                align(plannedPlacement, partAlignment);
 
                 checkPartOn(nozzle);
             }
@@ -1269,7 +1263,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (currentStep instanceof Align) {
                     /*result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);*/
-                    result = stepImpl2(plannedPlacements, completed);
+                    //result = stepImpl(plannedPlacements, completed);
+                    result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);
                 } else {
                     result = stepImpl(plannedPlacement);
