@@ -554,14 +554,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return new Align(plannedPlacements);
             }
 
-            //在底部识别后面一个步骤，对文件夹内的文件进行删除
-            String filePath = System.getProperty("user.dir");
-            String bufferedImagePath = filePath + "\\temp\\";
-            File outputfile = new File(bufferedImagePath + "saved.png");
-            if (outputfile.exists()) {
-                outputfile.delete();
-            }
-
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -654,8 +646,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
-                    feeder.postPick(nozzle);
-                    //feeder.feed(nozzle);
+                    feeder.feed(nozzle);
                     return;
                 } catch (Exception e) {
                     lastException = e;
@@ -1263,8 +1254,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (currentStep instanceof Align) {
                     /*result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);*/
-                    //result = stepImpl(plannedPlacements, completed);
-                    result = stepImpl(plannedPlacement);
+                    result = stepImpl2(plannedPlacements, completed);
                     completed.add(plannedPlacement);
                 } else {
                     result = stepImpl(plannedPlacement);

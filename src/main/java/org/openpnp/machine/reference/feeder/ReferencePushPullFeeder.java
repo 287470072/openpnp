@@ -436,8 +436,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             // Modulo of feed count is zero - no more parts there to pick, must feed
 
-            // Make sure we're calibrated
-            //掉过离线校验
+            // 确保我们已校准
             assertCalibrated(false);
 
             long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
@@ -450,8 +449,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
             head.moveToSafeZ();
 
-            // Make sure we're calibrated after type feed
-            //掉过离线校验
+            // 确保我们在输入后进行校准
             assertCalibrated(true);
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
