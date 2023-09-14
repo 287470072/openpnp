@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.*;
@@ -598,7 +599,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * Exception so that we can continue the loop.
                  */
                 try {
-                    feed(feeder, nozzle);
+
+                    //if (part.getPackage().getCompatibleNozzleTips().size() != 2 | !(feeder instanceof ReferencePushPullFeeder)) {
+                        feed(feeder, nozzle);
+
                 } catch (JobProcessorException jpe) {
                     lastException = jpe;
                     continue;

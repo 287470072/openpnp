@@ -398,10 +398,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-
         Logger.debug("feed({})", nozzle);
 
-
+        Head head = nozzle.getHead();
         Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
         if (actuator == null) {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
@@ -411,12 +410,46 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     getName()));
         }
 
-        actuator.actuate((Object) actuatorValue);
+        if (getFeedCount() % getPartsPerFeedCycle() == 0) {
+            // Modulo of feed count is zero - no more parts there to pick, must feed
+
+            // Make sure we're calibrated
+            //掉过离线校验
+            assertCalibrated(false);
 
 
+            long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
+            long n = getFeedMultiplier() * feedsPerPart;
+             for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
+                actuator.actuate((Object) actuatorValue);
 
-        // increment feed count 
-        //setFeedCount(getFeedCount() + 1);
+      /*          if (postPickActuatorName == null || postPickActuatorName.equals("")) {
+                    return;
+                }
+                Actuator actuator2 = nozzle.getHead().getActuatorByName(postPickActuatorName);
+                if (actuator2 == null) {
+                    actuator2 = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
+                }*/
+    /*            if (actuator2 == null) {
+                    throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
+                }
+                // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+                actuator2.actuate((Object) postPickActuatorValue);*/
+
+
+            }
+
+            head.moveToSafeZ();
+
+            // Make sure we're calibrated after type feed
+            //掉过离线校验
+            assertCalibrated(true);
+        } else {
+            Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
+        }
+
+        // increment feed count
+        setFeedCount(getFeedCount() + 1);
     }
 
     @Override
