@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.swing.Action;
+import javax.swing.*;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
@@ -90,7 +90,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited. 
     @Attribute(required = false)
-    protected Double rotationInFeeder = new Double(90.0);
+    protected Double rotationInFeeder = 90.0;
 
 
     @Attribute(required = false)
@@ -100,13 +100,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected boolean snapToAxis = true;
 
     @Attribute(required = false)
-    protected String actuatorName;
+    protected String actuatorName="飞达到位检测";
 
     @Attribute(required = false)
     protected double actuatorValue;
 
     @Attribute(required = false)
-    protected String postPickActuatorName;
+    protected String postPickActuatorName ="编带前进X2";
 
     @Deprecated
     @Attribute(required = false)
@@ -205,7 +205,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
      */
     @Attribute(required = false)
     private String peelOffActuatorName;
-/*    private Actuator actuator2;*/
+    /*    private Actuator actuator2;*/
 
     @Attribute(required = false)
     private long feedCount = 0;
@@ -420,7 +420,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
             long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
             long n = getFeedMultiplier() * feedsPerPart;
-             for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
+            for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
                 actuator.actuate((Object) actuatorValue);
 
       /*          if (postPickActuatorName == null || postPickActuatorName.equals("")) {
@@ -467,23 +467,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-            // Modulo of feed count is zero - no more parts there to pick, must feed
-
-            // 确保我们已校准
-            assertCalibrated(false);
-
-            long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
-            long n = getFeedMultiplier() * feedsPerPart;
-            for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
-
-                actuator.actuate((Object) actuatorValue);
-
-            }
-
-            head.moveToSafeZ();
-
-            // 确保我们在输入后进行校准
-            assertCalibrated(true);
+            actuator.actuate((Object) actuatorValue);
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
@@ -2309,7 +2293,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // adding +8mm to the tape width.  A clockwise around the table arrangement is assumed.
         Location rowUnit = transformFeederToMachineLocation(new Location(LengthUnit.Millimeters,
                 0,
-                -getTapeWidth().convertToUnits(LengthUnit.Millimeters).getValue() - 8.0, // it is "down" in tape orientation
+                -getTapeWidth().convertToUnits(LengthUnit.Millimeters).getValue() - 2.0, // it is "down" in tape orientation
                 0, 0), null)
                 .subtract(getLocation());
         // but if we have another feeder, the row unit is properly calculated
@@ -2330,6 +2314,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location newLocation = getLocation().add(rowUnit);
         ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, this);
         newFeeder.cloneFeederSettings(true, true, true, true, true, this);
+
         return newFeeder;
     }
 

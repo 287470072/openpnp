@@ -1,21 +1,21 @@
 /*
  * Copyright (C) 2020 <mark@makr.zone>
- * based on the ReferenceLeverFeeder 
+ * based on the ReferenceLeverFeeder
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -61,6 +61,7 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -79,7 +80,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
-extends AbstractReferenceFeederConfigurationWizard {
+        extends AbstractReferenceFeederConfigurationWizard {
     private final ReferencePushPullFeeder feeder;
 
     public ReferencePushPullFeederConfigurationWizard(ReferencePushPullFeeder feeder) {
@@ -94,7 +95,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelLocations);
-        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
+        panelLocations.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -107,21 +108,21 @@ extends AbstractReferenceFeederConfigurationWizard {
                 ColumnSpec.decode("left:min"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
         btnShowVisionFeatures.setToolTipText("预览视觉识别特征。");
@@ -130,9 +131,9 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         btnAutoSetup = new JButton(autoSetupAction);
         panelLocations.add(btnAutoSetup, "4, 2, 5, 1");
-        
-                button = new JButton(plusOneAction);
-                panelLocations.add(button, "10, 2");
+
+        button = new JButton(plusOneAction);
+        panelLocations.add(button, "10, 2");
 
         lblX_1 = new JLabel("X");
         panelLocations.add(lblX_1, "4, 4");
@@ -214,7 +215,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelTape = new JPanel();
         panelFields.add(panelTape);
         panelTape.setBorder(new TitledBorder(null, "料带设置", TitledBorder.LEADING, TitledBorder.TOP, null));
-        panelTape.setLayout(new FormLayout(new ColumnSpec[] {
+        panelTape.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -225,13 +226,13 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblPartPitch = new JLabel("元件间距");
         panelTape.add(lblPartPitch, "2, 2, right, default");
@@ -289,8 +290,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         Head head = null;
         try {
             head = Configuration.get().getMachine().getDefaultHead();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Logger.error(e, "Cannot determine default head of machine.");
         }
 
@@ -303,7 +303,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         panelVisionEnabled = new JPanel();
         panelVision.add(panelVisionEnabled);
-        panelVisionEnabled.setLayout(new FormLayout(new ColumnSpec[] {
+        panelVisionEnabled.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -318,23 +318,23 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.LINE_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.LINE_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblCalibrationTrigger = new JLabel("校准触发器");
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
@@ -449,7 +449,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelCloning = new JPanel();
         panelCloning.setBorder(new TitledBorder(null, "克隆设置", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelFields.add(panelCloning);
-        panelCloning.setLayout(new FormLayout(new ColumnSpec[] {
+        panelCloning.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -464,15 +464,15 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblUsedAsTemplate = new JLabel("Use this one as Template?");
         panelCloning.add(lblUsedAsTemplate, "2, 2, right, default");
@@ -484,7 +484,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             public void propertyChange(PropertyChangeEvent evt) {
                 // by setting anything, we fire a property change
                 if (btnSmartClone != null) {
-                    btnSmartClone.setAction(checkBoxUsedAsTemplate.isSelected() ? feederCloneToAllAction: feederCloneFromTemplate);
+                    btnSmartClone.setAction(checkBoxUsedAsTemplate.isSelected() ? feederCloneToAllAction : feederCloneFromTemplate);
                 }
                 // need to "apply" this immediately
                 feeder.setUsedAsTemplate(checkBoxUsedAsTemplate.isSelected());
@@ -622,327 +622,326 @@ extends AbstractReferenceFeederConfigurationWizard {
 
     private Action editPipelineAction =
             new AbstractAction("编辑视觉管道") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "编辑用于该飞达的所有视觉操作的管道。");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "编辑用于该飞达的所有视觉操作的管道。");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                UiUtils.confirmMoveToLocationAndAct(
-                        getTopLevelAncestor(), 
-                        "move the camera to the proper feeder vision location before editing the pipeline", 
-                        feeder.getCamera(), 
-                        feeder.getNominalVisionLocation(), 
-                        true, () -> {
-                            editPipeline();
-                        });
-            });
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        UiUtils.confirmMoveToLocationAndAct(
+                                getTopLevelAncestor(),
+                                "move the camera to the proper feeder vision location before editing the pipeline",
+                                feeder.getCamera(),
+                                feeder.getNominalVisionLocation(),
+                                true, () -> {
+                                    editPipeline();
+                                });
+                    });
+                }
+            };
 
     private Action resetPipelineAction =
             new AbstractAction("重置视觉管道") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "将此飞达的视觉管道重置为选定的默认类型。");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "将此飞达的视觉管道重置为选定的默认类型。");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            PipelineType type = (PipelineType) pipelineType.getSelectedItem();
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will reset the pipeline to the "+type+" type default. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                applyAction.actionPerformed(null);
-                UiUtils.messageBoxOnException(() -> {
-                    feeder.resetPipeline(type);
-                });
-            }
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    PipelineType type = (PipelineType) pipelineType.getSelectedItem();
+                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                            "This will reset the pipeline to the " + type + " type default. Are you sure?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (result == JOptionPane.YES_OPTION) {
+                        applyAction.actionPerformed(null);
+                        UiUtils.messageBoxOnException(() -> {
+                            feeder.resetPipeline(type);
+                        });
+                    }
+                }
+            };
 
     private Action resetStatisticsAction =
             new AbstractAction("重置统计数据") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "重置获得的平均精度统计。");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "重置获得的平均精度统计。");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                feeder.resetCalibrationStatistics();
-            });
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        feeder.resetCalibrationStatistics();
+                    });
+                }
+            };
 
     private Action resetFeedCountAction =
             new AbstractAction("重置供料计数") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the feed count e.g. when a tape has been changed.");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Reset the feed count e.g. when a tape has been changed.");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will reset the recorded feed count of this feeder. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    // we apply this because it is OpenPNP custom to do so 
-                    applyAction.actionPerformed(e);
-                    // set it back to 0
-                    feeder.setFeedCount(0);
-                });
-            }
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                            "This will reset the recorded feed count of this feeder. Are you sure?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (result == JOptionPane.YES_OPTION) {
+                        UiUtils.messageBoxOnException(() -> {
+                            // we apply this because it is OpenPNP custom to do so
+                            applyAction.actionPerformed(e);
+                            // set it back to 0
+                            feeder.setFeedCount(0);
+                        });
+                    }
+                }
+            };
     private Action discardPartsAction =
             new AbstractAction("丢弃元件") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Discard parts that have been produced by the last tape transport.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                // we apply this because it is OpenPNP custom to do so 
-                applyAction.actionPerformed(e);
-                // round the feed count up to the next multiple of the parts per feed operation
-                feeder.setFeedCount(((feeder.getFeedCount()-1)/feeder.getPartsPerFeedCycle()+1)*feeder.getPartsPerFeedCycle());
-                feeder.resetCalibration();
-            });
-        }
-    };
-    private Action showVisionFeaturesAction =
-            new AbstractAction("预览视觉功能") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Preview the features recognized by Computer Vision.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.submitUiMachineTask(() -> {
-                feeder.showFeatures();
-            });
-        }
-    };
-    private Action autoSetupAction =
-            new AbstractAction("在拾取位置使用相机自动设置", Icons.captureCamera) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>将摄像机置于拾取位置中心，然后按此按钮进行自动设置 如果每个进给周期有多个拾取，请选择最靠近卷带盘的一个。</html>");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                int result;
-                if (!feeder.getLocation().multiply(1, 1, 0, 0).isInitialized()) {
-                    // if the feeder.location X, Y is zero, we assume this is a freshly created feeder 
-                    result = JOptionPane.YES_OPTION; 
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Discard parts that have been produced by the last tape transport.");
                 }
-                else {
-                    // ask the user
-                    result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "<html>"
-                            + "<p>This may overwrite all your current settings. Are you sure?</p>"
-                            +(feeder.isUsedAsTemplate() ? 
-                                    "<br/><p color=\"red\">This feeder is marked as template. Are you really, really sure?</p>" : "")
-                            + "</html>",
-                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                }
-                if (result == JOptionPane.YES_OPTION) {
-                    applyAction.actionPerformed(e);
-                    UiUtils.submitUiMachineTask(() -> {
-                        feeder.autoSetup();
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        // we apply this because it is OpenPNP custom to do so
+                        applyAction.actionPerformed(e);
+                        // round the feed count up to the next multiple of the parts per feed operation
+                        feeder.setFeedCount(((feeder.getFeedCount() - 1) / feeder.getPartsPerFeedCycle() + 1) * feeder.getPartsPerFeedCycle());
+                        feeder.resetCalibration();
                     });
                 }
-            });
-        }
-    };
+            };
+    private Action showVisionFeaturesAction =
+            new AbstractAction("预览视觉功能") {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "Preview the features recognized by Computer Vision.");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        feeder.showFeatures();
+                    });
+                }
+            };
+    private Action autoSetupAction =
+            new AbstractAction("在拾取位置使用相机自动设置", Icons.captureCamera) {
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>将摄像机置于拾取位置中心，然后按此按钮进行自动设置 如果每个进给周期有多个拾取，请选择最靠近卷带盘的一个。</html>");
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        int result;
+                        if (!feeder.getLocation().multiply(1, 1, 0, 0).isInitialized()) {
+                            // if the feeder.location X, Y is zero, we assume this is a freshly created feeder
+                            result = JOptionPane.YES_OPTION;
+                        } else {
+                            // ask the user
+                            result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                                    "<html>"
+                                            + "<p>This may overwrite all your current settings. Are you sure?</p>"
+                                            + (feeder.isUsedAsTemplate() ?
+                                            "<br/><p color=\"red\">This feeder is marked as template. Are you really, really sure?</p>" : "")
+                                            + "</html>",
+                                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        }
+                        if (result == JOptionPane.YES_OPTION) {
+                            applyAction.actionPerformed(e);
+                            UiUtils.submitUiMachineTask(() -> {
+                                feeder.autoSetup();
+                            });
+                        }
+                    });
+                }
+            };
     private Action allFeederOcrAction =
             new AbstractAction("所有飞达OCR") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>通过OCR前往所有飞达并重新发现其中装载的元件。</html>");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>通过OCR前往所有飞达并重新发现其中装载的元件。</html>");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            applyAction.actionPerformed(e);
-            UiUtils.submitUiMachineTask(() -> {
-                StringBuilder report = new StringBuilder();
-                feeder.performOcrOnAllFeeders(null, false, report);
-                SwingUtilities.invokeLater(() -> {
-                    if (report.length() == 0) {
-                        report.append("No action taken.");
-                    }
-                    JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
-                });
-            });
-        }
-    };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    applyAction.actionPerformed(e);
+                    UiUtils.submitUiMachineTask(() -> {
+                        StringBuilder report = new StringBuilder();
+                        feeder.performOcrOnAllFeeders(null, false, report);
+                        SwingUtilities.invokeLater(() -> {
+                            if (report.length() == 0) {
+                                report.append("No action taken.");
+                            }
+                            JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>" + report + "</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
+                        });
+                    });
+                }
+            };
 
     private Action setupOcrRegionAction =
             new AbstractAction("设置OCR区域") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>将相机移动到视觉位置并让您选择 OCR 区域。</html>");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>将相机移动到视觉位置并让您选择 OCR 区域。</html>");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            applyAction.actionPerformed(e);
-            UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                SwingUtilities.invokeAndWait(() -> {
-                    UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
-                            @Override 
-                            public void setResult(RegionOfInterest roi) {
-                                feeder.setOcrRegion(roi);
-                            }
-                        };
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    applyAction.actionPerformed(e);
+                    UiUtils.submitUiMachineTask(() -> {
+                        MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                        MovableUtils.fireTargetedUserAction(feeder.getCamera());
+                        SwingUtilities.invokeAndWait(() -> {
+                            UiUtils.messageBoxOnException(() -> {
+                                new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
+                                    @Override
+                                    public void setResult(RegionOfInterest roi) {
+                                        feeder.setOcrRegion(roi);
+                                    }
+                                };
+                            });
+                        });
                     });
-                });
-            });
-        }
-    };
+                }
+            };
 
     private Action performOcrAction =
             new AbstractAction("OCR元件识别") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>执行 OCR 并分配识别的元件。</html>");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            applyAction.actionPerformed(e);
-            UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getOcrLocation());
-                MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                StringBuilder report = new StringBuilder();
-                feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);
-                if (report.length() == 0) {
-                    report.append("No action taken.");
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>执行 OCR 并分配识别的元件。</html>");
                 }
-                JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
-            });
-        }
-    };
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    applyAction.actionPerformed(e);
+                    UiUtils.submitUiMachineTask(() -> {
+                        MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getOcrLocation());
+                        MovableUtils.fireTargetedUserAction(feeder.getCamera());
+                        StringBuilder report = new StringBuilder();
+                        feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);
+                        if (report.length() == 0) {
+                            report.append("No action taken.");
+                        }
+                        JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>" + report + "</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
+            };
 
     private Action feederCloneFromTemplate =
             new AbstractAction("Clone from Template", Icons.importt) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Clone the settings from the selected template feeder, <br/>transforming any coordinates to the pick location and orientation.</html>");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>Clone the settings from the selected template feeder, <br/>transforming any coordinates to the pick location and orientation.</html>");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                if (checkBoxUsedAsTemplate.isSelected()) {
-                    throw new Exception("This feeder is used as a template and cannot be overwritten.");
-                }
-                if (!(checkBoxCloneTapeSettings.isSelected()  
-                        || checkBoxClonePushPullSettings.isSelected()
-                        || checkBoxCloneVisionSettings.isSelected())) {
-                    throw new Exception("Please select some feeder settings to clone.");
-                }
-                applyAction.actionPerformed(e);
-                if (feeder.getTemplateFeeder(null) == null) {
-                    throw new Exception("No suitable template feeder found.");
-                }
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html><p>This will overwrite the selected settings with those from the template:<br/><br/>"
-                                + feeder.getCloneTemplateStatus()+"<br/><br/>"
-                                + "Are you sure?",
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        if (checkBoxUsedAsTemplate.isSelected()) {
+                            throw new Exception("This feeder is used as a template and cannot be overwritten.");
+                        }
+                        if (!(checkBoxCloneTapeSettings.isSelected()
+                                || checkBoxClonePushPullSettings.isSelected()
+                                || checkBoxCloneVisionSettings.isSelected())) {
+                            throw new Exception("Please select some feeder settings to clone.");
+                        }
+                        applyAction.actionPerformed(e);
+                        if (feeder.getTemplateFeeder(null) == null) {
+                            throw new Exception("No suitable template feeder found.");
+                        }
+                        int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                                "<html><p>This will overwrite the selected settings with those from the template:<br/><br/>"
+                                        + feeder.getCloneTemplateStatus() + "<br/><br/>"
+                                        + "Are you sure?",
                                 null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (result == JOptionPane.YES_OPTION) {
-                    feeder.smartClone(null, 
-                            checkBoxCloneLocationSettings.isSelected(),
-                            checkBoxCloneTapeSettings.isSelected(), 
-                            checkBoxClonePushPullSettings.isSelected(),
-                            checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected());
+                        if (result == JOptionPane.YES_OPTION) {
+                            feeder.smartClone(null,
+                                    checkBoxCloneLocationSettings.isSelected(),
+                                    checkBoxCloneTapeSettings.isSelected(),
+                                    checkBoxClonePushPullSettings.isSelected(),
+                                    checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected());
+                        }
+                    });
                 }
-            });
-        }
-    };
+            };
 
     private Action feederCloneToAllAction =
             new AbstractAction("Clone to Feeders", Icons.export) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Clone the settings from this feeder to all compatible feeders.</html>");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>Clone the settings from this feeder to all compatible feeders.</html>");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                if (!checkBoxUsedAsTemplate.isSelected()) {
-                    throw new Exception("This feeder is not used as a template.");
-                }
-                if (!(checkBoxCloneTapeSettings.isSelected()  
-                        || checkBoxClonePushPullSettings.isSelected()
-                        || checkBoxCloneVisionSettings.isSelected())) {
-                    throw new Exception("Please select some feeder settings to clone.");
-                }
-                applyAction.actionPerformed(e);
-                if (feeder.getCompatibleFeeders().size() == 0) {
-                    throw new Exception("No suitable feeders found to clone to.");
-                }
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html>This will overwrite the selected settings in all the target feeders:<br/><br/>"
-                                + feeder.getCloneTemplateStatus()+"<br/><br/>   "
-                                +"Are you sure?</html>",
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        if (!checkBoxUsedAsTemplate.isSelected()) {
+                            throw new Exception("This feeder is not used as a template.");
+                        }
+                        if (!(checkBoxCloneTapeSettings.isSelected()
+                                || checkBoxClonePushPullSettings.isSelected()
+                                || checkBoxCloneVisionSettings.isSelected())) {
+                            throw new Exception("Please select some feeder settings to clone.");
+                        }
+                        applyAction.actionPerformed(e);
+                        if (feeder.getCompatibleFeeders().size() == 0) {
+                            throw new Exception("No suitable feeders found to clone to.");
+                        }
+                        int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                                "<html>This will overwrite the selected settings in all the target feeders:<br/><br/>"
+                                        + feeder.getCloneTemplateStatus() + "<br/><br/>   "
+                                        + "Are you sure?</html>",
                                 null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (result == JOptionPane.YES_OPTION) {
-                    for (ReferencePushPullFeeder targetFeeder : feeder.getCompatibleFeeders()) {
-                        targetFeeder.cloneFeederSettings( 
-                                checkBoxCloneLocationSettings.isSelected(),
-                                checkBoxCloneTapeSettings.isSelected(), 
-                                checkBoxClonePushPullSettings.isSelected(),
-                                checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected(),
-                                feeder);
-                    }
+                        if (result == JOptionPane.YES_OPTION) {
+                            for (ReferencePushPullFeeder targetFeeder : feeder.getCompatibleFeeders()) {
+                                targetFeeder.cloneFeederSettings(
+                                        checkBoxCloneLocationSettings.isSelected(),
+                                        checkBoxCloneTapeSettings.isSelected(),
+                                        checkBoxClonePushPullSettings.isSelected(),
+                                        checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected(),
+                                        feeder);
+                            }
+                        }
+                    });
                 }
-            });
-        }
-    };
+            };
 
     private Action plusOneAction =
             new AbstractAction("", Icons.add) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Add one more feeder like this one, advancing in a row.</html>");
-        }
+                {
+                    putValue(Action.SHORT_DESCRIPTION,
+                            "<html>Add one more feeder like this one, advancing in a row.</html>");
+                }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                applyAction.actionPerformed(e);
-                ReferencePushPullFeeder newFeeder = feeder.createNewInRow();
-                UiUtils.submitUiMachineTask(() -> {
-                    Camera camera = feeder.getCamera(); 
-                    MovableUtils.moveToLocationAtSafeZ(camera, newFeeder.getPickLocation(0, null));
-                    MovableUtils.fireTargetedUserAction(camera);
-                    newFeeder.autoSetup();
-                    SwingUtilities.invokeLater(() -> {
-                        Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.messageBoxOnException(() -> {
+                        applyAction.actionPerformed(e);
+                        ReferencePushPullFeeder newFeeder = feeder.createNewInRow();
+                        UiUtils.submitUiMachineTask(() -> {
+                            Camera camera = feeder.getCamera();
+                            MovableUtils.moveToLocationAtSafeZ(camera, newFeeder.getPickLocation(0, null));
+                            MovableUtils.fireTargetedUserAction(camera);
+                            newFeeder.autoSetup();
+                            SwingUtilities.invokeLater(() -> {
+                                Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));
+                            });
+                        });
                     });
-                });
-            });
-        }
-    };
+                }
+            };
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
