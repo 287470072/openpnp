@@ -417,6 +417,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
+        Logger.trace("供料前（实际工作）feedCount:" + getFeedCount());
+        setFeedCount(getFeedCount() + 1);
+        // Move to the Feed Start Location
+        Head head = nozzle.getHead();
         if (postPickActuatorName == null || postPickActuatorName.equals("")) {
             return;
         }
@@ -429,11 +433,28 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
+
+            Location visionOffsets = getVisionOffset()
+                    .multiply(
+                            (isCalibrateMotionX() ? 1 : 0),
+                            (isCalibrateMotionY() ? 1 : 0),
+                            1,  // Z currently not used, but maybe later?
+                            0); // Make sure there is no rotation.
+            Location feedStartLocation = getFeedStartLocation()
+                    .subtractWithRotation(visionOffsets);
+
+            MovableUtils.moveToLocationAtSafeZ(actuator, feedStartLocation);
+            double baseSpeed = actuator.getHead().getMachine().getSpeed();
+
             actuator.actuate((Object) postPickActuatorValue);
+
+            head.moveToSafeZ();
+            assertCalibrated(true);
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
-        setFeedCount(getFeedCount() + 1);
+
+        Logger.trace("供料后（实际工作）feedCount:" + getFeedCount());
     }
 
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {

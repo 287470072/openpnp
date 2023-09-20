@@ -735,13 +735,16 @@ public class JobPanel extends JPanel {
         for (Feeder feed : feeders) {
             if (feed instanceof ReferencePushPullFeeder) {
                 long feedCount = ((ReferencePushPullFeeder) feed).getFeedCount();
+
                 long partsPerFeedCycle = ((ReferencePushPullFeeder) feed).getPartsPerFeedCycle();
                 if (feedCount % partsPerFeedCycle != 0) {
+                    Logger.trace("供料前（凑偶数）feedCount:" + feedCount);
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName("编带前进");
 
                     if (actuator != null) {
                         actuator.actuate(((ReferencePushPullFeeder) feed).getActuatorValue());
                         ((ReferencePushPullFeeder) feed).setFeedCount(feedCount + 1);
+                        Logger.trace("供料后（凑偶数）feedCount:" + ((ReferencePushPullFeeder) feed).getFeedCount());
                     }
 
                 }
