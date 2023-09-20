@@ -355,9 +355,9 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
 
     protected void coordinateWithMachine(boolean unconditional) throws Exception {
         Machine machine = Configuration.get().getMachine();
-        if (!machine.isTask(Thread.currentThread())) {
+/*        if (!machine.isTask(Thread.currentThread())) {
             throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
-        }
+        }*/
         machine.getMotionPlanner()
         .waitForCompletion(null, unconditional ? 
                 CompletionType.WaitForUnconditionalCoordination

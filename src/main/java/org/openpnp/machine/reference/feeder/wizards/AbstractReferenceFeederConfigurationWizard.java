@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentListener;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -43,6 +44,9 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.pmw.tinylog.Logger;
+
+import java.awt.event.*;
 
 @SuppressWarnings("serial")
 /**
@@ -78,7 +82,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     }
 
     public AbstractReferenceFeederConfigurationWizard(ReferenceFeeder feeder,
-            boolean includePickLocation) {
+                                                      boolean includePickLocation) {
         this.feeder = feeder;
         this.includePickLocation = includePickLocation;
 
@@ -86,47 +90,48 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         panelPart.setBorder(
                 new TitledBorder(null, "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
+        panelPart.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         comboBoxPart = new JComboBox();
+
         comboBoxPart.setMaximumRowCount(20);
         try {
             comboBoxPart.setModel(new PartsComboBoxModel());
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
-        
+
+
         JLabel lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 2, right, default");
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
-        
+
         JLabel lblRetryCount = new JLabel("Feed Retry Count");
         panelPart.add(lblRetryCount, "2, 4, right, default");
-        
+
         feedRetryCount = new JTextField();
         feedRetryCount.setText("3");
         panelPart.add(feedRetryCount, "4, 4");
         feedRetryCount.setColumns(3);
-        
+
         lblPickRetryCount = new JLabel("Pick Retry Count");
         panelPart.add(lblPickRetryCount, "2, 6, right, default");
-        
+
         pickRetryCount = new JTextField();
         pickRetryCount.setText("3");
         pickRetryCount.setColumns(3);
@@ -140,17 +145,17 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             contentPanel.add(panelLocation);
             panelLocation
                     .setLayout(new FormLayout(
-                            new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
+                            new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC,
                                     ColumnSpec.decode("default:grow"),
                                     FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec
-                                            .decode("default:grow"),
+                                    .decode("default:grow"),
                                     FormSpecs.RELATED_GAP_COLSPEC,
                                     ColumnSpec.decode("default:grow"),
                                     FormSpecs.RELATED_GAP_COLSPEC,
                                     ColumnSpec.decode("default:grow"),
                                     FormSpecs.RELATED_GAP_COLSPEC,
                                     ColumnSpec.decode("left:default:grow"),},
-                            new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                            new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                     FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
             lblX_1 = new JLabel("X");
@@ -186,6 +191,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             panelLocation.add(locationButtonsPanel, "10, 4");
         }
     }
+
 
     @Override
     public void createBindings() {

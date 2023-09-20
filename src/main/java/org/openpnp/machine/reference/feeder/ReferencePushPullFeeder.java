@@ -100,13 +100,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected boolean snapToAxis = true;
 
     @Attribute(required = false)
-    protected String actuatorName="飞达到位检测";
+    protected String actuatorName = "飞达到位检测";
 
     @Attribute(required = false)
     protected double actuatorValue;
 
     @Attribute(required = false)
-    protected String postPickActuatorName ="编带前进X2";
+    protected String postPickActuatorName = "编带前进X2";
 
     @Deprecated
     @Attribute(required = false)
@@ -400,7 +400,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
 
-        Head head = nozzle.getHead();
         Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
         if (actuator == null) {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
@@ -409,52 +408,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             throw new Exception(String.format("No feed actuator assigned to feeder %s",
                     getName()));
         }
-
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-            // Modulo of feed count is zero - no more parts there to pick, must feed
-
-            // Make sure we're calibrated
-            //掉过离线校验
-            assertCalibrated(false);
-
-
-            long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
-            long n = getFeedMultiplier() * feedsPerPart;
-            for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
-                actuator.actuate((Object) actuatorValue);
-
-      /*          if (postPickActuatorName == null || postPickActuatorName.equals("")) {
-                    return;
-                }
-                Actuator actuator2 = nozzle.getHead().getActuatorByName(postPickActuatorName);
-                if (actuator2 == null) {
-                    actuator2 = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
-                }*/
-    /*            if (actuator2 == null) {
-                    throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
-                }
-                // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
-                actuator2.actuate((Object) postPickActuatorValue);*/
-
-
-            }
-
-            head.moveToSafeZ();
-
-            // Make sure we're calibrated after type feed
-            //掉过离线校验
-            assertCalibrated(true);
-        } else {
-            Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
+            actuator.actuate((Object) actuatorValue);
         }
 
-        // increment feed count
-        setFeedCount(getFeedCount() + 1);
+
     }
 
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
-        Head head = nozzle.getHead();
         if (postPickActuatorName == null || postPickActuatorName.equals("")) {
             return;
         }
@@ -467,10 +429,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-            actuator.actuate((Object) actuatorValue);
+            actuator.actuate((Object) postPickActuatorValue);
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
+        setFeedCount(getFeedCount() + 1);
     }
 
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {

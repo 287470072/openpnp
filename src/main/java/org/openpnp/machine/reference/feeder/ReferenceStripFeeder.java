@@ -1,24 +1,23 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.feeder;
-
 
 
 import java.util.List;
@@ -56,17 +55,17 @@ import org.simpleframework.xml.core.Persist;
 
 /**
  * SMD tape standard info from http://www.liteplacer.com/setup-tape-positions-2/
- * 
+ * <p>
  * holes 1.5mm
- * 
+ * <p>
  * hole pitch 4mm
- * 
+ * <p>
  * first part center to reference hole linear is 2mm
- * 
+ * <p>
  * tape width is multiple of 4mm
- * 
+ * <p>
  * part pitch is multiple of 4mm except for 0402 and smaller, where it is 2mm
- * 
+ * <p>
  * hole to part lateral is tape width / 2 - 0.5mm
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
@@ -113,8 +112,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Attribute
     private int feedCount = 0;
 
-	@Attribute(required = false)
-	private int maxFeedCount = 0;
+    @Attribute(required = false)
+    private int maxFeedCount = 0;
 
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
@@ -123,6 +122,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
 
     private Location visionLocation;
+
+    private long feedMultiplier = 1;
+
+    private Length feedPitch = new Length(4, LengthUnit.Millimeters);
 
     public Length getHoleDiameterMin() {
         return getHoleDiameter().multiply(0.9);
@@ -182,11 +185,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // case means the feeder is set up incorrectly but has been tested to behave in a 
         // reasonable way, even if the two points are coincident
         if (holeCount > 0) {
-        	partPitchAdjusted = partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
+            partPitchAdjusted = partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
         } else {
-        	partPitchAdjusted = holePitch.getValue();
+            partPitchAdjusted = holePitch.getValue();
         }
-        	
+
         Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                 new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
         // Create the offsets that are required to go from a reference hole
@@ -217,36 +220,54 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void ensureFeederZ(Camera camera) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getReferenceHoleLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": please set the Reference Hole Location Z coordinate first, "
+            throw new Exception("Feeder " + getName() + ": please set the Reference Hole Location Z coordinate first, "
                     + "it is required to determine the true scale of the camera view for accurate computer vision.");
         }
     }
 
     public Location[] getIdealLineLocations() {
         if (visionLocation == null) {
-            return new Location[] {referenceHoleLocation, lastHoleLocation};
+            return new Location[]{referenceHoleLocation, lastHoleLocation};
         }
         double d1 = referenceHoleLocation.getLinearLengthTo(lastHoleLocation)
                 .convertToUnits(LengthUnit.Millimeters).getValue();
         double d2 = referenceHoleLocation.getLinearLengthTo(visionLocation)
                 .convertToUnits(LengthUnit.Millimeters).getValue();
         if (d2 > d1) {
-            return new Location[] {referenceHoleLocation, visionLocation};
-        }
-        else {
-            return new Location[] {referenceHoleLocation, lastHoleLocation};
+            return new Location[]{referenceHoleLocation, visionLocation};
+        } else {
+            return new Location[]{referenceHoleLocation, lastHoleLocation};
         }
     }
 
     public void feed(Nozzle nozzle) throws Exception {
+
+        int feedCountTemp = getFeedCount();
+        long partsPerFeedCycle = getPartsPerFeedCycle();
+        long yu = getFeedCount() % getPartsPerFeedCycle();
+
         setFeedCount(getFeedCount() + 1);
 
         // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
-			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
-		}
+            throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+        }
 
         updateVisionOffsets(nozzle);
+    }
+
+    public long getPartsPerFeedCycle() {
+        long feedsPerPart = (long) Math.ceil(getPartPitch().divide(getFeedPitch()));
+        return Math.round(getFeedMultiplier() * Math.ceil(feedsPerPart * getFeedPitch().divide(getPartPitch())));
+    }
+
+    public long getFeedMultiplier() {
+        return feedMultiplier;
+    }
+
+
+    public Length getFeedPitch() {
+        return feedPitch;
     }
 
     private void updateVisionOffsets(Nozzle nozzle) throws Exception {
@@ -266,8 +287,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // alternate case below.
             expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
                     holePitch.multiply((feedCount - 1) / 2));
-        }
-        else {
+        } else {
             // For tapes with a part pitch >= 4 there is always a reference
             // hole 2mm from a part so we just multiply by the part pitch
             // skipping over holes that are not reference holes.
@@ -294,7 +314,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
             Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
             Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
-    
+
             // Process the pipeline to clean up the image and detect the tape holes
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
@@ -305,21 +325,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // Search range is half-way to the next hole. 
             pipeline.setProperty("sprocketHole.maxDistance", getHolePitch().multiply(0.5));
             pipeline.process();
-    
+
             if (MainFrame.get() != null) {
                 try {
                     MainFrame.get().getCameraViews().getCameraView(camera)
                             .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     // if we aren't running in the UI this will fail, and that's okay
                 }
             }
 
             // Grab the results
             List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-                    .getExpectedListModel(CvStage.Result.Circle.class, 
-                            new Exception("Feeder " + getName() + ": No tape holes found."));            
+                    .getExpectedListModel(CvStage.Result.Circle.class,
+                            new Exception("Feeder " + getName() + ": No tape holes found."));
 
             // Find the closest result
             results.sort((a, b) -> {
@@ -329,13 +348,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                         .getLinearDistanceTo(camera.getLocation());
                 return da.compareTo(db);
             });
-    
+
             CvStage.Result.Circle closestResult = results.get(0);
             Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
             return holeLocation;
         }
     }
-   
+
     /**
      * Returns if the feeder can take back a part.
      * Makes the assumption, that after each feed a pick followed,
@@ -343,7 +362,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
      */
     @Override
     public boolean canTakeBackPart() {
-        if (feedCount > 0 ) {  
+        if (feedCount > 0) {
             return true;
         } else {
             return false;
@@ -362,7 +381,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (!canTakeBackPart()) {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
-        
+
         // ok, now put the part back on the location of the last pick
         nozzle.moveToPickLocation(this);
         // put the part back
@@ -374,8 +393,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
     }
-        
-    
+
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
@@ -461,13 +480,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         firePropertyChange("feedCount", oldValue, feedCount);
     }
 
-	public int getMaxFeedCount() {
-		return maxFeedCount;
-	}
+    public int getMaxFeedCount() {
+        return maxFeedCount;
+    }
 
-	public void setMaxFeedCount(int count) {
-		maxFeedCount = count;
-	}
+    public void setMaxFeedCount(int count) {
+        maxFeedCount = count;
+    }
 
     public Length getReferenceHoleToPartLinear() {
         return referenceHoleToPartLinear;
@@ -490,7 +509,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (standardEia481 == null) {
             // If loaded from old configuration, we must migrate it to the EIA-481-C industry 
             // standard rotation in tape, where tape 0° is with the sprocket holes on top.
-            setLocation(getLocation().derive(null, null, null, 
+            setLocation(getLocation().derive(null, null, null,
                     Utils2D.angleNorm(getLocation().getRotation() - 90, 180)));
             standardEia481 = true;
         }
@@ -540,8 +559,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             String xml = IOUtils.toString(ReferenceStripFeeder.class
                     .getResource("ReferenceStripFeeder-DefaultPipeline.xml"));
             return new CvPipeline(xml);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Error(e);
         }
     }

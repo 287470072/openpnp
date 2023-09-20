@@ -675,7 +675,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             if (result.model == null) {
                 throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): No result found.",
+                        "底部视觉: (%s): 未识别到元件。\n" +
+                                "Tips:请检查有没有吸取到元件或者参考教程调整亮度阈值。",
                         part.getId()));
             }
 
@@ -802,7 +803,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 if (result.model == null) {
                     throw new Exception(String.format(
-                            "ReferenceBottomVision (%s): No result found.",
+                            "底部视觉: (%s): 未识别到元件。\n" +
+                                    "Tips:请检查有没有吸取到元件或者参考教程调整亮度阈值。",
                             part.getId()));
                 }
 

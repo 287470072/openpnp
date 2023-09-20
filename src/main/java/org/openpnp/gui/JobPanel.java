@@ -29,6 +29,7 @@ import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.*;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.*;
 import org.openpnp.model.Panel;
@@ -677,6 +678,7 @@ public class JobPanel extends JPanel {
      * Updates the Job controls based on the Job state and the Machine's readiness.
      */
     private void updateJobActions() {
+
         if (state == State.Stopped) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME,
@@ -687,6 +689,11 @@ public class JobPanel extends JPanel {
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(true);
         } else if (state == State.Running) {
+            try {
+                feedStatus();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME,
                     Translations.getString("JobPanel.Action.Job.Pause")); //$NON-NLS-1$
@@ -720,6 +727,26 @@ public class JobPanel extends JPanel {
             startPauseResumeJobAction.setEnabled(false);
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(false);
+        }
+    }
+
+    public void feedStatus() throws Exception {
+        List<Feeder> feeders = configuration.getMachine().getFeeders();
+        for (Feeder feed : feeders) {
+            if (feed instanceof ReferencePushPullFeeder) {
+                long feedCount = ((ReferencePushPullFeeder) feed).getFeedCount();
+                long partsPerFeedCycle = ((ReferencePushPullFeeder) feed).getPartsPerFeedCycle();
+                if (feedCount % partsPerFeedCycle != 0) {
+                    Actuator actuator = Configuration.get().getMachine().getActuatorByName("编带前进");
+
+                    if (actuator != null) {
+                        actuator.actuate(((ReferencePushPullFeeder) feed).getActuatorValue());
+                        ((ReferencePushPullFeeder) feed).setFeedCount(feedCount + 1);
+                    }
+
+                }
+            }
+
         }
     }
 

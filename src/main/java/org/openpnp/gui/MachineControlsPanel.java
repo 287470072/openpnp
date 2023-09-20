@@ -59,6 +59,7 @@ import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -304,7 +305,9 @@ public class MachineControlsPanel extends JPanel {
                 thread.setDaemon(true);
                 thread.start();
             } else {
+                //绑定串口
                 bindSerial();
+                //绑定相机
                 changeCamera();
                 // Not an emergency stop. Run as regular machine task.  
                 UiUtils.submitUiMachineTask(() -> {
@@ -323,6 +326,8 @@ public class MachineControlsPanel extends JPanel {
         MainFrame.get().getCameraViews().cameraPanelBind();
 
     }
+
+
 
 
     //根据COM口名称自动绑定GcodeDriver

@@ -1,30 +1,28 @@
 /*
  * Copyright (C) 2020 <mark@makr.zone>
- * based on the ReferenceLeverFeeder 
+ * based on the ReferenceLeverFeeder
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +38,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -71,7 +72,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullMotionConfigurationWizard
-extends AbstractConfigurationWizard {
+        extends AbstractConfigurationWizard {
     private final ReferencePushPullFeeder feeder;
     private JComboBox comboBoxFeedActuator;
     private JTextField actuatorValue;
@@ -88,7 +89,7 @@ extends AbstractConfigurationWizard {
         panelActuator.setBorder(new TitledBorder(null,
                 "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
-        panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
+        panelActuator.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -99,7 +100,7 @@ extends AbstractConfigurationWizard {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
+                new RowSpec[]{
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -126,6 +127,14 @@ extends AbstractConfigurationWizard {
         panelActuator.add(actuatorValue, "6, 4");
         actuatorValue.setColumns(10);
 
+        actuatorValue.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                feeder.setName(actuatorValue.getText() + "号飞达");
+                postPickActuatorValue.setText(actuatorValue.getText());
+            }
+        });
+
         JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
         panelActuator.add(lblForBoolean, "8, 4");
 
@@ -137,10 +146,22 @@ extends AbstractConfigurationWizard {
 
         comboBoxPostPickActuator = new JComboBox();
         comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+
+
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
+
 
         postPickActuatorValue = new JTextField();
         postPickActuatorValue.setColumns(10);
+
+        postPickActuatorValue.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                feeder.setName(postPickActuatorValue.getText() + "号飞达");
+                actuatorValue.setText(postPickActuatorValue.getText());
+            }
+        });
+
         panelActuator.add(postPickActuatorValue, "6, 6");
 
         JLabel label = new JLabel("For Boolean: 1 = True, 0 = False");
@@ -156,8 +177,7 @@ extends AbstractConfigurationWizard {
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
     }
-    
-   
+
 
     @Override
     public void createBindings() {
@@ -169,8 +189,7 @@ extends AbstractConfigurationWizard {
         Head head = null;
         try {
             head = Configuration.get().getMachine().getDefaultHead();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Logger.error(e, "Cannot determine default head of machine.");
         }
         actuatorConverter = (new NamedConverter<>(head.getActuators()));
@@ -182,19 +201,18 @@ extends AbstractConfigurationWizard {
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
 
-       
+
     }
 
     private NamedConverter<Actuator> actuatorConverter;
-    
-    
-    
+
+
     private Action testFeedActuatorAction = new AbstractAction("Test feed") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
-                   Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
+                    Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
                     return;
                 }
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
@@ -202,12 +220,12 @@ extends AbstractConfigurationWizard {
                 if (actuator == null) {
                     throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
                 }
-                 //Use the generic Object method to interpret the value as the actuator.valueType.
-                actuator.actuate((Object)feeder.getActuatorValue());
+                //Use the generic Object method to interpret the value as the actuator.valueType.
+                actuator.actuate((Object) feeder.getActuatorValue());
             });
         }
     };
-    
+
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -224,7 +242,7 @@ extends AbstractConfigurationWizard {
                             "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
                 }
                 // Use the generic Object method to interpret the value as the actuator.valueType.
-                actuator.actuate((Object)feeder.getPostPickActuatorValue());
+                actuator.actuate((Object) feeder.getPostPickActuatorValue());
             });
         }
     };
