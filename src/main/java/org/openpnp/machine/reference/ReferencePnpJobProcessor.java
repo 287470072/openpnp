@@ -433,14 +433,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (jobOrder.equals(JobOrderHint.Part)) {
                 // Get the list of unfinished placements and sort them by part.
                 jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator.comparing(JobPlacement::getPartId))
+                        .sorted(Comparator.comparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getPartFeederX)
+                                .reversed())
                         .collect(Collectors.toList());
             } else {
                 // Get the list of unfinished placements and sort them by part height.
                 jobPlacements = getPendingJobPlacements().stream()
                         .sorted(Comparator
-                                .comparing(JobPlacement::getPartHeight)
-                                .thenComparing(JobPlacement::getPartId))
+                                .comparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getPartFeederX)
+                                .reversed())
                         .collect(Collectors.toList());
             }
 
@@ -601,7 +604,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 try {
 
                     //if (part.getPackage().getCompatibleNozzleTips().size() != 2 | !(feeder instanceof ReferencePushPullFeeder)) {
-                        feed(feeder, nozzle);
+                    feed(feeder, nozzle);
 
                 } catch (JobProcessorException jpe) {
                     lastException = jpe;
@@ -1246,6 +1249,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to the caller.
          */
         public Step step() throws JobProcessorException {
+            List<Feeder> feeders = machine.getFeeders().stream()
+                    .filter(Feeder::isEnabled)
+/*                    .sorted(Comparator.comparing(f-> {
+                        try {
+                            return new Double(f.getPickLocation().getX());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }))*/
+                    .collect(Collectors.toList());
+
             PlannedPlacement plannedPlacement = plannedPlacements
                     .stream()
                     .filter(p -> p.jobPlacement.getStatus() == Status.Processing)

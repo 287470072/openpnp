@@ -417,8 +417,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
-        Logger.trace("供料前（实际工作）feedCount:" + getFeedCount());
-        setFeedCount(getFeedCount() + 1);
+
+
         // Move to the Feed Start Location
         Head head = nozzle.getHead();
         if (postPickActuatorName == null || postPickActuatorName.equals("")) {
@@ -454,7 +454,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
 
-        Logger.trace("供料后（实际工作）feedCount:" + getFeedCount());
+        setFeedCount(getFeedCount() + 1);
     }
 
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {

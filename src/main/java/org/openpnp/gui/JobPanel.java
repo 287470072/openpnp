@@ -689,11 +689,11 @@ public class JobPanel extends JPanel {
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(true);
         } else if (state == State.Running) {
-            try {
+/*            try {
                 feedStatus();
             } catch (Exception e) {
                 throw new RuntimeException(e);
-            }
+            }*/
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME,
                     Translations.getString("JobPanel.Action.Job.Pause")); //$NON-NLS-1$

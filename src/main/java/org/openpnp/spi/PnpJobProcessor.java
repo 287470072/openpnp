@@ -1,9 +1,6 @@
 package org.openpnp.spi;
 
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Placement;
+import org.openpnp.model.*;
 
 public interface PnpJobProcessor extends JobProcessor {
     public static class JobPlacement extends AbstractModelObject {
@@ -44,6 +41,7 @@ public interface PnpJobProcessor extends JobProcessor {
 
         /**
          * Set the error, and as a side effect, set the status to Errored.
+         *
          * @param error
          */
         public void setError(Exception error) {
@@ -58,17 +56,32 @@ public interface PnpJobProcessor extends JobProcessor {
         }
 
         public double getPartHeight() {
-            return (placement.getPart() != null 
+            return (placement.getPart() != null
                     ? placement.getPart().getHeight().convertToUnits(LengthUnit.Millimeters).getValue()
-                            : 0.0);
+                    : 0.0);
         }
 
         public String getPartId() {
-            return (placement.getPart() != null 
+            return (placement.getPart() != null
                     ? placement.getPart().getId()
-                            : "");
+                    : "");
         }
-        
+
+        public double getPartFeederX() {
+            double x = 0;
+            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
+                    try {
+                        x = feeder.getPickLocation().getX();
+                    } catch (Exception e) {
+
+                    }
+
+                }
+            }
+            return x;
+        }
+
         @Override
         public String toString() {
             return placement.getId();
