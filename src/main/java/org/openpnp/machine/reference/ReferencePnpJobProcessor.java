@@ -433,17 +433,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (jobOrder.equals(JobOrderHint.Part)) {
                 // Get the list of unfinished placements and sort them by part.
                 jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator.comparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getPartFeederX)
-                                .reversed())
+                        .sorted(Comparator.comparing(JobPlacement::getPartFeederX)
+                                .thenComparing(JobPlacement::getPartId))
                         .collect(Collectors.toList());
             } else {
                 // Get the list of unfinished placements and sort them by part height.
                 jobPlacements = getPendingJobPlacements().stream()
                         .sorted(Comparator
-                                .comparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getPartFeederX)
-                                .reversed())
+                                .comparing(JobPlacement::getPartFeederX)
+                                .thenComparing(JobPlacement::getPartId))
                         .collect(Collectors.toList());
             }
 
@@ -753,7 +751,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             if (plannedPlacement == null) {
                 return new Place(plannedPlacements);
             }
-            List<PlannedPlacement> plannedPlacements1 = plannedPlacements;
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -1249,17 +1247,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to the caller.
          */
         public Step step() throws JobProcessorException {
-            List<Feeder> feeders = machine.getFeeders().stream()
-                    .filter(Feeder::isEnabled)
-/*                    .sorted(Comparator.comparing(f-> {
-                        try {
-                            return new Double(f.getPickLocation().getX());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }))*/
-                    .collect(Collectors.toList());
-
             PlannedPlacement plannedPlacement = plannedPlacements
                     .stream()
                     .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
@@ -1270,10 +1257,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Step result;
                 //针对双目识别Align单独做处理
                 if (currentStep instanceof Align) {
-                    /*result = stepImpl(plannedPlacement);
-                    completed.add(plannedPlacement);*/
-                    result = stepImpl2(plannedPlacements, completed);
+                    result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);
+/*                    result = stepImpl2(plannedPlacements, completed);
+                    completed.add(plannedPlacement);*/
                 } else {
                     result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);

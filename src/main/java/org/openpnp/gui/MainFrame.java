@@ -1095,6 +1095,22 @@ public class MainFrame extends JFrame {
             lblPlacements.setText(String.format(Translations.getString(
                             "MainFrame.StatusPanel.PlacementsLabel.initial.format.text"), //$NON-NLS-1$
                     totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
+            int prgPercent = (int) (((float) totalPlacementsCompleted / (float) totalPlacements) * 100.0f);
+            if (prgPercent <= 30) {
+                prgbrPlacements.setForeground(new Color(255, 0, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
+
+            } else if (prgPercent > 30 & prgPercent <= 60) {
+                prgbrPlacements.setForeground(new Color(210, 153, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
+
+            }
+            else if (prgPercent > 60 & prgPercent <= 90) {
+                prgbrPlacements.setForeground(new Color(255, 255, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
+
+            }
+            else {
+                prgbrPlacements.setForeground(new Color(0, 255, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
+
+            }
             prgbrPlacements.setValue((int) (((float) totalPlacementsCompleted / (float) totalPlacements) * 100.0f));
         });
     }
