@@ -1103,7 +1103,7 @@ public class MainFrame extends JFrame {
                 prgbrPlacements.setForeground(new Color(210, 153, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
 
             }
-            else if (prgPercent > 60 & prgPercent <= 90) {
+            else if (prgPercent > 60 & prgPercent <= 99) {
                 prgbrPlacements.setForeground(new Color(255, 255, 0, 255));//这里点击左边的颜色按钮可以换进度条的已加载颜色
 
             }
