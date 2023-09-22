@@ -4,10 +4,8 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -37,7 +35,6 @@ import org.openpnp.model.VisionCompositing;
 import org.openpnp.model.VisionCompositing.Composite;
 import org.openpnp.model.VisionCompositing.Shot;
 import org.openpnp.spi.*;
-import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -45,13 +42,7 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
-import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.openpnp.vision.pipeline.Stage;
-import org.openpnp.vision.pipeline.stages.AffineUnwarp;
-import org.openpnp.vision.pipeline.stages.AffineWarp;
-import org.openpnp.vision.pipeline.stages.ImageCapture;
-import org.openpnp.vision.pipeline.stages.MaskRectangle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -129,16 +120,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
                 || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
             offsets = findOffsetsPreRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
-        } else {
+        }
+        else {
             offsets = findOffsetsPostRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         }
         if (nozzle.isAligningRotationMode()) {
             // Add the rotation offset to the rotation mode rather than adjusting for it in placement. This has the advantage of
             // showing the rotation aligned with the part rotation in the DRO, cross-hairs etc.
-            AbstractNozzle abstractNozzle = (AbstractNozzle) nozzle;
-            double rotOff = abstractNozzle.getRotationModeOffset() != null ? abstractNozzle.getRotationModeOffset() : 0;
-            //Align阶段调整元件旋转角度
-            abstractNozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
+            double rotOff = nozzle.getRotationModeOffset() != null ? nozzle.getRotationModeOffset() : 0;
+            nozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
             Location newOffsets = offsets.getLocation().derive(null, null, null, 0.);
             offsets = new PartAlignmentOffset(newOffsets, offsets.getPreRotated());
         }
@@ -147,7 +137,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public PartAlignmentOffset findOffsets2(List<PnpJobPlanner.PlannedPlacement> plannedPlacements) throws Exception {
-        return findOffsetsPreRotate2(plannedPlacements);
+        return null;
     }
 
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
@@ -182,11 +172,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 if (partHeight.convertToUnits(LengthUnit.Millimeters).getValue() <= 0.001) {
                     throw new Exception("Auto focus part height determination failed. Camera seems to have focused on nozzle tip.");
                 }
-                Logger.info("Part " + part.getId() + " height set to " + partHeight + " by camera focus provider.");
+                Logger.info("Part "+part.getId()+" height set to "+partHeight+" by camera focus provider.");
                 part.setHeight(partHeight);
             }
             if (part.isPartHeightUnknown()) {
-                throw new Exception("Part height unknown and camera " + camera.getName() + " does not support part height sensing.");
+                throw new Exception("Part height unknown and camera "+camera.getName()+" does not support part height sensing.");
             }
         }
         return camera.getLocation(nozzle)
@@ -218,7 +208,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
-            for (int pass = 0; ; ) {
+            for(int pass = 0;;) {
                 RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
                         wantedLocation, nozzleLocation, bottomVisionSettings);
 
@@ -229,18 +219,18 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
                 double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle;
-                // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a   
-                // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+                // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a
+                // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side
                 // is which. We can assume that the part is never picked more than +/-45º rotated.
                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
-                if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+                if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust ) {
                     angleOffset = Utils2D.angleNorm(angleOffset);
                 } else {
                     // turning more than 180° in one direction makes no sense
                     angleOffset = Utils2D.angleNorm(angleOffset, 180);
                 }
 
-                // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
+                // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets
                 // will change too, as the off-center part rotates around the nozzle axis.
                 // So we need to compensate for that.
                 offsets = offsets.rotateXy(-angleOffset)
@@ -248,7 +238,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
 
                 if (++pass >= maxVisionPasses) {
-                    // Maximum number of passes reached. 
+                    // Maximum number of passes reached.
                     break;
                 }
 
@@ -264,21 +254,24 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}",
                             offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
-                } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
+                }
+                else if (corner.getLinearDistanceTo(cornerWithAngularOffset) >  getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : corner offset {} > {}",
                             offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
-                } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                }
+                else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
                     Logger.debug("Offsets too large {} : angle offset {} > {}",
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
-                } else {
-                    // We have a good enough fix - go on with that. 
+                }
+                else {
+                    // We have a good enough fix - go on with that.
                     break;
                 }
 
                 // Not a good enough fix - try again with corrected position.
             }
             Logger.debug("Offsets accepted {}", offsets);
-            // Calculate cumulative offsets over all the passes.  
+            // Calculate cumulative offsets over all the passes.
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
 
             // subtract visionCenterOffset
@@ -289,14 +282,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
-    }
-
-    private PartAlignmentOffset findOffsetsPreRotate2(List<PnpJobPlanner.PlannedPlacement> plannedPlacements)
-            throws Exception {
-
-        processPipelineAndGetResult2(plannedPlacements);
-
-        return new PartAlignment.PartAlignmentOffset(null, true);
     }
 
     private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
@@ -316,11 +301,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Location offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
             double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle);
-            // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a   
-            // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+            // Most OpenCV Pipelines can only tell us the angle of the recognized rectangle in a
+            // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side
             // is which. We can assume that the part is never picked more than +/-45º rotated.
             // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
-            if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+            if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust ) {
                 angleOffset = Utils2D.angleNorm(angleOffset);
             } else {
                 // turning more than 180° in one direction makes no sense
@@ -349,9 +334,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Length maxPickTolerance = nt.getMaxPickTolerance();
             if (offsetsLength.compareTo(maxPickTolerance) > 0) {
                 LengthConverter lengthConverter = new LengthConverter();
-                throw new Exception("Part " + part.getId() + " bottom vision offsets length " + lengthConverter.convertForward(offsetsLength)
-                        + " larger than the allowed Max. Pick Tolerance " + lengthConverter.convertForward(maxPickTolerance) + " set on nozzle tip "
-                        + nt.getName() + ".");
+                throw new Exception("Part "+part.getId()+" bottom vision offsets length "+lengthConverter.convertForward(offsetsLength)
+                        +" larger than the allowed Max. Pick Tolerance "+lengthConverter.convertForward(maxPickTolerance)+" set on nozzle tip "
+                        + nt.getName()+".");
             }
         }
     }
@@ -414,18 +399,47 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinLength)),
                     measuredLength);
             ret = false;
-        } else {
+        }
+        else {
             msg = String.format("Part %s size ok. Width %s, Length %s", part.getId(),
                     measuredWidth, measuredLength);
             ret = true;
         }
         Logger.debug(msg);
-        if (!ret) {
+        if (! ret) {
             throw new Exception(msg);
         }
         return true;
     }
 
+    @Override
+    public void displayResult(BufferedImage image, Part part, Location offsets, Camera camera, Nozzle nozzle) {
+        String s = part.getId();
+        if (offsets != null) {
+            LengthConverter lengthConverter = new LengthConverter();
+            DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+            s += "  |  X:"+lengthConverter.convertForward(offsets.getLengthX())+" "
+                    +"Y:"+lengthConverter.convertForward(offsets.getLengthY())+" "
+                    +"C:"+doubleConverter.convertForward(offsets.getRotation())
+                    +" Δ:"+lengthConverter.convertForward(offsets.getLinearLengthTo(Location.origin));
+        }
+        Logger.debug("Alignment result: {}", s);
+        MainFrame mainFrame = MainFrame.get();
+        if (mainFrame != null) {
+            try {
+                mainFrame
+                        .getCameraViews()
+                        .getCameraView(camera)
+                        .showFilteredImage(image, s,
+                                2000);
+                // Also make sure the right nozzle is selected for correct cross-hair rotation.
+                MovableUtils.fireTargetedUserAction(nozzle);
+            }
+            catch (Exception e) {
+                // Throw away, just means we're running outside of the UI.
+            }
+        }
+    }
 
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
                                 Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
@@ -435,23 +449,23 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
         if (visionCompositing.getCompositingMethod().isEnforced()
                 && composite.getCompositingSolution().isInvalid()) {
-            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". "
-                    + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". "
-                    + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
+            throw new Exception("Vision Compositing has not found a valid solution for package "+pkg.getId()+". "
+                    + "Status: "+composite.getCompositingSolution()+", "+composite.getDiagnostics()+". "
+                    + "For more diagnostic information go to the Vision Compositing tab on package "+pkg.getId()+". ");
         }
         pipeline.resetReusedPipeline();
         for (Shot shot : composite.getShotsTravel()) {
             Location upp = camera.getUnitsPerPixelAtZ();
             pipeline.setProperty("camera", camera);
-            Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip. 
+            Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip.
             // Set the footprint.
             pipeline.setProperty("footprint", composite.getFootprint());
             pipeline.setProperty("footprint.rotation", wantedLocation.getRotation());
             pipeline.setProperty("footprint.xOffset", new Length(shot.getX(), composite.getUnits()));
             pipeline.setProperty("footprint.yOffset", new Length(shot.getY(), composite.getUnits()));
-            // Crop to fit into the mask. 
-            // TODO: make the template circular. 
-            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits())
+            // Crop to fit into the mask.
+            // TODO: make the template circular.
+            Length maxDim = new Length(Math.sqrt(2)*shot.getMaxMaskRadius(), composite.getUnits())
                     .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
             pipeline.setProperty("footprint.maxWidth", maxDim);
             pipeline.setProperty("footprint.maxHeight", maxDim);
@@ -463,7 +477,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // Set the background removal properties.
             pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance()
                     .multiply(1.2)); // Allow for some tolerance, we will check the result later.
-            pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius() * 2, composite.getUnits()));
+            pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius()*2, composite.getUnits()));
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTipCalibration calibration = ((ReferenceNozzleTip) nozzleTip).getCalibration();
                 if (calibration != null
@@ -480,11 +494,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.setProperty("MaskHsv.valueMin", 0);
                     // no need to restrict to this: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
                     pipeline.setProperty("MaskHsv.valueMax",
-                            Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
+                            Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
                 }
             }
             if (samplingSize.compareTo(upp.getLengthX().multiply(2)) < 0) {
-                // We want the sampling size to at least be 2 pixels, otherwise subSampling will be too costly. 
+                // We want the sampling size to at least be 2 pixels, otherwise subSampling will be too costly.
                 // This means: a camera with less than 4 pixels per smallest contact size, is likely to cause problems
                 // but that's to be expected anyways.
                 samplingSize = upp.getLengthX().multiply(2);
@@ -515,54 +529,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
-
                         if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                 .compareTo(camera.getRoamingRadius()) > 0) {
                             // Nozzle is not yet in camera roaming radius. Move at safe Z.
                             MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                        } else {
+                        }
+                        else {
                             nozzle.moveTo(shotLocation);
                         }
                         super.apply();
                     });
-
- /*                       //判断是N1嘴还是N2嘴
-                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-                        Nozzle n1 = nozzles
-                                .stream()
-                                .findFirst()
-                                .orElse(null);
-                        //如果是N1吸嘴的，将N1移动到相机上方
-                        if (nozzle == n1) {
-                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                    .compareTo(camera.getRoamingRadius()) > 0) {
-                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                            } else {
-                                nozzle.moveTo(shotLocation);
-                            }
-                        }
-                        //判断是否是单独N2运行，如果是，需要根据N1和N2的偏移量，计算出N2需要移动的位置
-                        if (nozzle != n1) {
-                            Location n2LocationOffset = nozzle.getHeadOffsets();
-                            Location n1locationOffset = n1.getHeadOffsets();
-                            Location n2NewLocation = shotLocation;
-                            n2NewLocation = n2NewLocation.derive(
-                                    shotLocation.getX() + (n2LocationOffset.getX() - n1locationOffset.getX()),
-                                    shotLocation.getY() + (n2LocationOffset.getY() - n1locationOffset.getY()),
-                                    shotLocation.getZ() + (n2LocationOffset.getZ() - n1locationOffset.getZ()),
-                                    shotLocation.getRotation());
-
-                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                    .compareTo(camera.getRoamingRadius()) > 0) {
-                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, n2NewLocation);
-                            } else {
-                                nozzle.moveTo(n2NewLocation);
-                            }
-                        }
-                        super.apply();
-                    });*/
                 }
 
                 @Override
@@ -575,90 +551,18 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     composite.interpret();
                     return new Result(null, composite.getDetectedRotatedRect());
                 }
-            }
-
-            ;
+            };
         }
     }
 
-
     private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera,
-                                                    Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings
-                                                            bottomVisionSettings) throws Exception {
+                                                    Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
                 nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
-        //下视觉识别矫正吸嘴元件的关键位置
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
-
-            //移动吸嘴到摄像头上方
             pipelineShot.apply();
 
-            AffineWarp affineWarp = new AffineWarp();
-            //判断是N1嘴还是N2嘴
-            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-            Nozzle n1 = nozzles
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
-            List<CvStage> stages = pipeline.getStages();
-
-
-            //清空所有AffineWarp，为下面添加stage做准备
-            for (int i = 0; i < stages.size(); i++) {
-                if (stages.get(i) instanceof AffineWarp) {
-                    pipeline.remove(stages.get(i));
-                }
-            }
-
-
-            if (camera.getWidth() > 2000) {
-                if (nozzle == n1) {
-                    pipeline.setProperty("needSettle", true);
-                    //左半边
-                    //左上角
-                    Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, 0);
-                    Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, camera.getHeight());
-                    Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
-                    affineWarp.setX0(cameraLeftUpperLocation.getX());
-                    affineWarp.setY0(cameraLeftUpperLocation.getY());
-                    //右上角
-                    affineWarp.setX1(cameraRightUpperLocation.getX());
-                    affineWarp.setY1(cameraRightUpperLocation.getY());
-                    //左下角
-                    affineWarp.setX2(cameraLeftLowerLocation.getX());
-                    affineWarp.setY2(cameraLeftLowerLocation.getY());
-                } else {
-                    if (part.getPackage().getCompatibleNozzleTips().size() > 2) {
-                        pipeline.setProperty("needSettle", false);
-                    } else {
-                        pipeline.setProperty("needSettle", true);
-                    }
-                    Location n2LocationOffset = nozzle.getHeadOffsets();
-                    Location n1locationOffset = n1.getHeadOffsets();
-                    Location offset = VisionUtils.getPixelOffsets(camera, n2LocationOffset.getX() - n1locationOffset.getX(), n2LocationOffset.getY() - n1locationOffset.getY());
-
-                    //右半边
-                    Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
-                    Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, camera.getHeight());
-                    Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, camera.getWidth(), 0);
-
-                    affineWarp.setX0(cameraLeftUpperLocation.getX() + offset.getX());
-                    affineWarp.setY0(cameraLeftUpperLocation.getY() + offset.getY());
-                    affineWarp.setX1(cameraRightUpperLocation.getX() + offset.getX());
-                    affineWarp.setY1(cameraRightUpperLocation.getY() + offset.getY());
-                    affineWarp.setX2(cameraLeftLowerLocation.getX() + offset.getX());
-                    affineWarp.setY2(cameraLeftLowerLocation.getY() + offset.getY());
-                }
-                pipeline.insert(affineWarp, 3);
-                pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
-            } else {
-                pipeline.setProperty("needSettle", true);
-            }
-
-            //识别
             pipeline.process();
-
-            //取结果
             Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
 
             // Fall back to the old name of "result" instead of "results" for backwards
@@ -675,8 +579,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             if (result.model == null) {
                 throw new Exception(String.format(
-                        "底部视觉: (%s): 未识别到元件。\n" +
-                                "Tips:请检查有没有吸取到元件或者参考教程调整亮度阈值。",
+                        "ReferenceBottomVision (%s): No result found.",
                         part.getId()));
             }
 
@@ -689,141 +592,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // Display the shot result.
             displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
         }
-        return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
-    }
-
-    private RotatedRect processPipelineAndGetResult2(List<PnpJobPlanner.PlannedPlacement> plannedPlacements) throws
-            Exception {
-
-        //判断贴片元件数量
-        if (plannedPlacements.size() < 2) {
-            //如果只有一个吸嘴有元件
-            PnpJobPlanner.PlannedPlacement plannedPlacement = plannedPlacements
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
-            PnpJobProcessor.JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            Placement placement = jobPlacement.getPlacement();
-            Part part = placement.getPart();
-            Camera camera = VisionUtils.getBottomVisionCamera();
-            Nozzle nozzle = plannedPlacement.nozzle;
-            pipeline = bottomVisionSettings.getPipeline();
-            Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, 0.);
-
-
-            BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
-            preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
-                    nozzle, nozzle.getNozzleTip(), wantedLocation, wantedLocation, bottomVisionSettings);
-
-            //下视觉识别矫正吸嘴元件的关键位置
-            for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
-
-                //移动吸嘴到摄像头上方
-                pipelineShot.apply();
-
-                AffineWarp affineWarp = new AffineWarp();
-                //判断是N1嘴还是N2嘴
-                List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-                Nozzle n1 = nozzles
-                        .stream()
-                        .findFirst()
-                        .orElse(null);
-                List<CvStage> stages = pipeline.getStages();
-
-
-                //清空所有AffineWarp，为下面添加stage做准备
-                for (int i = 0; i < stages.size(); i++) {
-                    if (stages.get(i) instanceof AffineWarp) {
-                        pipeline.remove(stages.get(i));
-                    }
-                }
-
-
-                if (camera.getWidth() > 2000) {
-                    if (nozzle == n1) {
-                        pipeline.setProperty("needSettle", true);
-                        //左半边
-                        //左上角
-                        Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, 0);
-                        Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, 0, camera.getHeight());
-                        Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
-                        affineWarp.setX0(cameraLeftUpperLocation.getX());
-                        affineWarp.setY0(cameraLeftUpperLocation.getY());
-                        //右上角
-                        affineWarp.setX1(cameraRightUpperLocation.getX());
-                        affineWarp.setY1(cameraRightUpperLocation.getY());
-                        //左下角
-                        affineWarp.setX2(cameraLeftLowerLocation.getX());
-                        affineWarp.setY2(cameraLeftLowerLocation.getY());
-                    } else {
-                        if (part.getPackage().getCompatibleNozzleTips().size() > 2) {
-                            pipeline.setProperty("needSettle", false);
-                        } else {
-                            pipeline.setProperty("needSettle", true);
-                        }
-                        Location n2LocationOffset = nozzle.getHeadOffsets();
-                        Location n1locationOffset = n1.getHeadOffsets();
-                        Location offset = VisionUtils.getPixelOffsets(camera, n2LocationOffset.getX() - n1locationOffset.getX(), n2LocationOffset.getY() - n1locationOffset.getY());
-
-                        //右半边
-                        Location cameraLeftUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, 0);
-                        Location cameraLeftLowerLocation = VisionUtils.getPixelCenterOffsets2(camera, (double) camera.getWidth() / 2, camera.getHeight());
-                        Location cameraRightUpperLocation = VisionUtils.getPixelCenterOffsets2(camera, camera.getWidth(), 0);
-
-                        affineWarp.setX0(cameraLeftUpperLocation.getX() + offset.getX());
-                        affineWarp.setY0(cameraLeftUpperLocation.getY() + offset.getY());
-                        affineWarp.setX1(cameraRightUpperLocation.getX() + offset.getX());
-                        affineWarp.setY1(cameraRightUpperLocation.getY() + offset.getY());
-                        affineWarp.setX2(cameraLeftLowerLocation.getX() + offset.getX());
-                        affineWarp.setY2(cameraLeftLowerLocation.getY() + offset.getY());
-                    }
-                    pipeline.insert(affineWarp, 3);
-                    pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
-                } else {
-                    pipeline.setProperty("needSettle", true);
-                }
-
-                //识别
-                pipeline.process();
-
-                //取结果
-                Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
-
-                // Fall back to the old name of "result" instead of "results" for backwards
-                // compatibility.
-                if (result == null) {
-                    result = pipeline.getResult("result");
-                }
-
-                if (result == null) {
-                    throw new Exception(String.format(
-                            "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
-                            part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
-                }
-
-                if (result.model == null) {
-                    throw new Exception(String.format(
-                            "底部视觉: (%s): 未识别到元件。\n" +
-                                    "Tips:请检查有没有吸取到元件或者参考教程调整亮度阈值。",
-                            part.getId()));
-                }
-
-                if (!(result.model instanceof RotatedRect)) {
-                    throw new Exception(String.format(
-                            "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
-                            part.getId(), result.model.getClass().getSimpleName()));
-                }
-                pipelineShot.processResult(result);
-                // Display the shot result.
-                displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
-            }
-
-
-        } else {
-            //如果两个吸嘴都有元件
-
-        }
-
         return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
     }
 
@@ -849,7 +617,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             bottomVisionSettings.setEnabled(true);
             bottomVisionSettings.setPipeline(pipeline);
             return bottomVisionSettings;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new Error(e);
         }
     }
@@ -883,34 +652,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    @Override
-    public void displayResult(BufferedImage image, Part part, Location offsets, Camera camera, Nozzle nozzle) {
-        String s = part.getId();
-        if (offsets != null) {
-            LengthConverter lengthConverter = new LengthConverter();
-            DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-            s += "  |  X:" + lengthConverter.convertForward(offsets.getLengthX()) + " "
-                    + "Y:" + lengthConverter.convertForward(offsets.getLengthY()) + " "
-                    + "C:" + doubleConverter.convertForward(offsets.getRotation())
-                    + " Δ:" + lengthConverter.convertForward(offsets.getLinearLengthTo(Location.origin));
-        }
-        Logger.debug("Alignment result: {}", s);
-        MainFrame mainFrame = MainFrame.get();
-        if (mainFrame != null) {
-            try {
-                mainFrame
-                        .getCameraViews()
-                        .getCameraView(camera)
-                        .showFilteredImage(image, s,
-                                2000);
-                // Also make sure the right nozzle is selected for correct cross-hair rotation.
-                MovableUtils.fireTargetedUserAction(nozzle);
-            } catch (Exception e) {
-                // Throw away, just means we're running outside of the UI.
-            }
-        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -967,9 +708,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     public static CvPipeline createStockPipeline(String variant) {
         try {
             String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceBottomVision-" + variant + "Pipeline.xml"));
+                    .getResource("ReferenceBottomVision-"+variant+"Pipeline.xml"));
             return new CvPipeline(xml);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new Error(e);
         }
     }
@@ -981,7 +723,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[]{
+        return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new ReferenceBottomVisionConfigurationWizard(this)),
                 new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getBottomVisionSettings(), this))};
     }
@@ -1077,7 +819,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (stockVisionSettings == null) {
                 // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.
                 partSettingsByPartId = new HashMap<>();
-            } else {
+            }
+            else {
                 // Reassign the stock pipeline.
                 stockVisionSettings.setPipeline(createStockPipeline("Default"));
                 // Create other stock pipelines.
@@ -1101,16 +844,17 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         defaultBottomVisionSettings.setName("- Default Machine Bottom Vision -");
         defaultBottomVisionSettings.setEnabled(enabled);
         configuration.addVisionSettings(defaultBottomVisionSettings);
-        if (pipeline != null) {
+        if(pipeline != null) {
             defaultBottomVisionSettings.setPipeline(pipeline);
             pipeline = null;
-        } else {
+        }
+        else {
             defaultBottomVisionSettings.setPipeline(stockBottomVisionSettings.getPipeline());
         }
         setBottomVisionSettings(defaultBottomVisionSettings);
         equivalentPartSettings.setPipeline(defaultBottomVisionSettings.getPipeline());
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultBottomVisionSettings);
-        for (Part part : configuration.getParts()) {
+        for (Part part: configuration.getParts()) {
             part.setBottomVisionSettings(null);
         }
         for (org.openpnp.model.Package pkg : configuration.getPackages()) {
@@ -1135,9 +879,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     }
 
                     part.setBottomVisionSettings((bottomVisionSettings != defaultBottomVisionSettings) ? bottomVisionSettings : null);
-                    Logger.info("Part " + partId + " BottomVisionSettings migrated.");
+                    Logger.info("Part "+partId+" BottomVisionSettings migrated.");
                 } else {
-                    Logger.warn("Part " + partId + " BottomVisionSettings with no part.");
+                    Logger.warn("Part "+partId+" BottomVisionSettings with no part.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1149,14 +893,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         optimizeVisionSettings(configuration);
     }
 
-    public AbstractVisionSettings createStockVisionSettings(Configuration configuration, String id, String
-            tag, String description) {
+    public AbstractVisionSettings createStockVisionSettings(Configuration configuration, String id, String tag, String description) {
         // Add the vision settings if missing.
         AbstractVisionSettings visionSettings = configuration.getVisionSettings(id);
         if (visionSettings == null) {
             visionSettings = createBottomVisionSettings(id, description, createStockPipeline(tag));
             configuration.addVisionSettings(visionSettings);
-        } else {
+        }
+        else {
             // Reassign the stock pipeline.
             visionSettings.setPipeline(createStockPipeline(tag));
         }
@@ -1185,7 +929,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
                 if (firstVisionSettings == null) {
                     bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
-                } else if (visionSettings != defaultVisionSettings
+                }
+                else if (visionSettings != defaultVisionSettings
                         && !visionSettings.isStockSetting()) {
                     // Duplicate, remove any references.
                     for (PartSettingsHolder holder : visionSettings.getUsedBottomVisionIn()) {
@@ -1194,7 +939,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     if (visionSettings.getUsedBottomVisionIn().size() == 0) {
                         if (firstVisionSettings != defaultVisionSettings
                                 && !firstVisionSettings.isStockSetting()) {
-                            firstVisionSettings.setName(firstVisionSettings.getName() + " + " + visionSettings.getName());
+                            firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
                         }
                         configuration.removeVisionSettings(visionSettings);
                     }
@@ -1208,7 +953,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             BottomVisionSettings mostFrequentVisionSettings = null;
             int highestFrequency = 0;
             BottomVisionSettings packageVisionSettings = AbstractPartAlignment.getInheritedVisionSettings(pkg, true);
-            for (Part part : configuration.getParts()) {
+            for (Part part: configuration.getParts()) {
                 if (part.getPackage() == pkg) {
                     BottomVisionSettings visionSettings = AbstractPartAlignment.getInheritedVisionSettings(part, true);
                     String id = visionSettings != null ? visionSettings.getId() : "";
@@ -1224,16 +969,18 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (mostFrequentVisionSettings != null) {
                 if (mostFrequentVisionSettings == defaultVisionSettings) {
                     pkg.setBottomVisionSettings(null);
-                } else {
+                }
+                else {
                     pkg.setBottomVisionSettings(mostFrequentVisionSettings);
                 }
-                for (Part part : configuration.getParts()) {
+                for (Part part: configuration.getParts()) {
                     if (part.getPackage() == pkg) {
                         if (part.getBottomVisionSettings() == mostFrequentVisionSettings) {
                             // Parts inherit from package now.
                             part.setBottomVisionSettings(null);
-                        } else if (part.getBottomVisionSettings() == null
-                                && packageVisionSettings != mostFrequentVisionSettings) {
+                        }
+                        else if (part.getBottomVisionSettings() == null
+                                && packageVisionSettings != mostFrequentVisionSettings){
                             // Former package settings were inherited, now we must freeze them.
                             part.setBottomVisionSettings(packageVisionSettings);
                         }
@@ -1259,12 +1006,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         && visionSettings != defaultVisionSettings
                         && usedIn.isEmpty()) {
                     configuration.removeVisionSettings(visionSettings);
-                } else if (visionSettings.getName().isEmpty()) {
+                }
+                else if (visionSettings.getName().isEmpty()) {
                     if (usedIn.size() <= 3) {
                         visionSettings.setName(listConverter.convertForward(usedIn));
-                    } else {
+                    }
+                    else {
                         various++;
-                        visionSettings.setName("Migrated " + various);
+                        visionSettings.setName("Migrated "+various);
                     }
                 }
             }
