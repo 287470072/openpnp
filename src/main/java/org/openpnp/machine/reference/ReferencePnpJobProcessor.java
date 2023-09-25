@@ -57,6 +57,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
+import javax.swing.*;
+
 import static org.openpnp.machine.reference.vision.AbstractPartAlignment.getInheritedVisionSettings;
 
 @Root
@@ -684,8 +686,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
                     //正式环境散料飞达拾取原件的位置
+
                     pick(nozzle, feeder, jobPlacement, part);
-                    postPick(feeder, nozzle);
+                    if (feeder instanceof ReferencePushPullFeeder) {
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                postPick(feeder, nozzle);
+                            } catch (JobProcessorException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    } else {
+                        postPick(feeder, nozzle);
+                    }
+
                     checkPartOn(nozzle);
                     return;
                 } catch (Exception e) {
@@ -719,7 +733,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         private void postPick(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             try {
-                feeder.postPick(nozzle);
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        feeder.postPick(nozzle);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
             } catch (Exception e) {
                 throw new JobProcessorException(feeder, e);
             }

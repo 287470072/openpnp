@@ -409,7 +409,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     getName()));
         }
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-            actuator.actuate((Object) actuatorValue);
+            //actuator.actuate((Object) actuatorValue);
         }
 
 
@@ -432,24 +432,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
-        if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-
-            Location visionOffsets = getVisionOffset()
-                    .multiply(
-                            (isCalibrateMotionX() ? 1 : 0),
-                            (isCalibrateMotionY() ? 1 : 0),
-                            1,  // Z currently not used, but maybe later?
-                            0); // Make sure there is no rotation.
-            Location feedStartLocation = getFeedStartLocation()
-                    .subtractWithRotation(visionOffsets);
-
-            MovableUtils.moveToLocationAtSafeZ(actuator, feedStartLocation);
-            double baseSpeed = actuator.getHead().getMachine().getSpeed();
+        if (getFeedCount() % getPartsPerFeedCycle() == 1) {
 
             actuator.actuate((Object) postPickActuatorValue);
 
-            head.moveToSafeZ();
-            assertCalibrated(true);
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }

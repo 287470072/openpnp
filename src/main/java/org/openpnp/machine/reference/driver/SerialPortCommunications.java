@@ -228,7 +228,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
                     break;
             }
 
-            Logger.trace("串口获取到数据{}", byte2Hex(b));
+            //Logger.trace("串口获取到数据{}", byte2Hex(b));
         } catch (NullPointerException e) {
             throw new IOException("Trying to read from a unconnected serial.");
         }
