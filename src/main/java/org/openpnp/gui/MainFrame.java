@@ -740,6 +740,7 @@ public class MainFrame extends JFrame {
         panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
 
 
+        UIManager.put("ProgressBar.selectionForeground",Color.BLACK);
         // Placements Progress Bar
         prgbrPlacements = new JProgressBar();
         prgbrPlacements.setMinimum(0);

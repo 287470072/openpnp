@@ -55,8 +55,6 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
      */
     PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception;
 
-    PartAlignmentOffset findOffsets2(List<PnpJobPlanner.PlannedPlacement> plannedPlacements) throws Exception;
-
     /**
      * Get a Wizard for configuring the PartAlignment instance properties for a specific
      * PartSettingsHolder (Part or Package).

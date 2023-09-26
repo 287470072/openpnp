@@ -295,20 +295,29 @@ public class VisionUtils {
     }
 
     public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
+        // 创建一个存储全局变量的Map，用于在脚本中访问零件和喷嘴等信息
         Map<String, Object> globals = new HashMap<>();
         globals.put("part", part);
         globals.put("nozzle", nozzle);
+
+        // 在视觉脚本中触发"Vision.PartAlignment.Before"事件，传递全局变量
         Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
 
+        // 初始化偏移量为null
         PartAlignmentOffset offsets = null;
         try {
+            // 调用PartAlignment对象的findOffsets方法，计算零件对齐的偏移量
             offsets = p.findOffsets(part, boardLocation, placement, nozzle);
+            // 返回计算得到的偏移量
             return offsets;
         } finally {
+            // 将偏移量存储在全局变量中，以便在脚本中访问
             globals.put("offsets", offsets);
+            // 在视觉脚本中触发"Vision.PartAlignment.After"事件，传递全局变量
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }
     }
+
 
     /**
      * Compute an RGB histogram over the provided image.

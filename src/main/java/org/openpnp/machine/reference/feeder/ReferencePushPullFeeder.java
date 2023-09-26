@@ -90,7 +90,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited. 
     @Attribute(required = false)
-    protected Double rotationInFeeder = 90.0;
+    protected Double rotationInFeeder = -90.0;
 
 
     @Attribute(required = false)
@@ -106,7 +106,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected double actuatorValue;
 
     @Attribute(required = false)
-    protected String postPickActuatorName = "编带前进X2";
+    protected String postPickActuatorName = "编带前进";
 
     @Deprecated
     @Attribute(required = false)

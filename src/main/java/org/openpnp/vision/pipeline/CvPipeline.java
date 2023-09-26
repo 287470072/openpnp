@@ -33,18 +33,18 @@ import org.simpleframework.xml.stream.Style;
  * list of CvStage instances. Each CvStage instance can modify the working image and return a new
  * image along with data extracted from the image. After processing the image callers can get access
  * to the images and models from each stage.
- * 
+ * <p>
  * CvPipeline is serializable using toXmlString and fromXmlString. This makes it easy to export
  * pipelines and exchange them with others.
- * 
+ * <p>
  * This work takes inspiration from several existing projects:
- * 
+ * <p>
  * FireSight by Karl Lew and Šimon Fojtů: https://github.com/firepick1/FireSight
- * 
+ * <p>
  * RoboRealm: http://www.roborealm.com/
- * 
+ * <p>
  * TODO: Add measuring to image window.
- * 
+ * <p>
  * TODO: Add info showing pixel coordinates when mouse is in image window.
  */
 @Root
@@ -74,14 +74,13 @@ public class CvPipeline implements AutoCloseable {
     private int currentShot;
 
     public CvPipeline() {
-        
+
     }
 
     public CvPipeline(String xmlPipeline) {
         try {
             fromXmlString(xmlPipeline);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Error(e);
         }
     }
@@ -89,7 +88,7 @@ public class CvPipeline implements AutoCloseable {
     /**
      * Add the given CvStage to the end of the pipeline using the given name. If name is null a
      * unique one will be generated and set on the stage.
-     * 
+     *
      * @param name
      * @param stage
      */
@@ -104,7 +103,7 @@ public class CvPipeline implements AutoCloseable {
     /**
      * Add the given CvStage to the end of the pipeline. If the stage does not have a name a unique
      * one will be generated and set on the stage.
-     * 
+     *
      * @param stage
      */
     public void add(CvStage stage) {
@@ -148,7 +147,7 @@ public class CvPipeline implements AutoCloseable {
     }
 
     /**
-     * @return Active parameter stages used to control select pipeline stage properties. 
+     * @return Active parameter stages used to control select pipeline stage properties.
      */
     public List<CvAbstractParameterStage> getParameterStages() {
         return stages
@@ -162,7 +161,7 @@ public class CvPipeline implements AutoCloseable {
     /**
      * Get the Result returned by the CvStage with the given name. May return null if the stage did
      * not return a result.
-     * 
+     *
      * @param name
      * @return
      */
@@ -174,9 +173,9 @@ public class CvPipeline implements AutoCloseable {
     }
 
     /**
-     * Get the Result returned by the CvStage with the given name, expected to be defined in the pipeline 
-     * and to return a non-null model. 
-     * 
+     * Get the Result returned by the CvStage with the given name, expected to be defined in the pipeline
+     * and to return a non-null model.
+     *
      * @param name
      * @return
      * @throws Exception when the stage name is undefined or the stage is missing in the pipeline.
@@ -187,14 +186,14 @@ public class CvPipeline implements AutoCloseable {
         }
         CvStage stage = getStage(name);
         if (stage == null) {
-            throw new Exception("Stage \""+name+"\" is missing in the pipeline.");
+            throw new Exception("Stage \"" + name + "\" is missing in the pipeline.");
         }
         Result result = getResult(stage);
         if (result == null) {
-            throw new Exception("Stage \""+name+"\" returned no result.");
+            throw new Exception("Stage \"" + name + "\" returned no result.");
         }
         if (result.model instanceof Exception) {
-            throw (Exception)(result.model);
+            throw (Exception) (result.model);
         }
         return result;
     }
@@ -202,7 +201,7 @@ public class CvPipeline implements AutoCloseable {
     /**
      * Get the Result returned by give CvStage. May return null if the stage did not return a
      * result.
-     * 
+     *
      * @param stage
      * @return
      */
@@ -215,7 +214,7 @@ public class CvPipeline implements AutoCloseable {
 
     /**
      * Get the current working image. Primarily intended to be called from CvStage implementations.
-     * 
+     *
      * @return
      */
     public Mat getWorkingImage() {
@@ -229,13 +228,13 @@ public class CvPipeline implements AutoCloseable {
     }
 
     public Object getWorkingModel() {
-      return workingModel;
+        return workingModel;
     }
-    
+
     public ColorSpace getWorkingColorSpace() {
         return workingColorSpace;
     }
-    
+
     public void setWorkingColorSpace(ColorSpace colorSpace) {
         workingColorSpace = colorSpace;
     }
@@ -249,95 +248,115 @@ public class CvPipeline implements AutoCloseable {
     }
 
     public long getTotalProcessingTimeNs() {
-      return totalProcessingTimeNs;
+        return totalProcessingTimeNs;
     }
 
     public void setTotalProcessingTimeNs(long totalProcessingTimeNs) {
-      this.totalProcessingTimeNs = totalProcessingTimeNs;
+        this.totalProcessingTimeNs = totalProcessingTimeNs;
     }
 
     public void process() throws Exception {
+        // 初始化终止异常和总处理时间
         terminalException = null;
         totalProcessingTimeNs = 0;
+
+        // 释放资源（清理工作）
         release();
+
+        // 遍历处理阶段
         for (CvStage stage : stages) {
+            // 准备处理阶段
             stage.processPrepare(this);
         }
+
+        // 再次遍历处理阶段，执行图像处理和计时
         for (CvStage stage : stages) {
-            // Process and time the stage and get the result.
+            // 记录处理开始时间
             long processingTimeNs = System.nanoTime();
             Result result = null;
             try {
+                // 检查阶段是否启用
                 if (!stage.isEnabled()) {
-                    throw new Exception(String.format("Stage \"%s\"not enabled.", stage.getName()));
+                    throw new Exception(String.format("Stage \"%s\" not enabled.", stage.getName()));
                 }
+
+                // 执行阶段的处理操作，获取处理结果
                 result = stage.process(this);
-            }
-            catch (TerminalException e) {
+            } catch (TerminalException e) {
+                // 处理终止异常
                 result = new Result(null, e.getOriginalException());
                 setTerminalException(e.getOriginalException());
-                Logger.debug("Stage \""+stage.getName()+"\" throws "+e.getOriginalException());
-            }
-            catch (Exception e) {
+                Logger.debug("Stage \"" + stage.getName() + "\" throws " + e.getOriginalException());
+            } catch (Exception e) {
+                // 处理其他异常
                 result = new Result(null, e);
                 if (stage.isEnabled()) {
-                    Logger.debug("Stage \""+stage.getName()+"\" throws "+e);
+                    Logger.debug("Stage \"" + stage.getName() + "\" throws " + e);
                 }
             }
+
+            // 计算处理时间
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;
 
             Mat image = null;
             Object model = null;
             ColorSpace colorSpace = null;
+
+            // 从结果对象中提取图像、模型和颜色空间
             if (result != null) {
                 image = result.image;
                 model = result.model;
                 colorSpace = result.colorSpace;
             }
-            if(stage.isEnabled() && model != null) {
+
+            // 如果阶段启用且模型不为空，将工作模型设置为当前模型
+            if (stage.isEnabled() && model != null) {
                 workingModel = model;
             }
-            if(stage.isEnabled() && colorSpace != null) {
+
+            // 如果阶段启用且颜色空间不为空，将工作颜色空间设置为当前颜色空间
+            if (stage.isEnabled() && colorSpace != null) {
                 workingColorSpace = colorSpace;
             }
-            // If the result image is null and there is a working image,
-            // replace the result image with a clone of the working image.
+
+            // 如果结果图像为空，并且有工作图像，用工作图像的克隆替换结果图像
             if (image == null) {
                 if (workingImage != null) {
                     image = workingImage.clone();
                 }
-            }
-            // If the result image is not null:
-            // Release the working image if the result image is different.
-            // Replace the working image with the result image.
-            // Clone the result image for storage.
-            else {
+            } else { // 如果结果图像不为空
                 if (workingImage != null && workingImage != image) {
+                    // 释放工作图像资源
                     workingImage.release();
                 }
+
+                // 将工作图像替换为结果图像，并为存储克隆结果图像
                 workingImage = image;
                 image = image.clone();
             }
 
-            // If the result colorSpace is null and there is a working colorSpace,
-            // replace the result colorSpace with the working colorSpace.
+            // 如果结果颜色空间为空，并且有工作颜色空间，将结果颜色空间替换为工作颜色空间
             if (colorSpace == null) {
                 if (workingColorSpace != null) {
                     colorSpace = workingColorSpace;
                 }
             }
 
+            // 将阶段处理结果存储到结果映射中
             results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
         }
+
+        // 如果存在终止异常，则抛出终止异常
         if (terminalException != null) {
             throw (terminalException);
         }
     }
 
+
     /**
      * Reset all the modified parameters to default values
-     * (we do not want the parameters to permanently modify the pipeline). 
+     * (we do not want the parameters to permanently modify the pipeline).
      */
     public void resetToDefaults() {
         for (CvAbstractParameterStage stage : getParameterStages()) {
@@ -363,12 +382,12 @@ public class CvPipeline implements AutoCloseable {
         workingModel = null;
         results.clear();
     }
-    
+
     @Override
     public void close() throws IOException {
         release();
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         release();
@@ -377,7 +396,7 @@ public class CvPipeline implements AutoCloseable {
 
     /**
      * Convert the pipeline to an XML string that can be read back in with #fromXmlString.
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -391,7 +410,7 @@ public class CvPipeline implements AutoCloseable {
 
     /**
      * Parse the pipeline in the given String and replace the current pipeline with the results.
-     * 
+     *
      * @param s
      * @throws Exception
      */
@@ -410,12 +429,10 @@ public class CvPipeline implements AutoCloseable {
     public boolean equals(Object other) {
         if (other == this) {
             return true;
-        }
-        else if (other instanceof CvPipeline) {
+        } else if (other instanceof CvPipeline) {
             try {
                 return toXmlString().equals(((CvPipeline) other).toXmlString());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 //ignore
             }
         }
@@ -423,7 +440,7 @@ public class CvPipeline implements AutoCloseable {
     }
 
     private String generateUniqueName() {
-        for (int i = 0;; i++) {
+        for (int i = 0; ; i++) {
             String name = "" + i;
             if (getStage(name) == null) {
                 return name;
@@ -435,16 +452,15 @@ public class CvPipeline implements AutoCloseable {
     public CvPipeline clone() throws CloneNotSupportedException {
         try {
             return new CvPipeline(toXmlString());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new CloneNotSupportedException(e.getMessage());
         }
     }
-    
+
     public Object getProperty(String name) {
         return properties.get(name);
     }
-    
+
     public void setProperty(String name, Object value) {
         properties.put(name, value);
     }
@@ -478,11 +494,11 @@ public class CvPipeline implements AutoCloseable {
 
     public abstract class PipelineShot {
         private Map<String, Object> properties;
-        private final int index; 
+        private final int index;
 
         /**
          * Records the customized pipeline properties for this shot.
-         * 
+         * <p>
          * Use a derived class to add user defined data and methods
          * to the PipelineShot.
          */
@@ -491,9 +507,9 @@ public class CvPipeline implements AutoCloseable {
             // Record a snapshot of the current properties
             properties = new HashMap<>();
             properties.putAll(CvPipeline.this.properties);
-            index = compositeShots.size(); 
+            index = compositeShots.size();
             CvPipeline.this.compositeShots.add(this);
-            CvPipeline.this.currentShot = index; 
+            CvPipeline.this.currentShot = index;
         }
 
         public int getIndex() {
@@ -502,9 +518,9 @@ public class CvPipeline implements AutoCloseable {
 
         /**
          * Apply the recorded pipeline properties for this shot to the pipeline.
-         * Override this method to define custom actions, such as moving the 
-         * subject/camera to the specific shot location. 
-         * 
+         * Override this method to define custom actions, such as moving the
+         * subject/camera to the specific shot location.
+         *
          * @throws Exception
          */
         public void apply() throws Exception {
@@ -514,15 +530,15 @@ public class CvPipeline implements AutoCloseable {
         }
 
         /**
-         * Process the result of one shot. 
+         * Process the result of one shot.
          * Override this method to define the custom operations.
-         * 
+         *
          * @param result
          */
         public abstract void processResult(Result result);
 
         /**
-         * Process the composite result of all the shots. 
+         * Process the composite result of all the shots.
          * Override this method to define custom operations.
          */
         public abstract Result processCompositeResult();

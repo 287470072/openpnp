@@ -501,11 +501,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             return this;
         }
-
-        @Override
-        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
-            return null;
-        }
     }
 
     protected class CalibrateNozzleTips extends PlannedPlacementStep {
@@ -537,11 +532,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             return this;
-        }
-
-        @Override
-        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
-            return null;
         }
     }
 
@@ -641,11 +631,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * the recorded error.
              */
             throw lastException;
-        }
-
-        @Override
-        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
-            return null;
         }
 
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
@@ -793,67 +778,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return this;
         }
 
-        @Override
-        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
-            //判断是否所有的校正任务都已经完成
-            PlannedPlacement plannedPlacement = plannedPlacements
-                    .stream()
-                    .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
-                    .filter(p -> !completed.contains(p))
-                    .findFirst()
-                    .orElse(null);
-            //如果已经没有需要再校正的任务了，就开始放置任务
-            if (plannedPlacement == null) {
-                return new Place(plannedPlacements);
-            }
-
-            final Nozzle nozzle = plannedPlacement.nozzle;
-            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final Part part = placement.getPart();
-
-            final PartAlignment partAlignment = AbstractPartAlignment.getPartAlignment(part);
-
-            if (partAlignment == null) {
-                plannedPlacement.alignmentOffsets = null;
-                Logger.debug("Not aligning {} as no compatible enabled aligners defined", part);
-                return this;
-            }
-
-
-            if (plannedPlacements.size() == 2) {
-                align2(plannedPlacement, partAlignment);
-
-                checkPartOn(nozzle);
-            } else {
-                align(plannedPlacement, partAlignment);
-
-                checkPartOn(nozzle);
-            }
-
-
-            return this;
-        }
-
-
-        private void align2(PlannedPlacement plannedPlacement, PartAlignment partAlignment) throws JobProcessorException {
-
-            PartAlignment.PartAlignmentOffset offsets = null;
-            final Nozzle nozzle = plannedPlacement.nozzle;
-            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final Part part = placement.getPart();
-            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
-
-            Exception lastException = null;
-            try {
-                offsets = partAlignment.findOffsets(part, boardLocation, placement, nozzle);
-                return;
-            } catch (Exception e) {
-                lastException = e;
-            }
-            throw new JobProcessorException(part, lastException);
-        }
 
         private void align(PlannedPlacement plannedPlacement, PartAlignment partAlignment) throws JobProcessorException {
             final Nozzle nozzle = plannedPlacement.nozzle;
@@ -939,10 +863,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return this;
         }
 
-        @Override
-        protected Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException {
-            return null;
-        }
 
         private void place(Nozzle nozzle, Part part, Placement placement, Location placementLocation) throws JobProcessorException {
             fireTextStatus("Placing %s for %s.", part.getId(), placement.getId());
@@ -1260,8 +1180,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         protected abstract Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException;
 
-        protected abstract Step stepImpl2(List<PlannedPlacement> plannedPlacements, Set<PlannedPlacement> completed) throws JobProcessorException;
-
         /**
          * Find the next uncompleted, non-errored PlannedPlacement and pass it to stepImpl. If stepImpl
          * completes without error the PlannedPlacement is marked complete and control is returned
@@ -1275,17 +1193,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .findFirst()
                     .orElse(null);
             try {
-                Step result;
-                //针对双目识别Align单独做处理
-                if (currentStep instanceof Align) {
-                    result = stepImpl(plannedPlacement);
-                    completed.add(plannedPlacement);
-/*                    result = stepImpl2(plannedPlacements, completed);
-                    completed.add(plannedPlacement);*/
-                } else {
-                    result = stepImpl(plannedPlacement);
-                    completed.add(plannedPlacement);
-                }
+                Step result = stepImpl(plannedPlacement);
+                completed.add(plannedPlacement);
                 return result;
             } catch (JobProcessorException e) {
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
