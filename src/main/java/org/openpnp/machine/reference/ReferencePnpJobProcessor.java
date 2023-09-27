@@ -453,6 +453,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             long t = System.currentTimeMillis();
             List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
+
+            List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
+            if (plannedPlacements.size() > 1 && nozzles.size() > 1 && jobPlacements.size() >0) {
+                //删除第二个元件的的放置任务，准备用新的进行替换
+                plannedPlacements.remove(1);
+                double n1X = plannedPlacements.get(0).jobPlacement.getPartFeederX();
+                double n1Offset = nozzles.get(0).getHeadOffsets().getX();
+                double n2Offset = nozzles.get(1).getHeadOffsets().getX();
+                //获取N1到达飞达上方时N2的X轴坐标
+                double offsetDiff = n2Offset - n1Offset;
+                double n2X = n1X + offsetDiff;
+                JobPlacement nearFeeder = jobPlacements
+                        .stream()
+                        .min(Comparator.comparingDouble(a -> Math.abs(a.getPartFeederX() - n2X)))
+                        .orElse(null);
+                plannedPlacements.add(new PlannedPlacement(nozzles.get(1), nozzles.get(1).getNozzleTip(), nearFeeder));
+            }
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
@@ -1323,32 +1340,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
-            /**
-             * Create an empty List<PlannedPlacement> which will hold the results.
-             */
+            // 创建一个空的 List<PlannedPlacement> 来保存计划的放置操作
             List<PlannedPlacement> plannedPlacements = new ArrayList<>();
 
-            /**
-             * Get a list of all the nozzles. We make a copy of the list so that we can modify
-             * it within this function without modifying the machine. This makes the logic below
-             * easier. As we plan a nozzle we'll remove it from the list until none are left.
-             */
+            // 获取所有吸嘴的列表。复制列表以便在此函数内进行修改，而不影响机器的吸嘴列表。
             List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
 
-            /**
-             * Same as above, except for NozzleTips.
-             */
+            // 获取所有吸嘴尖的列表，同样进行复制以便在此函数内修改
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
 
-            /**
-             * First we plan any placements that can be done without a nozzle change. For each
-             * nozzle we see if there is a placement that we can handle without doing a nozzletip
-             * change. If there is, we remove the nozzle, nozzle tip and job placement from their
-             * respective lists so that we don't plan the same one again.
-             */
+            // 第一轮计划：计划不需要更换吸嘴尖的放置操作
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
                 if (plannedPlacement != null) {
+                    // 将计划的放置操作添加到结果列表中，并从相应的列表中移除对应的吸嘴、吸嘴尖和放置操作
                     plannedPlacements.add(plannedPlacement);
                     jobPlacements.remove(plannedPlacement.jobPlacement);
                     nozzles.remove(plannedPlacement.nozzle);
@@ -1356,14 +1361,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
-            /**
-             * Now we'll try to plan any nozzles that didn't get planned on the first pass by
-             * seeing if a nozzle change helps. This is nearly the same as above, except this
-             * time we allow a nozzle tip change to happen.
-             */
+            // 第二轮计划：计划需要更换吸嘴尖的放置操作
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
                 PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
                 if (plannedPlacement != null) {
+                    // 将计划的放置操作添加到结果列表中，并从相应的列表中移除对应的吸嘴、吸嘴尖和放置操作
                     plannedPlacements.add(plannedPlacement);
                     jobPlacements.remove(plannedPlacement.jobPlacement);
                     nozzles.remove(plannedPlacement.nozzle);
@@ -1371,11 +1373,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
-            /**
-             * Finally, we sort any planned placements by the nozzle name so that they are
-             * performed in the order of nozzle name. This is not really necessary but some users
-             * prefer it that way and it does no harm
-             */
+            // 最后，按照吸嘴名称对计划的放置操作进行排序，以按照吸嘴名称的顺序执行操作
             plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
                 return plannedPlacement.nozzle.getName();
             }));
@@ -1384,9 +1382,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         /**
-         * Try to find a planning solution for the given nozzle that does not require
-         * a nozzle tip change. This essentially just checks if there are any job placements
-         * remaining that are compatible with the currently loaded nozzle tip.
+         * 尝试查找不需要更换吸嘴尖的放置操作的计划解决方案。
          *
          * @param nozzle
          * @param jobPlacements
@@ -1410,10 +1406,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         /**
-         * Try to find a planning solution that allows for a nozzle tip change. This is very
-         * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
-         * tips on the machine that are compatible with both the nozzle and the placement,
-         * instead of just the one that is loaded.
+         * 尝试查找需要更换吸嘴尖的放置操作的计划解决方案。
          *
          * @param nozzle
          * @param jobPlacements
@@ -1427,8 +1420,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Placement placement = jobPlacement.getPlacement();
                 Part part = placement.getPart();
                 org.openpnp.model.Package pkg = part.getPackage();
-                // Get the intersection of nozzle tips that are not yet used, are compatible with
-                // the package, and are compatible with the nozzle.
+                // 获取未使用的吸嘴尖、与包装兼容的吸嘴尖和与吸嘴兼容的吸嘴尖的交集
                 List<NozzleTip> goodNozzleTips = nozzleTips
                         .stream()
                         .filter(nozzleTip -> {
@@ -1445,7 +1437,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return null;
         }
     }
-
 
     /**
      * 根据标准javaBean对象的属性名获取其属性值
