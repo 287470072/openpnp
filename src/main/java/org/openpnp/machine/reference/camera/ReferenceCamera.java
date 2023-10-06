@@ -237,6 +237,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
      */
     @Override
     public BufferedImage captureTransformed() {
+        //return captureRaw();
         return transformImage(captureRaw());
     }
 

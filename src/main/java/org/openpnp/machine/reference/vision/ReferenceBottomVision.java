@@ -42,7 +42,9 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
+import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -562,7 +564,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     UiUtils.messageBoxOnException(() -> {
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
                         if (nozzles.size() == 2 && camera.getWidth() > 2000) {
-                            if (nozzle.getName().equals(nozzles.get(0))) {
+                            if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                         .compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
@@ -571,19 +573,35 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 } else {
                                     nozzle.moveTo(shotLocation);
                                 }
-                            } else if (nozzle.getName().equals(nozzles.get(1))) {
-                                //TODO: 是否考虑根据N1和N2的偏移来移动N2
+                            } else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                Location shotLocationNew = shotLocation;
+                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+
 
                             }
                         } else {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                        .compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                } else {
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            } else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                Location shotLocationNew = shotLocation;
+                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocationNew);
 
-                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                    .compareTo(camera.getRoamingRadius()) > 0) {
-                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                // 喷嘴还不在相机漫游半径内。以安全的Z轴移
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                            } else {
-                                nozzle.moveTo(shotLocation);
                             }
                         }
 
@@ -617,6 +635,64 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             // 应用管道阶段操作
             pipelineShot.apply();
+
+            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            AffineWarp affineWarp = new AffineWarp();
+            List<CvStage> stages = pipeline.getStages();
+            for (int i = 0; i < stages.size(); i++) {
+                if (stages.get(i) instanceof AffineWarp) {
+                    pipeline.remove(stages.get(i));
+                }
+            }
+
+            if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
+                //左半边
+                //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
+                Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+
+                Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
+                Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                affineWarp.setX0(lefUpLocation.getX());
+                affineWarp.setY0(lefUpLocation.getY());
+                affineWarp.setX1(rightUpLocation.getX());
+                affineWarp.setY1(rightUpLocation.getY());
+                affineWarp.setX2(leftDownLocation.getX());
+                affineWarp.setY2(leftDownLocation.getY());
+            } else {
+                //右半边
+                Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+                Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+
+                Location n1Offset = n1.getHeadOffsets();
+                Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
+                double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
+                double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
+
+                Location leftCenteLocation = unitsPerPixel.multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                Location rightCenteLocation = unitsPerPixel.multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
+                double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
+
+
+                double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) * 2;
+                cameraNozzelOffsetY = 0;
+
+                affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
+                affineWarp.setY0(lefUpLocation.getY() - cameraNozzelOffsetY);
+                affineWarp.setX1(rightUpLocation.getX() - cameraNozzelOffsetX);
+                affineWarp.setY1(rightUpLocation.getY() - cameraNozzelOffsetY);
+                affineWarp.setX2(leftDownLocation.getX() - cameraNozzelOffsetX);
+                affineWarp.setY2(leftDownLocation.getY() - cameraNozzelOffsetY);
+            }
+            pipeline.insert(affineWarp, 3);
+            pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
 
             // 处理管道，执行图像处理操作
             pipeline.process();

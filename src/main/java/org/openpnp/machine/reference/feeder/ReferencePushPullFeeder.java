@@ -421,6 +421,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
         // Move to the Feed Start Location
         Head head = nozzle.getHead();
+
+        setFeedCount(getFeedCount() + 1);
+
         if (postPickActuatorName == null || postPickActuatorName.equals("")) {
             return;
         }
@@ -431,16 +434,23 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         if (actuator == null) {
             throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
         }
-        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
-        if (getFeedCount() % getPartsPerFeedCycle() == 1) {
 
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        if (getFeedCount() % getPartsPerFeedCycle() == 0) {
+/*            Actuator finalActuator = actuator;
+            SwingUtilities.invokeLater(()->{
+                try {
+                    finalActuator.actuate(postPickActuatorValue);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });*/
             actuator.actuate((Object) postPickActuatorValue);
 
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
         }
 
-        setFeedCount(getFeedCount() + 1);
     }
 
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {

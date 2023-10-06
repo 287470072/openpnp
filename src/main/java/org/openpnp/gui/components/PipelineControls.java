@@ -2,20 +2,20 @@
  * Copyright (C) 2022 <mark@makr.zone>
  * inspired and based on work by
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -53,18 +53,22 @@ import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvAbstractParameterStage;
 import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 import org.pmw.tinylog.Logger;
@@ -84,7 +88,7 @@ public abstract class PipelineControls extends JPanel {
     private boolean resetable = true;
     private Timer timer;
 
-    public PipelineControls() { 
+    public PipelineControls() {
         rebuildUi();
     }
 
@@ -102,9 +106,8 @@ public abstract class PipelineControls extends JPanel {
     private void invokeRebuildUi() {
         if (SwingUtilities.isEventDispatchThread()) {
             rebuildUi();
-        }
-        else {
-            SwingUtilities.invokeLater(() -> { 
+        } else {
+            SwingUtilities.invokeLater(() -> {
                 rebuildUi();
             });
         }
@@ -116,7 +119,7 @@ public abstract class PipelineControls extends JPanel {
 
     public void setEditable(boolean editable) {
         this.editable = editable;
-        if (btnEdit != null) { 
+        if (btnEdit != null) {
             btnEdit.setVisible(editable);
         }
     }
@@ -127,7 +130,7 @@ public abstract class PipelineControls extends JPanel {
 
     public void setResetable(boolean resetable) {
         this.resetable = resetable;
-        if (btnReset != null) { 
+        if (btnReset != null) {
             btnReset.setVisible(resetable);
         }
     }
@@ -144,7 +147,7 @@ public abstract class PipelineControls extends JPanel {
 
     @Override
     public void setEnabled(boolean enabled) {
-        for (Component comp : getComponents()) { 
+        for (Component comp : getComponents()) {
             comp.setEnabled(enabled);
         }
         super.setEnabled(enabled);
@@ -152,30 +155,30 @@ public abstract class PipelineControls extends JPanel {
 
     /**
      * Override this method to prepare the pipeline properties the same way as it will be done when the pipeline is used
-     * for vision operations. Typically a common method should be called, which takes the same pipeline and 
-     * pipelineParameterAssignments parameters. 
-     * As a minimum the "camera" property must be set, and pipeline.setProperties(pipelineParameterAssignments) should be 
-     * called to propagate the parameters. 
-     * 
-     * @param pipeline 
-     * @param pipelineParameterAssignments 
-     * @param edit If true, open the Pipeline Editor using {@link #openPipelineEditor}. 
+     * for vision operations. Typically a common method should be called, which takes the same pipeline and
+     * pipelineParameterAssignments parameters.
+     * As a minimum the "camera" property must be set, and pipeline.setProperties(pipelineParameterAssignments) should be
+     * called to propagate the parameters.
+     *
+     * @param pipeline
+     * @param pipelineParameterAssignments
+     * @param edit                         If true, open the Pipeline Editor using {@link #openPipelineEditor}.
      * @throws Exception
      */
     public abstract void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception;
 
     /**
      * Override this method to reset the pipeline to the default.
-     * 
+     *
      * @throws Exception
      */
     public abstract void resetPipeline() throws Exception;
 
     /**
      * Open the Pipeline Editor with all the necessary handling before/after.
-     * Including to move the camera or subject (Nozzle) to the right location before the editing takes place. 
-     * The user is asked to confirm and can also skip the move. 
-     * 
+     * Including to move the camera or subject (Nozzle) to the right location before the editing takes place.
+     * The user is asked to confirm and can also skip the move.
+     *
      * @param pipelineTitle
      * @param pipeline
      * @param moveBeforeEditDescription
@@ -183,15 +186,14 @@ public abstract class PipelineControls extends JPanel {
      * @param location
      */
     public void openPipelineEditor(String pipelineTitle, CvPipeline pipeline,
-            String moveBeforeEditDescription, HeadMountable movable, Location location) {
-        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
-                moveBeforeEditDescription, true, 
+                                   String moveBeforeEditDescription, HeadMountable movable, Location location) {
+        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(),
+                moveBeforeEditDescription, true,
                 () -> {
                     if (pipeline.getPipelineShotsCount() > 0) {
                         // Start with the first shot.
                         pipeline.getPipelineShot(0).apply();
-                    }
-                    else {
+                    } else {
                         // not a multi-shot pipeline, move to location.
                         MovableUtils.moveToLocationAtSafeZ(movable, location);
                         MovableUtils.fireTargetedUserAction(movable);
@@ -199,13 +201,72 @@ public abstract class PipelineControls extends JPanel {
                     }
                 },
                 () -> {
+                    Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
+                            .stream()
+                            .findFirst()
+                            .orElse(null);
+                    AffineWarp affineWarp = new AffineWarp();
+                    List<CvStage> stages = pipeline.getStages();
+                    for (int i = 0; i < stages.size(); i++) {
+                        if (stages.get(i) instanceof AffineWarp) {
+                            pipeline.remove(stages.get(i));
+                        }
+                    }
+
+                    Camera camera = (Camera) pipeline.getProperty("camera");
+                    if (movable == n1 && camera.getLooking() == Camera.Looking.Up) {
+                        //左半边
+                        //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
+                        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+
+                        Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                        Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
+                        Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                        affineWarp.setX0(lefUpLocation.getX());
+                        affineWarp.setY0(lefUpLocation.getY());
+                        affineWarp.setX1(rightUpLocation.getX());
+                        affineWarp.setY1(rightUpLocation.getY());
+                        affineWarp.setX2(leftDownLocation.getX());
+                        affineWarp.setY2(leftDownLocation.getY());
+                    } else {
+                        //右半边
+                        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+                        Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                        Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                        Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+
+                        Location n1Offset = n1.getHeadOffsets();
+                        Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
+                        double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
+                        double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
+
+                        Location leftCenteLocation = unitsPerPixel.multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                        Location rightCenteLocation = unitsPerPixel.multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                        double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
+                        double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
+
+
+                        double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                        double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) / 10;
+                        cameraNozzelOffsetY = 0;
+
+                        affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
+                        affineWarp.setY0(lefUpLocation.getY() + cameraNozzelOffsetY);
+                        affineWarp.setX1(rightUpLocation.getX() - cameraNozzelOffsetX);
+                        affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
+                        affineWarp.setX2(leftDownLocation.getX() - cameraNozzelOffsetX);
+                        affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                    }
+                    pipeline.insert(affineWarp, 3);
+                    pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+
                     CvPipelineEditor editor = new CvPipelineEditor(pipeline);
                     CvPipelineEditorDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), pipelineTitle, editor) {
 
                         @Override
                         public void pipelineChanged() {
                             super.pipelineChanged();
-                            // We need to make sure, the settings is recognized as a "deep" change, otherwise 
+                            // We need to make sure, the settings is recognized as a "deep" change, otherwise
                             // somehow the firePropertyChange() will not be propagated. So toggle to null first.
                             setPipeline(null);
                             setPipeline(pipeline);
@@ -217,7 +278,7 @@ public abstract class PipelineControls extends JPanel {
 
     /**
      * Open the Pipeline Editor with all the necessary handling before/after.
-     * 
+     *
      * @param pipelineTitle
      * @param pipeline
      */
@@ -226,7 +287,7 @@ public abstract class PipelineControls extends JPanel {
     }
 
     private Object getParameterValue(CvAbstractParameterStage paramStage) {
-        if (pipelineParameterAssignments != null 
+        if (pipelineParameterAssignments != null
                 && pipelineParameterAssignments.containsKey(paramStage.parameterName())) {
             return pipelineParameterAssignments.get(paramStage.parameterName());
         }
@@ -252,7 +313,7 @@ public abstract class PipelineControls extends JPanel {
             // Value has changed since the invokeLater call, no point in previewing.
             return;
         }
-        boolean hasEffectStage = paramStage.getEffectStageName() != null 
+        boolean hasEffectStage = paramStage.getEffectStageName() != null
                 && !paramStage.getEffectStageName().isEmpty();
         if (hasEffectStage || paramStage.isPreviewResult()) {
             if (timer != null) {
@@ -264,9 +325,9 @@ public abstract class PipelineControls extends JPanel {
             try (CvPipeline pipeline = getPipeline()) {
                 configurePipeline(pipeline, getPipelineParameterAssignments(), false);
                 Camera camera = (Camera) pipeline.getProperty("camera");
-                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera); 
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
                 pipeline.process();
-                List<BufferedImage> showImages = new ArrayList<>(); 
+                List<BufferedImage> showImages = new ArrayList<>();
                 CvStage effectStage = hasEffectStage ? pipeline.getStage(paramStage.getEffectStageName()) : null;
                 if (effectStage != null) {
                     Result result = pipeline.getResult(effectStage);
@@ -283,13 +344,13 @@ public abstract class PipelineControls extends JPanel {
                 }
                 if (showImages.size() > 0) {
                     // Show the first image directly.
-                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterLabel()+" = "+paramStage.displayValue(value), 3000);
+                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterLabel() + " = " + paramStage.displayValue(value), 3000);
                     showImages.remove(0);
                     if (showImages.size() > 0) {
                         // Show subsequent images with a timer.
                         timer = new Timer(1000, e -> {
-                            cameraView.showFilteredImage(showImages.get(0), 
-                                    paramStage.getParameterLabel()+" = "+paramStage.displayValue(value), 3000);
+                            cameraView.showFilteredImage(showImages.get(0),
+                                    paramStage.getParameterLabel() + " = " + paramStage.displayValue(value), 3000);
                             showImages.remove(0);
                             if (showImages.isEmpty()) {
                                 // No more images, stop.
@@ -300,18 +361,17 @@ public abstract class PipelineControls extends JPanel {
                         timer.start();
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Logger.warn(e);
             }
         }
     }
 
     private RowSpec[] dynamicRowspec(int rows) {
-        RowSpec[] rowspec = new RowSpec[rows*2];
-        for (int i = 0; i < rows*2; i+=2) {
+        RowSpec[] rowspec = new RowSpec[rows * 2];
+        for (int i = 0; i < rows * 2; i += 2) {
             rowspec[i] = FormSpecs.RELATED_GAP_ROWSPEC;
-            rowspec[i+1] = FormSpecs.DEFAULT_ROWSPEC;
+            rowspec[i + 1] = FormSpecs.DEFAULT_ROWSPEC;
         }
         return rowspec;
     }
@@ -325,10 +385,10 @@ public abstract class PipelineControls extends JPanel {
         invokation++;
         //Logger.trace("rebuild "+this.hashCode()+" invokation "+invokation);
         JPanel panel = this;
-        List<CvAbstractParameterStage> parameterStages = getPipeline() != null ? 
+        List<CvAbstractParameterStage> parameterStages = getPipeline() != null ?
                 getPipeline().getParameterStages() : new ArrayList<>();
         int rows = 1 + parameterStages.size();
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
+        panel.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -339,7 +399,7 @@ public abstract class PipelineControls extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            dynamicRowspec(rows)));
+                dynamicRowspec(rows)));
 
         JLabel lblPipeline = new JLabel(Translations.getString("PipelinePanel.PipelineLabel.title")); //$NON-NLS-1$
         lblPipeline.setEnabled(isEnabled());
@@ -384,9 +444,9 @@ public abstract class PipelineControls extends JPanel {
                     JLabel lbl = new JLabel(parameter.getParameterLabel());
                     lbl.setToolTipText(parameter.getParameterDescription());
                     lbl.setEnabled(isEnabled());
-                    panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                    panel.add(lbl, "2, " + (formRow * 2) + ", right, default");
                     JSlider slider = new JSlider(JSlider.HORIZONTAL,
-                            scalarParameter.minimumScalar(), scalarParameter.maximumScalar(), 
+                            scalarParameter.minimumScalar(), scalarParameter.maximumScalar(),
                             scalarParameter.convertToScalar(getParameterValue(parameter)));
                     slider.setEnabled(isEnabled());
                     slider.addChangeListener(new ChangeListener() {
@@ -412,9 +472,8 @@ public abstract class PipelineControls extends JPanel {
                     });
                     slider.setToolTipText(parameter.getParameterDescription());
                     slider.setEnabled(isEnabled());
-                    panel.add(slider, "4, "+(formRow*2)+", 7, 1, fill, default");
-                }
-                catch (Exception e) {
+                    panel.add(slider, "4, " + (formRow * 2) + ", 7, 1, fill, default");
+                } catch (Exception e) {
                     Logger.warn(e);
                 }
             }
@@ -423,6 +482,7 @@ public abstract class PipelineControls extends JPanel {
         revalidate();
         repaint();
     }
+
     public final Action copyAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
@@ -437,8 +497,7 @@ public abstract class PipelineControls extends JPanel {
                         new StringSelection(getPipeline().toXmlString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
                         "PipelinePanel.Action.CopyPipeline.errorMessage"), e); //$NON-NLS-1$
             }
@@ -466,8 +525,7 @@ public abstract class PipelineControls extends JPanel {
                     setPipeline(null);
                     setPipeline(pipeline);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
                         "PipelinePanel.Action.PastePipeline.errorMessage"), e); //$NON-NLS-1$
             }

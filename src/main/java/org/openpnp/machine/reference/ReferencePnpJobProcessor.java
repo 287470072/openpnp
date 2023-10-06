@@ -455,7 +455,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
 
             List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
-            if (plannedPlacements.size() > 1 && nozzles.size() > 1 && jobPlacements.size() >0) {
+            if (plannedPlacements.size() > 1 && nozzles.size() > 1 && jobPlacements.size() > 0) {
                 //删除第二个元件的的放置任务，准备用新的进行替换
                 plannedPlacements.remove(1);
                 double n1X = plannedPlacements.get(0).jobPlacement.getPartFeederX();
@@ -688,19 +688,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
                     //正式环境散料飞达拾取原件的位置
-
-                    pick(nozzle, feeder, jobPlacement, part);
                     if (feeder instanceof ReferencePushPullFeeder) {
-                        SwingUtilities.invokeLater(() -> {
-                            try {
-                                postPick(feeder, nozzle);
-                            } catch (JobProcessorException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-                    } else {
+                        pick(nozzle, feeder, jobPlacement, part);
+
                         postPick(feeder, nozzle);
+
                     }
+
 
                     checkPartOn(nozzle);
                     return;
@@ -735,13 +729,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         private void postPick(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             try {
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        feeder.postPick(nozzle);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+
+                feeder.postPick(nozzle);
 
             } catch (Exception e) {
                 throw new JobProcessorException(feeder, e);

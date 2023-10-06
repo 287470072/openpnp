@@ -63,8 +63,15 @@ public class VisionUtils {
      * @return
      */
     public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
-        double imageWidth = camera.getWidth();
-        double imageHeight = camera.getHeight();
+        double imageWidth;
+        double imageHeight;
+        if (camera.getLooking() == Camera.Looking.Up) {
+            imageWidth = (double) camera.getWidth() / 2;
+            imageHeight = camera.getHeight();
+        } else {
+            imageWidth = camera.getWidth();
+            imageHeight = camera.getHeight();
+        }
 
         // Calculate the difference between the center of the image to the
         // center of the match.
