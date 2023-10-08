@@ -47,6 +47,7 @@ public class MovableUtils {
                 }
                 safeZ = safeZ.convertToUnits(location.getUnits());
             }
+            //这里N2会转一圈
             hm.moveTo(location.derive(null, null, (safeZ != null ? safeZ.getValue() : Double.NaN), null), speed);
         }
         // else: moves only in Z (or not at all).

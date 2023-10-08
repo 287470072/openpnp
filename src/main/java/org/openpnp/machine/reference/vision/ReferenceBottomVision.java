@@ -574,13 +574,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     nozzle.moveTo(shotLocation);
                                 }
                             } else if (nozzle.equals(nozzles.get(1))) {
-                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+          /*                      Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
                                 Location shotLocationNew = shotLocation;
                                 shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
                                 shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
 
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);*/
 
 
                             }
