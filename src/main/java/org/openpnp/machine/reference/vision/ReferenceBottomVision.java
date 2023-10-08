@@ -112,11 +112,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             return new PartAlignmentOffset(new Location(LengthUnit.Millimeters), false);
         }
 
-        // 检查零件和烟罩是否都有零件
+        // 检查吸嘴上是否都有零件
         if (part == null || nozzle.getPart() == null) {
-            throw new Exception("No part on nozzle.");
+            throw new Exception("吸嘴上无零件，请点击停止任务后重新开始。");
         }
-        // 检查零件和烟罩的零件是否匹配
+        // 检查零件和吸嘴的零件是否匹配
         if (part != nozzle.getPart()) {
             throw new Exception("Part mismatch with part on nozzle.");
         }
@@ -647,53 +647,53 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
+            if (camera.getWidth() > 2000) {
+                if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
+                    //左半边
+                    //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
+                    Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
 
-            if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
-                //左半边
-                //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
-                Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+                    Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                    affineWarp.setX0(lefUpLocation.getX());
+                    affineWarp.setY0(lefUpLocation.getY());
+                    affineWarp.setX1(rightUpLocation.getX());
+                    affineWarp.setY1(rightUpLocation.getY());
+                    affineWarp.setX2(leftDownLocation.getX());
+                    affineWarp.setY2(leftDownLocation.getY());
+                } else {
+                    //右半边
+                    Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+                    Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
 
-                Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
-                Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
-                Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
-                affineWarp.setX0(lefUpLocation.getX());
-                affineWarp.setY0(lefUpLocation.getY());
-                affineWarp.setX1(rightUpLocation.getX());
-                affineWarp.setY1(rightUpLocation.getY());
-                affineWarp.setX2(leftDownLocation.getX());
-                affineWarp.setY2(leftDownLocation.getY());
-            } else {
-                //右半边
-                Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
-                Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
-                Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
-                Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                    Location n1Offset = n1.getHeadOffsets();
+                    Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
+                    double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
+                    double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
 
-                Location n1Offset = n1.getHeadOffsets();
-                Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
-                double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
-                double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
-
-                Location leftCenteLocation = unitsPerPixel.multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
-                Location rightCenteLocation = unitsPerPixel.multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
-                double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
-                double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
+                    Location leftCenteLocation = unitsPerPixel.multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                    Location rightCenteLocation = unitsPerPixel.multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                    double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
+                    double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
 
-                double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
-                double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) * 2;
-                cameraNozzelOffsetY = 0;
+                    double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                    double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) * 2;
+                    cameraNozzelOffsetY = 0;
 
-                affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
-                affineWarp.setY0(lefUpLocation.getY() - cameraNozzelOffsetY);
-                affineWarp.setX1(rightUpLocation.getX() - cameraNozzelOffsetX);
-                affineWarp.setY1(rightUpLocation.getY() - cameraNozzelOffsetY);
-                affineWarp.setX2(leftDownLocation.getX() - cameraNozzelOffsetX);
-                affineWarp.setY2(leftDownLocation.getY() - cameraNozzelOffsetY);
+                    affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
+                    affineWarp.setY0(lefUpLocation.getY() - cameraNozzelOffsetY);
+                    affineWarp.setX1(rightUpLocation.getX() - cameraNozzelOffsetX);
+                    affineWarp.setY1(rightUpLocation.getY() - cameraNozzelOffsetY);
+                    affineWarp.setX2(leftDownLocation.getX() - cameraNozzelOffsetX);
+                    affineWarp.setY2(leftDownLocation.getY() - cameraNozzelOffsetY);
+                }
+                pipeline.insert(affineWarp, 3);
+                pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
             }
-            pipeline.insert(affineWarp, 3);
-            pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
-
             // 处理管道，执行图像处理操作
             pipeline.process();
 
