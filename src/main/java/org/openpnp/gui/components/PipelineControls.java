@@ -231,7 +231,7 @@ public abstract class PipelineControls extends JPanel {
                             affineWarp.setY2(leftDownLocation.getY());
                         } else {
                             //右半边
-                            Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
+                            Location unitsPerPixel = camera.getUnitsPerPixel();
                             Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
                             Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
                             Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
@@ -249,15 +249,16 @@ public abstract class PipelineControls extends JPanel {
                             double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
                             double cameraNozzelOffsetX, cameraNozzelOffsetY;
+                            leftRightOffsetX = 30;
                             if (n2N1OffsetX > leftRightOffsetX) {
-                                cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX) / 10;
+                                cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);
                             } else {
-                                cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                                cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX);
                             }
 
 
                             cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) / 10;
-                            //cameraNozzelOffsetY = 0;
+                            cameraNozzelOffsetY = 0;
 
 
                             affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
