@@ -238,18 +238,27 @@ public abstract class PipelineControls extends JPanel {
 
                             Location n1Offset = n1.getHeadOffsets();
                             Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
+                            //两个吸嘴的偏移量
                             double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
                             double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
 
+                            //画面中心的偏移量
                             Location leftCenteLocation = unitsPerPixel.multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
                             Location rightCenteLocation = unitsPerPixel.multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
                             double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
                             double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
+                            double cameraNozzelOffsetX, cameraNozzelOffsetY;
+                            if (n2N1OffsetX > leftRightOffsetX) {
+                                cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX) / 10;
+                            } else {
+                                cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                            }
 
-                            double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
-                            double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) / 10;
-                            cameraNozzelOffsetY = 0;
+
+                            cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) / 10;
+                            //cameraNozzelOffsetY = 0;
+
 
                             affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
                             affineWarp.setY0(lefUpLocation.getY() + cameraNozzelOffsetY);

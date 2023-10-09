@@ -65,7 +65,7 @@ public class VisionUtils {
     public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
         double imageWidth;
         double imageHeight;
-        if (camera.getLooking() == Camera.Looking.Up) {
+        if (camera.getLooking() == Camera.Looking.Up && camera.getWidth() > 2000) {
             imageWidth = (double) camera.getWidth() / 2;
             imageHeight = camera.getHeight();
         } else {

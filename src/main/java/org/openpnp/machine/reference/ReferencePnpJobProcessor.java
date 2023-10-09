@@ -688,12 +688,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
                     //正式环境散料飞达拾取原件的位置
-                    if (feeder instanceof ReferencePushPullFeeder) {
-                        pick(nozzle, feeder, jobPlacement, part);
 
-                        postPick(feeder, nozzle);
+                    pick(nozzle, feeder, jobPlacement, part);
 
-                    }
+                    postPick(feeder, nozzle);
 
 
                     checkPartOn(nozzle);

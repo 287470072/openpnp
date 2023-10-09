@@ -438,14 +438,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             Actuator finalActuator = actuator;
-            SwingUtilities.invokeLater(()->{
+/*            SwingUtilities.invokeLater(()->{
                 try {
                     finalActuator.actuate(postPickActuatorValue);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
-           // actuator.actuate((Object) postPickActuatorValue);
+            });*/
+           actuator.actuate((Object) postPickActuatorValue);
 
         } else {
             Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);

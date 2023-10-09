@@ -77,6 +77,7 @@ public class ReferenceLcCsvImporter extends LcCsvImporter implements BoardImport
     	return new String[] {
     			"X",  			//$NON-NLS-1$
     			"X (MM)", 		//$NON-NLS-1$
+				"Mid X",
     			"REF X", 		//$NON-NLS-1$
     			"POSX", 		//$NON-NLS-1$
     			"REF-X(MM)", 	//$NON-NLS-1$
@@ -88,6 +89,7 @@ public class ReferenceLcCsvImporter extends LcCsvImporter implements BoardImport
     	return new String[] {
     			"Y", 			//$NON-NLS-1$
     			"Y (MM)", 		//$NON-NLS-1$
+				"Mid Y",
     			"REF Y", 		//$NON-NLS-1$
     			"POSY", 		//$NON-NLS-1$
     			"REF-Y(MM)", 	//$NON-NLS-1$

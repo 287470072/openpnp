@@ -574,13 +574,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     nozzle.moveTo(shotLocation);
                                 }
                             } else if (nozzle.equals(nozzles.get(1))) {
-          /*                      Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
                                 Location shotLocationNew = shotLocation;
                                 shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
                                 shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
 
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);*/
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
 
 
                             }
@@ -680,8 +680,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
 
-                    double cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
-                    double cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) * 2;
+                    double cameraNozzelOffsetX, cameraNozzelOffsetY;
+                    if (n2N1OffsetX > leftRightOffsetX) {
+                        cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX) / 10;
+                    } else {
+                        cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX) / 10;
+                    }
+
+                    cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) * 2;
                     cameraNozzelOffsetY = 0;
 
                     affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
