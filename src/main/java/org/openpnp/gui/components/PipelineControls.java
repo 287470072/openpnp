@@ -249,23 +249,22 @@ public abstract class PipelineControls extends JPanel {
                             double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
                             double cameraNozzelOffsetX, cameraNozzelOffsetY;
-                            leftRightOffsetX = 30;
-                            if (n2N1OffsetX > leftRightOffsetX) {
+                            leftRightOffsetX = 29.75;
+    /*                        if (n2N1OffsetX > leftRightOffsetX) {
                                 cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);
                             } else {
                                 cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX);
-                            }
+                            }*/
+
+                            cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
+                            cameraNozzelOffsetY = n2N1OffsetY *2;
 
 
-                            cameraNozzelOffsetY = (n2N1OffsetY - leftRightOffsetY) / 10;
-                            cameraNozzelOffsetY = 0;
-
-
-                            affineWarp.setX0(lefUpLocation.getX() - cameraNozzelOffsetX);
+                            affineWarp.setX0(lefUpLocation.getX() + cameraNozzelOffsetX);
                             affineWarp.setY0(lefUpLocation.getY() + cameraNozzelOffsetY);
-                            affineWarp.setX1(rightUpLocation.getX() - cameraNozzelOffsetX);
+                            affineWarp.setX1(rightUpLocation.getX() + cameraNozzelOffsetX);
                             affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
-                            affineWarp.setX2(leftDownLocation.getX() - cameraNozzelOffsetX);
+                            affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
                             affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
                         }
                         pipeline.insert(affineWarp, 3);
