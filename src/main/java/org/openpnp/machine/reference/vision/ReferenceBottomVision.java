@@ -579,8 +579,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 Location shotLocationNew = shotLocation;
                                 shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
                                 shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+                                if (shotLocationNew.getZ() > 1) {
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                }
 
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+
 
 
                             }
@@ -691,7 +694,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     }
 */
                     cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
-                    cameraNozzelOffsetY = n2N1OffsetY *2;
+                    cameraNozzelOffsetY = n2N1OffsetY * 2;
 
 
                     affineWarp.setX0(lefUpLocation.getX() + cameraNozzelOffsetX);
@@ -700,6 +703,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                     affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
                     affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                    pipeline.setProperty("needSettle", false);
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
