@@ -60,33 +60,40 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     public AbstractAxis getAxisX() {
         return axisX;
     }
+
     public void setAxisX(AbstractAxis axisX) {
         assert axisX.getType() == Axis.Type.X;
         this.axisX = axisX;
         this.axisXId = (axisX == null) ? null : axisX.getId();
     }
+
     @Override
     public AbstractAxis getAxisY() {
         return axisY;
     }
+
     public void setAxisY(AbstractAxis axisY) {
         assert axisY.getType() == Axis.Type.Y;
         this.axisY = axisY;
         this.axisYId = (axisY == null) ? null : axisY.getId();
     }
+
     @Override
     public AbstractAxis getAxisZ() {
         return axisZ;
     }
+
     public void setAxisZ(AbstractAxis axisZ) {
         assert axisZ.getType() == Axis.Type.Z;
         this.axisZ = axisZ;
         this.axisZId = (axisZ == null) ? null : axisZ.getId();
     }
+
     @Override
     public AbstractAxis getAxisRotation() {
         return axisRotation;
     }
+
     public void setAxisRotation(AbstractAxis axisRotation) {
         assert axisRotation.getType() == Axis.Type.Rotation;
         this.axisRotation = axisRotation;
@@ -94,7 +101,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public  AbstractAxis getAxis(Axis.Type type) {
+    public AbstractAxis getAxis(Axis.Type type) {
         switch (type) {
             case X:
                 return getAxisX();
@@ -109,7 +116,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
-    public  void setAxis(AbstractAxis axis, Axis.Type type) {
+    public void setAxis(AbstractAxis axis, Axis.Type type) {
         switch (type) {
             case X:
                 setAxisX(axis);
@@ -126,7 +133,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
-    public  void setAxis(AbstractAxis axis) {
+    public void setAxis(AbstractAxis axis) {
         setAxis(axis, axis.getType());
     }
 
@@ -137,8 +144,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             // Get the raw Z Axis.
             try {
                 return zAxis.getCoordinateAxes(machine).getAxis(Axis.Type.Z);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // Cannot throw in this (legacy) context. 
                 // However, this should never happen, as axis transforms cannot mix multiple Z axes together and
                 // therefore the typed axis should be unique.
@@ -173,12 +179,12 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public Length [] getSafeZZone() {
+    public Length[] getSafeZZone() {
         Length safeZLow = null;
         Length safeZHigh = null;
         CoordinateAxis coordAxis = getCoordinateAxisZ();
         if (coordAxis instanceof ReferenceControllerAxis) {
-            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis; 
+            ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) coordAxis;
             if (rawAxis.isSafeZoneLowEnabled()) {
                 // We have a lower Safe Z Zone limit.
                 Length z = rawAxis.getSafeZoneLow();
@@ -192,23 +198,22 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             // Note, Z axis transform might be negative, so upper and lower limit may be swapped.
             // We can compare Lengths without unit conversion as they are in System units courtesy of 
             // rawToHeadMountableZ().
-            if (safeZLow != null && safeZHigh != null 
+            if (safeZLow != null && safeZHigh != null
                     && safeZLow.getValue() > safeZHigh.getValue()) {
                 Length swap = safeZLow;
                 safeZLow = safeZHigh;
                 safeZHigh = swap;
             }
-        }
-        else if (coordAxis != null) {
+        } else if (coordAxis != null) {
             // Just take the home coordinate as Safe Z.
             safeZLow = safeZHigh = coordAxis.getHomeCoordinate();
         }
-        return new Length[] { safeZLow, safeZHigh};
+        return new Length[]{safeZLow, safeZHigh};
     }
 
     @Override
     public Length getSafeZ() {
-        Length safeZ [] = getSafeZZone();
+        Length safeZ[] = getSafeZZone();
         return safeZ[0];
     }
 
@@ -218,8 +223,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         if (coordAxis != null) {
             Length rawZ = headMountableToRawZ(coordAxis, z);
             return coordAxis.isInSafeZone(rawZ);
-        }
-        else {
+        } else {
             return true;
         }
     }
@@ -229,7 +233,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         // Safe Z must now be set/captured on the Axis. 
     }
 
-    @Override 
+    @Override
     public Length getEffectiveSafeZ() throws Exception {
         return getSafeZ();
     }
@@ -250,15 +254,14 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         if (safeZ != null) {
             Logger.debug("{}.moveToSafeZ({})", getName(), speed);
             if (!isInSafeZZone(safeZ)) {
-                throw new Exception("Effective Safe Z coordinate "+safeZ+" is outside Safe Z Zone.");
+                throw new Exception("Effective Safe Z coordinate " + safeZ + " is outside Safe Z Zone.");
             }
             safeZ = safeZ.convertToUnits(l.getUnits());
             if (safeZ.getValue() > l.getZ()) {
                 // Only move if the new effective Safe Z is higher than current Z. 
                 l = l.derive(null, null, safeZ.getValue(), null);
                 moveTo(l, speed);
-            }
-            else if (!isInSafeZZone(l.getLengthZ())) {
+            } else if (!isInSafeZZone(l.getLengthZ())) {
                 // Still outside safe Z Zone (above it), for shared Z with negating transform, where the Safe Z Zone 
                 // is limited on two sides. 
                 safeZ = getSafeZZone()[1];
@@ -277,16 +280,22 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
+    public void moveToTogether(Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
+        getHead().moveToTogether(this, location, rotateA, rotateB, options);
+    }
+
+    @Override
     public void moveToSafeZ() throws Exception {
         moveToSafeZ(getMachine().getSpeed());
     }
+
 
     @Override
     public void waitForCompletion(CompletionType completionType) throws Exception {
         Machine machine = getMachine();
         if (machine.isEnabled() && machine instanceof ReferenceMachine) {
             ((ReferenceMachine) machine)
-                .getMotionPlanner().waitForCompletion(getHead() == null ? null : this, completionType);
+                    .getMotionPlanner().waitForCompletion(getHead() == null ? null : this, completionType);
         }
     }
 
@@ -313,14 +322,15 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             // https://github.com/openpnp/openpnp/issues/255
             // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
             // it here by replacing any NaN values with the current value from the axes.
-            location = location.derive(currentLocation, 
-                    Double.isNaN(location.getX()), 
-                    Double.isNaN(location.getY()), 
-                    Double.isNaN(location.getZ()), 
-                    Double.isNaN(location.getRotation())); 
+            location = location.derive(currentLocation,
+                    Double.isNaN(location.getX()),
+                    Double.isNaN(location.getY()),
+                    Double.isNaN(location.getZ()),
+                    Double.isNaN(location.getRotation()));
         }
         return location;
     }
+
     @Override
     public Location toHeadLocation(Location location, LocationOption... options) throws Exception {
         return toHeadLocation(location, getLocation(), options);
@@ -329,19 +339,20 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     public Location getCalibratedHeadOffsets(LocationOption... options) {
         return getHeadOffsets();
     }
-    
+
     public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
         // Add the calibrated Head offset.
         location = location.add(getCalibratedHeadOffsets(options));
         return location;
     }
+
     @Override
     public Location toHeadMountableLocation(Location location, LocationOption... options) {
         return toHeadMountableLocation(location, null, options);
     }
 
     protected Location toMappedLocation(LengthUnit units, AxesLocation location) {
-        double x = location.getLengthCoordinate(axisX).convertToUnits(units).getValue();  
+        double x = location.getLengthCoordinate(axisX).convertToUnits(units).getValue();
         double y = location.getLengthCoordinate(axisY).convertToUnits(units).getValue();
         double z = location.getLengthCoordinate(axisZ).convertToUnits(units).getValue();
         double rotation = location.getCoordinate(axisRotation);
@@ -367,7 +378,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public AxesLocation toRaw(Location location, LocationOption... options) 
+    public AxesLocation toRaw(Location location, LocationOption... options)
             throws Exception {
         AxesLocation axesLocation = toAxesLocation(location);
         axesLocation = AbstractTransformedAxis.toRaw(axisX, axesLocation, options);
@@ -386,7 +397,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) 
+    public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options)
             throws Exception {
         List<LocationOption> oplist = Arrays.asList(options);
         // Inverse-transform the desired location to a raw location, applying the approximation options, which means some 
@@ -399,17 +410,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         // Evaluate the Keep options. 
         for (Axis axis : desiredRawLocation.getAxes()) {
             if (axis instanceof ControllerAxis) {
-                ControllerAxis rawAxis = (ControllerAxis)axis;
-                if ((rawAxis.getType() == Axis.Type.X && oplist.contains(LocationOption.KeepX)) 
-                        && (rawAxis.getType() == Axis.Type.Y && oplist.contains(LocationOption.KeepY)) 
-                        && (rawAxis.getType() == Axis.Type.Z && oplist.contains(LocationOption.KeepZ)) 
+                ControllerAxis rawAxis = (ControllerAxis) axis;
+                if ((rawAxis.getType() == Axis.Type.X && oplist.contains(LocationOption.KeepX))
+                        && (rawAxis.getType() == Axis.Type.Y && oplist.contains(LocationOption.KeepY))
+                        && (rawAxis.getType() == Axis.Type.Z && oplist.contains(LocationOption.KeepZ))
                         && (rawAxis.getType() == Axis.Type.Rotation && oplist.contains(LocationOption.KeepRotation))) {
                     desiredRawLocation = desiredRawLocation
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                 }
-            }
-            else if ((axis instanceof ReferenceVirtualAxis) 
-                && (oplist.contains(LocationOption.ReplaceVirtual))) {
+            } else if ((axis instanceof ReferenceVirtualAxis)
+                    && (oplist.contains(LocationOption.ReplaceVirtual))) {
                 // Replace the virtual axis coordinate with zero
                 desiredRawLocation = desiredRawLocation
                         .put(new AxesLocation(axis, new Length(0.0, LengthUnit.Millimeters)));
@@ -422,13 +432,13 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                     double coordinate = desiredRawLocation.getCoordinate(rawAxis);
                     if (rawAxis.isSoftLimitLowEnabled()
                             && coordinate < softLimitLow
-                            && ! rawAxis.coordinatesMatch(coordinate, softLimitLow)) {
+                            && !rawAxis.coordinatesMatch(coordinate, softLimitLow)) {
                         desiredRawLocation = desiredRawLocation
                                 .put(new AxesLocation(axis, rawAxis.getSoftLimitLow()));
                     }
                     if (rawAxis.isSoftLimitHighEnabled()
                             && coordinate > softLimitHigh
-                            && ! rawAxis.coordinatesMatch(coordinate, softLimitHigh)) {
+                            && !rawAxis.coordinatesMatch(coordinate, softLimitHigh)) {
                         desiredRawLocation = desiredRawLocation
                                 .put(new AxesLocation(axis, rawAxis.getSoftLimitHigh()));
                     }
@@ -442,12 +452,12 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return approximativeLocation;
     }
 
-    @Override 
+    @Override
     public boolean isReachable(Location location) throws Exception {
-            location = substituteUnchangedCoordinates(location, getLocation());
-            Location headLocation = toHeadLocation(location);
-            AxesLocation axesLocation = toRaw(headLocation);
-            return getMachine().getMotionPlanner().isValidLocation(this, axesLocation);
+        location = substituteUnchangedCoordinates(location, getLocation());
+        Location headLocation = toHeadLocation(location);
+        AxesLocation axesLocation = toRaw(headLocation);
+        return getMachine().getMotionPlanner().isValidLocation(this, axesLocation);
     }
 
     protected ReferenceMachine getMachine() {

@@ -57,6 +57,7 @@ public class MovableUtils {
     public static void moveToLocationAtSafeZ(HeadMountable hm, Location location) throws Exception {
         moveToLocationAtSafeZ(hm, location, hm.getHead().getMachine().getSpeed());
     }
+
     
     public static void park(Head head) throws Exception {
         head.moveToSafeZ();

@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -85,22 +85,21 @@ public class ReferenceHead extends AbstractHead {
                 if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
                     // Convert fiducial location to raw coordinates
                     axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
-                }
-                else {
+                } else {
                     // Use bare X, Y homing coordinates (legacy mode).
-                    axesHomingLocation =  new AxesLocation(machine, 
-                            (axis) -> (axis.getHomeCoordinate())); 
+                    axesHomingLocation = new AxesLocation(machine,
+                            (axis) -> (axis.getHomeCoordinate()));
                     // For best legacy support, we suppress the camera calibration head offsets, but we do not
                     // suppress the head offsets in general. Whether it was a bug or a feature to not account for the 
                     // head offsets, can be left open. 
-                    Location cameraHomingLocation = hm.toHeadMountableLocation(hm.toTransformed(axesHomingLocation), 
+                    Location cameraHomingLocation = hm.toHeadMountableLocation(hm.toTransformed(axesHomingLocation),
                             LocationOption.SuppressCameraCalibration);
                     // Having the legacy camera location, we can derive the axesHomingLocation, this time accounting 
                     // for the camera calibration head offsets.
                     axesHomingLocation = hm.toRaw(hm.toHeadLocation(cameraHomingLocation));
                 }
                 // Just take the X and Y axes.
-                axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
+                axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y);
                 // Reset to the axes homing location as the new Working Coordinate System.
                 machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
             }
@@ -126,12 +125,12 @@ public class ReferenceHead extends AbstractHead {
                 "ReferenceHead.CamerasPropertySheetHolder.title"), getCameras(), null)); //$NON-NLS-1$
         children.add(new ActuatorsPropertySheetHolder(this, Translations.getString(
                 "ReferenceHead.ActuatorsPropertySheetHolder.title"), getActuators(), null)); //$NON-NLS-1$
-        return children.toArray(new PropertySheetHolder[] {});
+        return children.toArray(new PropertySheetHolder[]{});
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard())};
+        return new PropertySheet[]{new PropertySheetWizardAdapter(getConfigurationWizard())};
     }
 
     @Override
@@ -145,13 +144,23 @@ public class ReferenceHead extends AbstractHead {
         super.moveToSafeZ(speed);
     }
 
-    @Override 
+    @Override
     public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
             machine.getMotionPlanner().moveTo(hm, axesLocation, speed, options);
+        }
+    }
+
+    @Override
+    public void moveToTogether(HeadMountable hm, Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
+        ReferenceMachine machine = getMachine();
+        AxesLocation mappedAxes = hm.getMappedAxes(machine);
+        if (!mappedAxes.isEmpty()) {
+            AxesLocation axesLocation = hm.toRaw(location);
+            machine.getMotionPlanner().moveToTogether(hm, axesLocation, rotateA, rotateB, options);
         }
     }
 
@@ -170,9 +179,9 @@ public class ReferenceHead extends AbstractHead {
         DualCam
     }
 
-    @Attribute(required=false) 
+    @Attribute(required = false)
     private NozzleSolution nozzleSolution;
-    @Attribute(required=false) 
+    @Attribute(required = false)
     int nozzleSolutionsMultiplier = 1;
 
     public NozzleSolution getNozzleSolution() {
