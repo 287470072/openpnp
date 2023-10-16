@@ -2,20 +2,20 @@
  * Copyright (C) 2020 <mark@makr.zone>
  * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -40,36 +40,35 @@ import org.openpnp.spi.Machine;
 import org.openpnp.util.Triplet;
 
 /**
- * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However AxesLocation 
+ * Like the classic OpenPnP Location, the AxesLocation stores a set of coordinates. However AxesLocation
  * can store an arbitrary number of axes and their coordinates, including multiple times the same Axis.Type
- * e.g. multiple Z or C axes. 
- * 
- * All coordinates are handled as Millimeters to speed up calculations and allow for multi-axis transforms 
- * across drivers with different units. This unit-less handling also avoids problems with rotational axis 
+ * e.g. multiple Z or C axes.
+ * <p>
+ * All coordinates are handled as Millimeters to speed up calculations and allow for multi-axis transforms
+ * across drivers with different units. This unit-less handling also avoids problems with rotational axis
  * coordinates that should obviously never be length unit converted.
- * 
- * Like Location, the AxesLoction is sometimes used as a Vector, thought as a distance to the origin. 
- * Furthermore, it is sometimes used as an axis map, i.e. only the included axes are important, not the 
+ * <p>
+ * Like Location, the AxesLoction is sometimes used as a Vector, thought as a distance to the origin.
+ * Furthermore, it is sometimes used as an axis map, i.e. only the included axes are important, not the
  * coordinates.
- * 
+ * <p>
  * Coordinates of axes not present in the AxesLocation are sometimes treated as 0.0, in other cases however a
  * missing axis means that it should not be included in an operation such as moveTo(), etc. Be careful to
- * determine which meaning applies. 
- * 
- * AxesLocations preserve the order of the axes. In particular the Configuration order of axis definitions is 
- * sometimes used to treat axes in their "natural" order, where it may matter.  
- * 
+ * determine which meaning applies.
+ * <p>
+ * AxesLocations preserve the order of the axes. In particular the Configuration order of axis definitions is
+ * sometimes used to treat axes in their "natural" order, where it may matter.
  */
 public class AxesLocation {
-    final private LinkedHashMap<Axis, Double> location;
+    private LinkedHashMap<Axis, Double> location;
     final public static AxesLocation zero = new AxesLocation();
 
     /**
-     * All coordinates of AxesLoactions are handled as Millimeters to speed up calculations and allow for 
-     * multi-axis transforms across drivers with different units and other universal vector math. This unit-less 
-     * handling also avoids problems with rotational axis coordinates that should obviously never be length unit 
+     * All coordinates of AxesLoactions are handled as Millimeters to speed up calculations and allow for
+     * multi-axis transforms across drivers with different units and other universal vector math. This unit-less
+     * handling also avoids problems with rotational axis coordinates that should obviously never be length unit
      * converted.
-     * 
+     *
      * @return
      */
     final public static LengthUnit getUnits() {
@@ -78,16 +77,24 @@ public class AxesLocation {
 
     /**
      * Create an empty AxesLocation. Because coordinates often default to 0.0, this can also be used as the
-     * origin or zero AxesLocation. See also org.openpnp.model.AxesLocation.zero.   
-     * 
+     * origin or zero AxesLocation. See also org.openpnp.model.AxesLocation.zero.
      */
     public AxesLocation() {
         // Empty.
         location = new LinkedHashMap<>(0);
     }
+
+    public LinkedHashMap<Axis, Double> getLocation() {
+        return location;
+    }
+
+    public void setLocation(LinkedHashMap<Axis, Double> l) {
+        location = l;
+    }
+
     /**
-     * Create a single Axis/coordinate pair AxesLocation.  
-     * 
+     * Create a single Axis/coordinate pair AxesLocation.
+     *
      * @param axis
      * @param coordinate
      */
@@ -97,9 +104,10 @@ public class AxesLocation {
             location.put(axis, coordinate);
         }
     }
+
     /**
-     * Create a single Axis/Length coordinate pair AxesLocation.  
-     * 
+     * Create a single Axis/Length coordinate pair AxesLocation.
+     *
      * @param axis
      * @param coordinate
      */
@@ -107,10 +115,11 @@ public class AxesLocation {
         this(axis, coordinate
                 .convertToUnits(getUnits()).getValue());
     }
+
     /**
-     * Create an AxesLocation with the given CoordinateAxis argument list and initialize to the current 
-     * coordinates (i.e. planned coordinates). 
-     * 
+     * Create an AxesLocation with the given CoordinateAxis argument list and initialize to the current
+     * coordinates (i.e. planned coordinates).
+     *
      * @param axes
      */
     public AxesLocation(CoordinateAxis... axis) {
@@ -119,18 +128,20 @@ public class AxesLocation {
             location.put(oneAxis, oneAxis.getLengthCoordinate().convertToUnits(getUnits()).getValue());
         }
     }
+
     /**
-     * Create an AxesLocation with the given Axis List and initialize to the current 
-     * coordinates (i.e. planned coordinates). 
-     * 
+     * Create an AxesLocation with the given Axis List and initialize to the current
+     * coordinates (i.e. planned coordinates).
+     *
      * @param axes
      */
     public AxesLocation(List<CoordinateAxis> axes) {
         this(axes, (axis) -> axis.getLengthCoordinate());
     }
+
     /**
      * Create an AxesLocation with the given typed Axis Iterable and initialize coordinates with the given function.
-     * 
+     *
      * @param <T>
      * @param axes
      * @param initializer
@@ -144,19 +155,21 @@ public class AxesLocation {
             }
         }
     }
+
     /**
-     * Create an AxesLoaction over all the ControllerAxes of the machine and initialize to the current 
-     * coordinates (i.e. planned coordinates). 
-     * 
+     * Create an AxesLoaction over all the ControllerAxes of the machine and initialize to the current
+     * coordinates (i.e. planned coordinates).
+     *
      * @param machine
      */
     public AxesLocation(Machine machine) {
         this(machine, (axis) -> (axis.getLengthCoordinate()));
     }
+
     /**
      * Create an AxesLoaction over all the CoordinateAxes of the machine (in Machine Setup order).
-     * Apply the given function to initialize the coordinates.  
-     * 
+     * Apply the given function to initialize the coordinates.
+     *
      * @param machine
      * @param initializer
      */
@@ -171,10 +184,11 @@ public class AxesLocation {
             }
         }
     }
+
     /**
      * Create an AxesLoaction over all the ControllerAxes of the machine (in Machine Setup order) and with the given driver.
-     * Apply the given function to initialize the coordinates.  
-     * 
+     * Apply the given function to initialize the coordinates.
+     *
      * @param machine
      * @param driver
      * @param initializer
@@ -192,9 +206,10 @@ public class AxesLocation {
             }
         }
     }
+
     /**
-     * Using the given binary function, aggregate the given axesLocation argument list.  
-     * 
+     * Using the given binary function, aggregate the given axesLocation argument list.
+     *
      * @param function
      * @param axesLocation
      */
@@ -208,9 +223,10 @@ public class AxesLocation {
             }
         }
     }
+
     /**
      * Create a new AxesLocation with the given function applied to the coordinates of axesLocation.
-     *  
+     *
      * @param function
      * @param axesLocation
      */
@@ -230,7 +246,7 @@ public class AxesLocation {
     }
 
     public AxesLocation multiply(double factor) {
-        return new AxesLocation((a) -> (a*factor), this);
+        return new AxesLocation((a) -> (a * factor), this);
     }
 
     public AxesLocation put(AxesLocation other) {
@@ -239,14 +255,14 @@ public class AxesLocation {
 
     /**
      * Returns the dot product of this AxesLocation with the other, both treated as vectors.
-     *   
+     *
      * @param other
      * @return
      */
     public double dotProduct(AxesLocation other) {
         double dot = 0;
         for (Entry<Axis, Double> entry : this.location.entrySet()) {
-            dot += entry.getValue()*other.getCoordinate(entry.getKey());
+            dot += entry.getValue() * other.getCoordinate(entry.getKey());
         }
         return dot;
     }
@@ -254,8 +270,8 @@ public class AxesLocation {
     /**
      * Returns this vector projected perpendicularly onto the other. This results in a vector that
      * points into the same direction as the other vector and has a length that is equal to the length
-     * of this vector times the cosine of the angle between them.   
-     * 
+     * of this vector times the cosine of the angle between them.
+     *
      * @param other
      * @return
      */
@@ -265,17 +281,16 @@ public class AxesLocation {
         double dot = dotProduct(other);
         double norm = other.getEuclideanMetric();
         if (norm == 0) {
-            return other.multiply(0); 
-        }
-        else {
-            double factor = dot/norm/norm; // need to norm twice, because of multiply.
+            return other.multiply(0);
+        } else {
+            double factor = dot / norm / norm; // need to norm twice, because of multiply.
             return other.multiply(factor);
         }
     }
 
     /**
      * Filter those axes from the AxesLocation that are driven by the given driver.
-     * 
+     *
      * @param driver
      * @return
      */
@@ -285,20 +300,20 @@ public class AxesLocation {
 
     /**
      * Filter those axes from the AxesLocation that have one of the given Axis.Types.
-     * 
+     *
      * @param types
      * @return
      */
     public AxesLocation byType(Axis.Type... types) {
         final List<Axis.Type> typeList = Arrays.asList(types);
-        return  new AxesLocation(getAxes(), 
-                (axis) -> (typeList.contains(axis.getType()) ? 
-                        getLengthCoordinate(axis) : null)); 
+        return new AxesLocation(getAxes(),
+                (axis) -> (typeList.contains(axis.getType()) ?
+                        getLengthCoordinate(axis) : null));
     }
 
     /**
      * Return all the axes from the AxesLocation.
-     * 
+     *
      * @return
      */
     public Set<Axis> getAxes() {
@@ -307,7 +322,7 @@ public class AxesLocation {
 
     /**
      * Get those axes from the AxesLocation that are driven by the given driver.
-     * 
+     *
      * @param driver
      * @return
      */
@@ -323,7 +338,7 @@ public class AxesLocation {
 
     /**
      * Get those axes from the AxesLocation that are of the given axisClass.
-     * 
+     *
      * @param axisClass
      * @return
      */
@@ -340,7 +355,7 @@ public class AxesLocation {
 
     /**
      * Get all the axes from the AxesLocation that are ControllerAxis.
-     * 
+     *
      * @param driver
      * @return
      */
@@ -357,13 +372,13 @@ public class AxesLocation {
 
     /**
      * Returns true if the coordinates of this location match the other's.
-     * 
+     * <p>
      * Note, this is asymmetric, as only the axes contained in this location are matched.
      * If the other location contains more axes, they are ignored. If this location contains
-     * more axes, they are compared against 0.0.    
-     * 
-     * Uses the resolution of the involved axes for tolerance. 
-     * 
+     * more axes, they are compared against 0.0.
+     * <p>
+     * Uses the resolution of the involved axes for tolerance.
+     *
      * @param driver
      * @param other
      * @return
@@ -371,7 +386,7 @@ public class AxesLocation {
     public boolean matches(AxesLocation other) {
         for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
             if (!axis.coordinatesMatch(
-                    this.getLengthCoordinate(axis), 
+                    this.getLengthCoordinate(axis),
                     other.getLengthCoordinate(axis))) {
                 return false;
             }
@@ -388,7 +403,7 @@ public class AxesLocation {
     }
 
     /**
-     * Set this AxesLocation to the axes as the current (planned) location.  
+     * Set this AxesLocation to the axes as the current (planned) location.
      */
     public void setToCoordinates() {
         for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
@@ -397,8 +412,8 @@ public class AxesLocation {
     }
 
     /**
-     * Set this AxesLocation to the axes of the given driver as the current driver location.  
-     * 
+     * Set this AxesLocation to the axes of the given driver as the current driver location.
+     *
      * @param driver
      */
     public void setToDriverCoordinates(Driver driver) {
@@ -409,7 +424,7 @@ public class AxesLocation {
 
     /**
      * Get the coordinate for the given axis from the AxesLocation.
-     * 
+     *
      * @param axis
      * @return
      */
@@ -422,9 +437,10 @@ public class AxesLocation {
         }
         return 0.0;
     }
+
     /**
      * Get the coordinate for the given axis from the AxesLocation, converted to the given length units.
-     * 
+     *
      * @param axis
      * @param units
      * @return
@@ -433,14 +449,14 @@ public class AxesLocation {
         if (axis.getType() == Axis.Type.Rotation) {
             // Never convert rotation angles.
             return getCoordinate(axis);
-        }
-        else {
+        } else {
             return getLengthCoordinate(axis).convertToUnits(units).getValue();
         }
     }
+
     /**
      * Get the coordinate for the given axis from the AxesLocation as a Length.
-     * 
+     *
      * @param axis
      * @return
      */
@@ -459,16 +475,16 @@ public class AxesLocation {
             }
             str.append(entry.getKey().getName());
             str.append(":");
-            str.append(String.format(Locale.US, "%f", entry.getValue())); 
+            str.append(String.format(Locale.US, "%f", entry.getValue()));
         }
         str.append(")");
         return str.toString();
     }
 
     /**
-     * Based on the mapped axes in this, substitute coordinates by Axis.Type to convert a Location to 
+     * Based on the mapped axes in this, substitute coordinates by Axis.Type to convert a Location to
      * an AxisLocation. Used together with org.openpnp.spi.MovableMountable.getMappedAxes(Machine).
-     * 
+     *
      * @param location
      * @return
      * @throws Exception
@@ -481,9 +497,10 @@ public class AxesLocation {
                 new AxesLocation(getAxis(Axis.Type.Z), location.getZ()),
                 new AxesLocation(getAxis(Axis.Type.Rotation), location.getRotation()));
     }
+
     /**
      * Get the drivers of all the ControllerAxes in this AxesLocation.
-     *  
+     *
      * @param machine
      * @return
      */
@@ -502,69 +519,70 @@ public class AxesLocation {
     }
 
     /**
-     * From the AxisLocation, return the driver axis of the given type.  
-     * 
+     * From the AxisLocation, return the driver axis of the given type.
+     *
      * @param driver
      * @param axisType
      * @return
      * @throws Exception
      */
     public ControllerAxis getAxis(Driver driver, Axis.Type axisType) throws Exception {
-        ControllerAxis found = null; 
+        ControllerAxis found = null;
         for (ControllerAxis axis : getAxes(driver)) {
             if (axis.getType() == axisType) {
                 if (found != null) {
                     // Make this future-proof: 
                     // Getting axes by type will no longer be allowed inside motion blending applications. 
-                    throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+axisType+" assigned.");
+                    throw new Exception("Axes " + found.getName() + " and " + axis.getName() + " have duplicate type " + axisType + " assigned.");
                 }
                 found = axis;
             }
         }
         return found;
     }
+
     public CoordinateAxis getAxis(Axis.Type axisType) throws Exception {
-        CoordinateAxis found = null; 
+        CoordinateAxis found = null;
         for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
             if (axis.getType() == axisType) {
                 if (found != null) {
                     // Make this future-proof: 
                     // Getting axes by type will no longer be allowed inside motion blending applications. 
-                    throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+axisType+" assigned.");
+                    throw new Exception("Axes " + found.getName() + " and " + axis.getName() + " have duplicate type " + axisType + " assigned.");
                 }
                 found = axis;
             }
         }
         return found;
     }
+
     /**
-     * From the AxisLocation, return the driver axis with the specified variable name. 
-     * 
+     * From the AxisLocation, return the driver axis with the specified variable name.
+     *
      * @param variable The name of the variable.
      * @return
      * @throws Exception If the variable names are unassigned or not unique within the mapped axes.
      */
-    public ControllerAxis getAxisByVariable(Driver driver, String variable) 
+    public ControllerAxis getAxisByVariable(Driver driver, String variable)
             throws Exception {
         ControllerAxis found = null;
         if (driver.isUsingLetterVariables()) {
             for (ControllerAxis axis : getAxes(driver)) {
                 if (axis.getLetter() == null || axis.getLetter().isEmpty()) {
-                    throw new Exception("Axis "+axis.getName()+" has no letter assigned.");
+                    throw new Exception("Axis " + axis.getName() + " has no letter assigned.");
                 }
                 if (axis.getLetter().equals(variable)) {
                     if (found != null) {
-                        throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate letter "+variable+" assigned.");
+                        throw new Exception("Axes " + found.getName() + " and " + axis.getName() + " have duplicate letter " + variable + " assigned.");
                     }
                     found = axis;
                 }
             }
-        }
-        else {
+        } else {
             for (ControllerAxis axis : getAxes(driver)) {
                 if (axis.getType().toString().equals(variable)) {
                     if (found != null) {
-                        throw new Exception("Axes "+found.getName()+" and "+axis.getName()+" have duplicate type "+variable+" assigned. Use letter variables on the driver.");
+                        throw new Exception("Axes " + found.getName() + " and " + axis.getName() + " have duplicate type " + variable + " assigned. Use letter variables on the driver.");
                     }
                     found = axis;
                 }
@@ -575,7 +593,7 @@ public class AxesLocation {
 
     public boolean isInSafeZone() {
         for (CoordinateAxis axis : getAxes(CoordinateAxis.class)) {
-            if (! axis.isInSafeZone(getLengthCoordinate(axis))) {
+            if (!axis.isInSafeZone(getLengthCoordinate(axis))) {
                 return false;
             }
         }
@@ -585,25 +603,25 @@ public class AxesLocation {
     /**
      * Create a distance vector over ControllerAxes that are both contained in this and location1
      * and that are not matching in coordinates. This will return a vector with only the axes that
-     * need to move. 
-     * 
+     * need to move.
+     *
      * @param location1
      * @return
      */
     public AxesLocation motionSegmentTo(AxesLocation location1) {
-        AxesLocation distance = new AxesLocation(getControllerAxes(), 
-                (a) -> ( location1.contains(a) ? 
-                        (!a.coordinatesMatch(getLengthCoordinate(a), location1.getLengthCoordinate(a)) ? 
+        AxesLocation distance = new AxesLocation(getControllerAxes(),
+                (a) -> (location1.contains(a) ?
+                        (!a.coordinatesMatch(getLengthCoordinate(a), location1.getLengthCoordinate(a)) ?
                                 new Length(location1.getCoordinate(a) - getCoordinate(a), AxesLocation.getUnits())
-                                :null)
-                        :null));
+                                : null)
+                        : null));
         return distance;
     }
 
     /**
      * Returns the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation from the origin
-     * i.e. treated as a vector. 
-     * 
+     * i.e. treated as a vector.
+     *
      * @return
      */
     public double getEuclideanMetric() {
@@ -617,11 +635,11 @@ public class AxesLocation {
     }
 
     /**
-     * Get the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation 
-     * using the given function. 
-     * 
+     * Get the Euclidean metric i.e. the distance in N-dimensional space of the AxesLocation
+     * using the given function.
+     *
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
-     * @param f The function to be applied to the AxesLocation to obtain the metric.
+     * @param f      The function to be applied to the AxesLocation to obtain the metric.
      * @return a Triplet with <linear, rotational, overall> Euclidean rate.
      */
     public Triplet<Double, Double, Double> getEuclideanMetric(Driver driver, Function<ControllerAxis, Double> f) {
@@ -629,11 +647,10 @@ public class AxesLocation {
         double rotationalRate = 0;
         double euclideanRate = 0;
         for (ControllerAxis axis : getAxes(driver)) {
-            double val =  f.apply(axis);
+            double val = f.apply(axis);
             if (axis.isRotationalOnController()) {
                 rotationalRate += Math.pow(val, 2);
-            }
-            else {
+            } else {
                 linearRate += Math.pow(val, 2);
             }
             euclideanRate += Math.pow(val, 2);
@@ -646,21 +663,20 @@ public class AxesLocation {
 
     /**
      * Get the metric according to NIST RS274NGC Interpreter - Version 3, Section 2.1.2.5 (p. 7).
-     * The rate is to be interpreted over the Euclidean linear axis distance of a move 
+     * The rate is to be interpreted over the Euclidean linear axis distance of a move
      * and in the absence of any linear axes, over the Euclidean angular distance of the move.
-     * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
      *
      * @param driver
      * @param f
      * @return
+     * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
      */
     public Double getRS274NGCMetric(Driver driver, Function<ControllerAxis, Double> f) {
         Triplet<Double, Double, Double> rates = getEuclideanMetric(driver, f);
         if (rates.first != null && rates.first != 0) {
-            return rates.first; 
-        }
-        else {
+            return rates.first;
+        } else {
             return rates.second;
-        }        
+        }
     }
 }

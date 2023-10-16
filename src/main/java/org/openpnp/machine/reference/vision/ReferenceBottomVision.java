@@ -571,10 +571,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 if (shotLocationNew.getZ() > 1) {
                                     MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                                 }
-
-
-
-
                             }
                         } else {
                             if (nozzle.equals(nozzles.get(0))) {

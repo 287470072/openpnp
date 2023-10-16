@@ -21,11 +21,7 @@
 
 package org.openpnp.machine.reference.driver;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -159,7 +155,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         AxesLocation newLocation =
                 currentLocation
                         .put(axesLocation);
-
         if (!homed) {
             // Machine is unhomed, check if move is legal.
             int optionFlags = Motion.optionFlags(options);
@@ -275,6 +270,20 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         newLocation =
                 currentLocation
                         .put(axesLocation);
+
+        LinkedHashMap<Axis, Double> newLocationLocation = newLocation.getLocation();
+        for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
+            Axis axis = entry.getKey(); // 获取Axis对象
+            Double value = entry.getValue(); // 获取对应的Double值
+
+            // 执行操作，例如将Double值增加10.0
+            value += 10.0;
+
+            // 更新LinkedHashMap中的值
+            newLocationLocation.put(axis, value);
+        }
+        newLocation.setLocation(newLocationLocation);
+
 
         // Create the motion commands needed for backlash compensation if enabled.
         createBacklashCompensatedMotion(hm, speed, currentLocation, newLocation, options);
