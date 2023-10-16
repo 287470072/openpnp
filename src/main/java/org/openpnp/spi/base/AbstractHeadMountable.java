@@ -247,6 +247,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         getHead().moveTo(this, headLocation, getHead().getMaxPartSpeed() * speed, options);
     }
 
+
+
     @Override
     public void moveToSafeZ(double speed) throws Exception {
         Location l = getLocation();
@@ -281,7 +283,12 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public void moveToTogether(Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
-        getHead().moveToTogether(this, location, rotateA, rotateB, options);
+        Logger.debug("{}.moveTo({}, {})", getName(), location, getMachine().getSpeed());
+        Location currentLocation = getLocation();
+        location = substituteUnchangedCoordinates(location, currentLocation);
+        Location headLocation = toHeadLocation(location, currentLocation);
+
+       getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
     }
 
     @Override

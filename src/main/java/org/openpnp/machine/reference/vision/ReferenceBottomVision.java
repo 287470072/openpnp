@@ -558,11 +558,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                         .compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                     // 喷嘴还不在相机漫游半径内。以安全的Z轴移
-                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                    //MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+
                                 } else {
-                                    nozzle.moveTo(shotLocation);
+                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveTo(shotLocation);
                                 }
-                            } else if (nozzle.equals(nozzles.get(1))) {
+                            } /*else if (nozzle.equals(nozzles.get(1))) {
                                 Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
                                 Location shotLocationNew = shotLocation;
@@ -571,7 +574,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 if (shotLocationNew.getZ() > 1) {
                                     MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                                 }
-                            }
+                            }*/
                         } else {
                             if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
