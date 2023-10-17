@@ -216,7 +216,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveToTogether(HeadMountable hm, AxesLocation axesLocation, double rotateA, double rotateB, MotionOption... options) throws Exception {
-        double speed = getMinimumSpeed();
+        double speed = getMachine().getSpeed();
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");
         } else if (speed < getMinimumSpeed()) {
@@ -275,12 +275,10 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
             Axis axis = entry.getKey(); // 获取Axis对象
             Double value = entry.getValue(); // 获取对应的Double值
-            if(axis.getName().equals("B")){
+            if (axis.getName().equals("B")) {
                 // 执行操作，例如将Double值增加10.0
-                value += 100.0;
+                value += rotateB;
             }
-
-
 
             // 更新LinkedHashMap中的值
             newLocationLocation.put(axis, value);
