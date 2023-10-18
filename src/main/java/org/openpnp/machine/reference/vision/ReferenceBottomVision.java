@@ -4,12 +4,14 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -551,8 +553,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
+
+                        Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-                        if (nozzles.size() == 2 && camera.getWidth() > 2000) {
+                        if (nozzles.size() == 2 && camera.getWidth() > 2000 && pkgNozzles.size() > 1) {
                             if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
                                         .compareTo(camera.getRoamingRadius()) > 0) {
@@ -565,16 +569,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
                                     //nozzle.moveTo(shotLocation);
                                 }
-                            } /*else if (nozzle.equals(nozzles.get(1))) {
-                                Location n2Offest = nozzles.get(1).getHeadOffsets();
-                                Location n1Offset = nozzles.get(0).getHeadOffsets();
-                                Location shotLocationNew = shotLocation;
-                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
-                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
-                                if (shotLocationNew.getZ() > 1) {
-                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                                }
-                            }*/
+                            }
                         } else {
                             if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
