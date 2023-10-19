@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PlotRenderingInfo;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -189,140 +190,176 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 .derive(null, null, null, angle);
     }
 
+    private Location getShotLocation(Placement placement, BoardLocation boardLocation, Part part, Camera camera, Nozzle nozzle) {
+/*        try {
+
+            BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
+
+
+            // 从Package对象中获取VisionCompositing对象
+            VisionCompositing visionCompositing = part.getPackage().getVisionCompositing();
+            // 创建一个Composite对象，用于合成视觉信息
+            VisionCompositing.Composite composite = visionCompositing.new Composite(
+                    part.getPackage(), bottomVisionSettings, nozzle, nozzle.getNozzleTip(), camera, wantedLocation);
+
+            Shot shot = composite.getCompositeShots().get(0);
+            Location shotLocation = composite.getShotLocation(shot);
+            return shotLocation;
+        } catch (Exception exception) {
+
+        }*/
+        return null;
+    }
+
     private List<PnpJobPlanner.PlannedPlacement> findOffsetsPreRotateMulti(List<PnpJobPlanner.PlannedPlacement> pps) {
-        pps.forEach(p -> {
-            try {
-                final Nozzle nozzle = p.nozzle;
-                final PnpJobProcessor.JobPlacement jobPlacement = p.jobPlacement;
-                final Placement placement = jobPlacement.getPlacement();
-                final BoardLocation boardLocation = jobPlacement.getBoardLocation();
-                final Part part = placement.getPart();
-
-                // 获取底部视觉相机
-                Camera camera = VisionUtils.getBottomVisionCamera();
+        PnpJobPlanner.PlannedPlacement plannedPlacement = pps.stream().findFirst().orElse(null);
 
 
-                // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
-                double wantedAngle = placement.getLocation().getRotation();
-                if (boardLocation != null) {
-                    wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
-                            .getRotation();
-                }
-                // 规范化旋转角度为-180°到180°之间的范围
-                wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
-                // 获取所需的位置，包括零件高度和旋转角度
-
-                Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
-                // 初始化吸嘴位置和中心位置
-                Location nozzleLocation = wantedLocation;
-                final Location center = new Location(maxLinearOffset.getUnits());
-                // 获取零件的继承的视觉设置
-                BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
 
 
-                // 从Package对象中获取VisionCompositing对象
-                VisionCompositing visionCompositing = part.getPackage().getVisionCompositing();
-                // 创建一个Composite对象，用于合成视觉信息
-                VisionCompositing.Composite composite = visionCompositing.new Composite(
-                        part.getPackage(), bottomVisionSettings, nozzle, nozzle.getNozzleTip(), camera, wantedLocation);
+        if (pps.size() > 1) {
 
-                Shot shot = composite.getCompositeShots().get(0);
+        }
 
-                Location shotLocation = composite.getShotLocation(shot);
 
-                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                        .compareTo(camera.getRoamingRadius()) > 0) {
-                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
-                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+        pps.stream()
+                /*  .filter(p -> p.alignmentOffsets == null) // 过滤条件为p内alignmentOffsets为空的*/
+                .forEach(p -> {
+                    try {
+                        final Nozzle n1, n2;
+                        final Nozzle nozzle = p.nozzle;
+                        final PnpJobProcessor.JobPlacement jobPlacement = p.jobPlacement;
+                        final Placement placement = jobPlacement.getPlacement();
+                        final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+                        final Part part = placement.getPart();
 
-                } else {
-                    nozzle.moveTo(shotLocation);
-                }
+                        // 获取底部视觉相机
+                        Camera camera = VisionUtils.getBottomVisionCamera();
 
-                try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
-                    // 初始化偏移量，用于迭代计算
-                    Location offsets = new Location(nozzleLocation.getUnits());
-                    // 尝试多次获取零件的正确位置
-                    for (int pass = 0; ; ) {
+                        //两个吸嘴都有元件
+                        if (pps.size() > 1) {
 
-                        // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, part, nozzle,
-                                wantedLocation, nozzleLocation, bottomVisionSettings);
+                            Location ShotLocation = getShotLocation(placement, boardLocation, part, camera, nozzle);
 
-                        // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
-                        Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
 
-                        // 创建偏移量对象，表示相机中心到定位零件的物理距离
-                        offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+                        } else if (pps.size() == 1 && nozzle.getName().equals("N1")) {
 
-                        // 计算角度偏移量
-                        double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle;
+                        } else if (pps.size() == 1 && nozzle.getName().equals("N2")) {
 
-                        // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
-                        // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
-                        if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
-                            angleOffset = Utils2D.angleNorm(angleOffset);
+                        }
+
+                        // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
+                        double wantedAngle = placement.getLocation().getRotation();
+                        if (boardLocation != null) {
+                            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
+                                    .getRotation();
+                        }
+                        // 规范化旋转角度为-180°到180°之间的范围
+                        wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
+                        // 获取所需的位置，包括零件高度和旋转角度
+
+                        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
+                        // 初始化吸嘴位置和中心位置
+                        Location nozzleLocation = wantedLocation;
+                        final Location center = new Location(maxLinearOffset.getUnits());
+                        // 获取零件的继承的视觉设置
+
+
+                        Location shotLocation = getShotLocation(placement, boardLocation, part, camera, nozzle);
+
+                        if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                .compareTo(camera.getRoamingRadius()) > 0) {
+                            // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                            // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                            MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+
                         } else {
-                            // 旋转超过180°在一个方向上没有意义
-                            angleOffset = Utils2D.angleNorm(angleOffset, 180);
+                            nozzle.moveTo(shotLocation);
                         }
 
-                        // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                        offsets = offsets.rotateXy(-angleOffset)
-                                .derive(null, null, null, angleOffset);
-                        nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
+                        try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+                            // 初始化偏移量，用于迭代计算
+                            Location offsets = new Location(nozzleLocation.getUnits());
+                            // 尝试多次获取零件的正确位置
+                            for (int pass = 0; ; ) {
 
-                        if (++pass >= maxVisionPasses) {
-                            // 达到最大尝试次数，结束循环
-                            break;
+                                // 处理管道并获取结果的旋转矩形
+                                RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, part, nozzle,
+                                        wantedLocation, nozzleLocation, bottomVisionSettings);
+
+                                // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
+                                Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+
+                                // 创建偏移量对象，表示相机中心到定位零件的物理距离
+                                offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+
+                                // 计算角度偏移量
+                                double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle;
+
+                                // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
+                                // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
+                                if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+                                    angleOffset = Utils2D.angleNorm(angleOffset);
+                                } else {
+                                    // 旋转超过180°在一个方向上没有意义
+                                    angleOffset = Utils2D.angleNorm(angleOffset, 180);
+                                }
+
+                                // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
+                                offsets = offsets.rotateXy(-angleOffset)
+                                        .derive(null, null, null, angleOffset);
+                                nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
+
+                                if (++pass >= maxVisionPasses) {
+                                    // 达到最大尝试次数，结束循环
+                                    break;
+                                }
+
+                                // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
+                                Point corners[] = new Point[4];
+                                rect.points(corners);
+                                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                                        .convertToUnits(maxLinearOffset.getUnits());
+                                Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
+                                partSizeCheck(part, bottomVisionSettings, rect, camera);
+
+                                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                                    Logger.debug("Offsets too large {} : center offset {} > {}",
+                                            offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
+                                } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
+                                    Logger.debug("Offsets too large {} : corner offset {} > {}",
+                                            offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
+                                } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                                    Logger.debug("Offsets too large {} : angle offset {} > {}",
+                                            offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                                } else {
+                                    // 找到足够好的位置修正，结束循环
+                                    break;
+                                }
+
+                                // 位置修正不足，尝试使用修正后的位置再次计算
+                            }
+
+                            // 记录偏移量已接受
+                            Logger.debug("Offsets accepted {}", offsets);
+
+                            // 计算所有尝试的累积偏移量
+                            offsets = wantedLocation.subtractWithRotation(nozzleLocation);
+
+                            // 减去视觉中心偏移
+                            offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
+
+                            // 显示处理结果，包括图像、零件、偏移量、相机和喷嘴信息
+                            displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
+
+                            // 检查偏移量是否符合要求
+                            offsetsCheck(part, nozzle, offsets);
+                            p.alignmentOffsets = new PartAlignment.PartAlignmentOffset(offsets, true);
                         }
+                    } catch (Exception e) {
 
-                        // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
-                        Point corners[] = new Point[4];
-                        rect.points(corners);
-                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
-                                .convertToUnits(maxLinearOffset.getUnits());
-                        Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                        partSizeCheck(part, bottomVisionSettings, rect, camera);
-
-                        if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : center offset {} > {}",
-                                    offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
-                        } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : corner offset {} > {}",
-                                    offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
-                        } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
-                            Logger.debug("Offsets too large {} : angle offset {} > {}",
-                                    offsets, Math.abs(angleOffset), getMaxAngularOffset());
-                        } else {
-                            // 找到足够好的位置修正，结束循环
-                            break;
-                        }
-
-                        // 位置修正不足，尝试使用修正后的位置再次计算
                     }
-
-                    // 记录偏移量已接受
-                    Logger.debug("Offsets accepted {}", offsets);
-
-                    // 计算所有尝试的累积偏移量
-                    offsets = wantedLocation.subtractWithRotation(nozzleLocation);
-
-                    // 减去视觉中心偏移
-                    offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
-
-                    // 显示处理结果，包括图像、零件、偏移量、相机和喷嘴信息
-                    displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
-
-                    // 检查偏移量是否符合要求
-                    offsetsCheck(part, nozzle, offsets);
-                    p.alignmentOffsets = new PartAlignment.PartAlignmentOffset(offsets, true);
-                }
-            } catch (Exception e) {
-
-            }
-        });
+                });
         Logger.trace("666");
         return pps;
 
