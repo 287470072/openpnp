@@ -11,24 +11,23 @@ import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.PartSettingsRoot;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PartAlignmentMulti;
 import org.openpnp.util.VisionUtils;
 
-public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartSettingsRoot, PartAlignment {
+public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartSettingsRoot, PartAlignment, PartAlignmentMulti {
 
-    @Override 
+    @Override
     public PartSettingsHolder getParentHolder(PartSettingsHolder partSettingsHolder) {
         if (partSettingsHolder instanceof Part) {
             return ((Part) partSettingsHolder).getPackage();
-        }
-        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+        } else if (partSettingsHolder instanceof org.openpnp.model.Package) {
             return this;
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    @Override 
+    @Override
     public BottomVisionSettings getInheritedVisionSettings(PartSettingsHolder partSettingsHolder) {
         while (partSettingsHolder != null) {
             BottomVisionSettings visionSettings = partSettingsHolder.getBottomVisionSettings();
@@ -56,9 +55,13 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
         return null;
     }
 
+    public static AbstractPartAlignment getPartAlignmentMulti() {
+        return (AbstractPartAlignment) Configuration.get().getMachine().getPartAlignmentMulti().get(0);
+    }
+
     public static AbstractPartAlignment getPartAlignment(PartSettingsHolder partSettingsHolder, boolean allowDisabled) {
         // Search for enabled first, then fall back to disabled, if allowed.
-        for (boolean allowDisabledPass : (allowDisabled ? new boolean [] { false, true } : new boolean [] { false })) {
+        for (boolean allowDisabledPass : (allowDisabled ? new boolean[]{false, true} : new boolean[]{false})) {
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
                 if (partAlignment.isEnabled() || allowDisabledPass) {
                     // TODO: if there are ever multiple Alignment<->VisionSettings classes, they would have to be matched up here. 
@@ -93,8 +96,7 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
         }
         try {
             visionSettings.getPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
         return new BottomVisionSettingsConfigurationWizard(visionSettings, partSettingsHolder);
     }

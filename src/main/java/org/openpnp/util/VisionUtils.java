@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.vision.AbstractPartAlignmentMulti;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.Area;
@@ -26,10 +27,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 import org.openpnp.model.Footprint.Pad;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.*;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.vision.pipeline.CvPipeline;
 
@@ -300,6 +298,11 @@ public class VisionUtils {
             return null;
         }
     }
+
+    public static List<PnpJobPlanner.PlannedPlacement> findPartAlignmentOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps, PartAlignmentMulti p) throws Exception {
+        return p.findOffsetsMulti(pps);
+    }
+
 
     public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
         // 创建一个存储全局变量的Map，用于在脚本中访问零件和喷嘴等信息

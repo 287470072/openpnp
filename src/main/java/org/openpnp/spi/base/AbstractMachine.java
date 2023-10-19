@@ -24,19 +24,8 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Driver;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.*;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.Signaler;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -50,10 +39,10 @@ import com.google.common.util.concurrent.FutureCallback;
 public abstract class AbstractMachine extends AbstractModelObject implements Machine {
     /**
      * History:
-     * 
+     * <p>
      * Note: Can't actually use the @Version annotation because of a bug in SimpleXML. See
      * http://sourceforge.net/p/simple/mailman/message/27887562/
-     * 
+     * <p>
      * 1.0: Initial revision. 1.1: Added jobProcessors Map and deprecated JobProcesor and
      * JobPlanner.
      */
@@ -80,6 +69,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
 
     @ElementList(required = false)
+    protected IdentifiableList<PartAlignmentMulti> partAlignmentMultis = new IdentifiableList<>();
+
+    @ElementList(required = false)
     protected IdentifiableList<Driver> drivers = new IdentifiableList<>();
 
     @Element(required = false)
@@ -90,10 +82,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Attribute(required = false)
     protected double speed = 1.0D;
-    
+
     @ElementMap(required = false)
     protected HashMap<String, Object> properties = new HashMap<>();
-    
+
     @ElementList(required = false)
     protected IdentifiableList<NozzleTip> nozzleTips = new IdentifiableList<>();
 
@@ -103,7 +95,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     volatile protected Thread taskThread;
 
-    protected AbstractMachine() {}
+    protected AbstractMachine() {
+    }
 
     @SuppressWarnings("unused")
     @Commit
@@ -131,7 +124,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     /**
      * Find a default machine axis by type. This is just an educated guess that is good as a default assignment
      * to be reviewed by the user.
-     * 
+     *
      * @param type
      * @return
      */
@@ -148,8 +141,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             if (type != Axis.Type.Z) {
                 // Unless it's Z, we look for transforms on top.
                 for (Axis axis : getAxes()) {
-                    if (axis instanceof AbstractSingleTransformedAxis 
-                            && ((AbstractSingleTransformedAxis)axis).getInputAxis() == defaultAxis) {
+                    if (axis instanceof AbstractSingleTransformedAxis
+                            && ((AbstractSingleTransformedAxis) axis).getInputAxis() == defaultAxis) {
                         defaultAxis = (AbstractAxis) axis;
                         break;
                     }
@@ -157,8 +150,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             }
             // Look for linear transforms on top-
             for (Axis axis : getAxes()) {
-                if (axis instanceof ReferenceLinearTransformAxis 
-                        && ((ReferenceLinearTransformAxis)axis).getPrimaryInputAxis() == defaultAxis) {
+                if (axis instanceof ReferenceLinearTransformAxis
+                        && ((ReferenceLinearTransformAxis) axis).getPrimaryInputAxis() == defaultAxis) {
                     defaultAxis = (AbstractAxis) axis;
                     break;
                 }
@@ -176,7 +169,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public Head getHead(String id) {
         return heads.get(id);
     }
-    
+
     @Override
     public Head getHeadByName(String name) {
         for (Head head : heads) {
@@ -250,6 +243,11 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<PartAlignment> getPartAlignments() {
         return Collections.unmodifiableList(partAlignments);
+    }
+
+    @Override
+    public List<PartAlignmentMulti> getPartAlignmentMulti() {
+        return Collections.unmodifiableList(partAlignmentMultis);
     }
 
     @Override
@@ -332,17 +330,17 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             for (Head head : getHeads()) {
                 for (HeadMountable hm : head.getHeadMountables()) {
                     if (hm.getAxis(axis.getType()) == axis) {
-                        ((AbstractHeadMountable)hm).setAxis(null, axis.getType());
+                        ((AbstractHeadMountable) hm).setAxis(null, axis.getType());
                     }
                 }
             }
         }
     }
 
-    @Override 
+    @Override
     public void permutateAxis(Axis axis, int direction) {
         int index0 = axes.indexOf(axis);
-        int index1 = direction > 0 ? index0+1 : index0-1;
+        int index1 = direction > 0 ? index0 + 1 : index0 - 1;
         if (0 <= index1 && axes.size() > index1) {
             axes.remove(axis);
             axes.add(index1, axis);
@@ -380,10 +378,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
-    @Override 
+    @Override
     public void permutateCamera(Camera camera, int direction) {
         int index0 = cameras.indexOf(camera);
-        int index1 = direction > 0 ? index0+1 : index0-1;
+        int index1 = direction > 0 ? index0 + 1 : index0 - 1;
         if (0 <= index1 && cameras.size() > index1) {
             cameras.remove(camera);
             cameras.add(index1, camera);
@@ -407,10 +405,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
-    @Override 
+    @Override
     public void permutateActuator(Actuator actuator, int direction) {
         int index0 = actuators.indexOf(actuator);
-        int index1 = direction > 0 ? index0+1 : index0-1;
+        int index1 = direction > 0 ? index0 + 1 : index0 - 1;
         if (0 <= index1 && actuators.size() > index1) {
             actuators.remove(actuator);
             actuators.add(index1, actuator);
@@ -433,10 +431,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
-    @Override 
+    @Override
     public void permutateDriver(Driver driver, int direction) {
         int index0 = drivers.indexOf(driver);
-        int index1 = direction > 0 ? index0+1 : index0-1;
+        int index1 = direction > 0 ? index0 + 1 : index0 - 1;
         if (0 <= index1 && drivers.size() > index1) {
             drivers.remove(driver);
             drivers.add(index1, driver);
@@ -545,7 +543,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Override
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback,
-            final boolean ignoreEnabled) {
+                                final boolean ignoreEnabled) {
         synchronized (this) {
             if (executor == null || executor.isShutdown()) {
                 executor = new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS,
@@ -577,8 +575,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                         // This does not necessarily wait for the motion to be complete physically, as this would 
                         // be undesirable for continuous Jog commands.  
                         getMotionPlanner().waitForCompletion(null, CompletionType.CommandJog);
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         exception = e;
                     }
 
@@ -591,8 +588,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                             // with that of the machine.  
                             Logger.trace(exception, "Exception caught, executing pending motion");
                             getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             // If there is a second exception, there is likely something fundamentally wrong with the driver or communications. 
                             // We rely on user diagnosis to re-home the machine when necessary, there is really nothing we can do, except log this 
                             // secondary exception and hope the first one is conclusive for the user. 
@@ -621,8 +617,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     if (callback != null) {
                         if (exception != null) {
                             callback.onFailure(exception);
-                        }
-                        else {
+                        } else {
                             callback.onSuccess(result);
                         }
                     }
@@ -633,8 +628,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                         throw exception;
                     }
                     return result;
-                }
-                finally {
+                } finally {
                     // If no more tasks are scheduled notify listeners that
                     // the machine is no longer busy
                     if (isQueueEmpty()) {
@@ -658,7 +652,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long busyTimeout, final long executeTimeout) 
+    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long busyTimeout, final long executeTimeout)
             throws Exception {
         if (onlyIfEnabled && !isEnabled()) {
             // Ignore the task if the machine is not enabled.
@@ -668,8 +662,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         if (isTask(Thread.currentThread())) {
             // We are already on the machine task, just execute this.
             return callable.call();
-        }
-        else {
+        } else {
             // Otherwise, submit a machine task and wait for its completion.
             try {
                 long t1 = System.currentTimeMillis() + busyTimeout;
@@ -683,14 +676,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                 if (executeTimeout < 0) {
                     // no timeout
                     return future.get();
-                }
-                else {
+                } else {
                     return future.get(executeTimeout, TimeUnit.MILLISECONDS);
                 }
-            }
-            catch (ExecutionException e) {
+            } catch (ExecutionException e) {
                 if (e.getCause() instanceof Exception) {
-                    throw (Exception)e.getCause();
+                    throw (Exception) e.getCause();
                 }
                 throw e;
             }
@@ -762,7 +753,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     public void setProperty(String name, Object value) {
         properties.put(name, value);
     }
-    
+
     @Override
     public List<NozzleTip> getNozzleTips() {
         return Collections.unmodifiableList(nozzleTips);
@@ -781,7 +772,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             fireIndexedPropertyChange("nozzleTips", index, nozzleTip, null);
         }
     }
-    
+
     @Override
     public NozzleTip getNozzleTip(String id) {
         return nozzleTips.get(id);

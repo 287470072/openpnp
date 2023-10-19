@@ -36,14 +36,7 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.*;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.Machine;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PnpJobPlanner;
+import org.openpnp.spi.*;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
@@ -518,6 +511,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             return this;
         }
+
+        @Override
+        protected Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException {
+            return null;
+        }
     }
 
     protected class CalibrateNozzleTips extends PlannedPlacementStep {
@@ -549,6 +547,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             return this;
+        }
+
+        @Override
+        protected Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException {
+            return null;
         }
     }
 
@@ -648,6 +651,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * the recorded error.
              */
             throw lastException;
+        }
+
+        @Override
+        protected Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException {
+            return null;
         }
 
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
@@ -756,8 +764,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             super(plannedPlacements);
         }
 
+
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
+/*
             if (plannedPlacement == null) {
                 return new Place(plannedPlacements);
             }
@@ -778,8 +788,36 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             align(plannedPlacement, partAlignment);
 
             checkPartOn(nozzle);
+*/
 
             return this;
+        }
+
+        @Override
+        protected Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException {
+            PlannedPlacement plannedPlacement = plannedPlacements
+                    .stream()
+                    .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
+                    .filter(p -> p.alignmentOffsets == null)
+                    .findFirst()
+                    .orElse(null);
+            if (plannedPlacement == null) {
+                return new Place(plannedPlacements);
+            }
+            alignMulti(pps);
+            return this;
+        }
+
+        private void alignMulti(List<PlannedPlacement> pps) throws JobProcessorException {
+            final PartAlignmentMulti partAlignmentMulti = AbstractPartAlignment.getPartAlignmentMulti();
+            Exception lastException;
+            try {
+                List<PlannedPlacement> test = VisionUtils.findPartAlignmentOffsetsMulti(pps, partAlignmentMulti);
+                return;
+            } catch (Exception e) {
+                lastException = e;
+            }
+            throw new JobProcessorException(partAlignmentMulti, lastException);
         }
 
 
@@ -865,6 +903,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             scriptComplete(plannedPlacement, placementLocation);
 
             return this;
+        }
+
+        @Override
+        protected Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException {
+            return null;
         }
 
 
@@ -1015,7 +1058,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             // Note, do not add the part's height to the placement location, this will be done later to allow
-            // for on-the-fly part height probing.  
+            // for on-the-fly part height probing.
             return placementLocation;
         }
     }
@@ -1184,6 +1227,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         protected abstract Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException;
 
+        protected abstract Step multiAlign(List<PlannedPlacement> pps) throws JobProcessorException;
+
         /**
          * Find the next uncompleted, non-errored PlannedPlacement and pass it to stepImpl. If stepImpl
          * completes without error the PlannedPlacement is marked complete and control is returned
@@ -1197,8 +1242,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .findFirst()
                     .orElse(null);
             try {
-                Step result = stepImpl(plannedPlacement);
-                completed.add(plannedPlacement);
+                Step result;
+                if (this instanceof Align) {
+                    result = multiAlign(plannedPlacements);
+                    plannedPlacements.forEach(p -> {
+                        completed.add(p);
+                    });
+                } else {
+                    result = stepImpl(plannedPlacement);
+                    completed.add(plannedPlacement);
+                }
                 return result;
             } catch (JobProcessorException e) {
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
@@ -1269,7 +1322,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     JobPlacement jobPlacement = iterator.next();
 
                     /**
-                     * Assign some local temporary variables to make the code below easier to read. 
+                     * Assign some local temporary variables to make the code below easier to read.
                      */
                     Placement placement = jobPlacement.getPlacement();
                     Part part = placement.getPart();
@@ -1282,7 +1335,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                      */
                     if (packag.getCompatibleNozzleTips().contains(nozzleTip)) {
                         /**
-                         * It's compatible, so create a PlannedPlacement which is a holder for a 
+                         * It's compatible, so create a PlannedPlacement which is a holder for a
                          * nozzle, nozzle tip and a job placement.
                          */
                         PlannedPlacement plannedPlacement = new PlannedPlacement(nozzle, nozzle.getNozzleTip(), jobPlacement);
@@ -1423,6 +1476,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             return null;
         }
+
     }
 
     /**

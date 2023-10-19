@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.jfree.chart.plot.PiePlot;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -91,6 +92,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
         });
     }
+
+    @Override
+    public List<PnpJobPlanner.PlannedPlacement> findOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps) throws Exception {
+        return findOffsetsPreRotateMulti(pps);
+    }
+
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
@@ -180,6 +187,145 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         .getValue(),
                         0.0))
                 .derive(null, null, null, angle);
+    }
+
+    private List<PnpJobPlanner.PlannedPlacement> findOffsetsPreRotateMulti(List<PnpJobPlanner.PlannedPlacement> pps) {
+        pps.forEach(p -> {
+            try {
+                final Nozzle nozzle = p.nozzle;
+                final PnpJobProcessor.JobPlacement jobPlacement = p.jobPlacement;
+                final Placement placement = jobPlacement.getPlacement();
+                final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+                final Part part = placement.getPart();
+
+                // 获取底部视觉相机
+                Camera camera = VisionUtils.getBottomVisionCamera();
+
+
+                // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
+                double wantedAngle = placement.getLocation().getRotation();
+                if (boardLocation != null) {
+                    wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
+                            .getRotation();
+                }
+                // 规范化旋转角度为-180°到180°之间的范围
+                wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
+                // 获取所需的位置，包括零件高度和旋转角度
+
+                Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
+                // 初始化吸嘴位置和中心位置
+                Location nozzleLocation = wantedLocation;
+                final Location center = new Location(maxLinearOffset.getUnits());
+                // 获取零件的继承的视觉设置
+                BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
+
+
+                // 从Package对象中获取VisionCompositing对象
+                VisionCompositing visionCompositing = part.getPackage().getVisionCompositing();
+                // 创建一个Composite对象，用于合成视觉信息
+                VisionCompositing.Composite composite = visionCompositing.new Composite(
+                        part.getPackage(), bottomVisionSettings, nozzle, nozzle.getNozzleTip(), camera, wantedLocation);
+
+                Shot shot = composite.getCompositeShots().get(0);
+
+                Location shotLocation = composite.getShotLocation(shot);
+
+                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                        .compareTo(camera.getRoamingRadius()) > 0) {
+                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+
+                } else {
+                    nozzle.moveTo(shotLocation);
+                }
+
+                try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+                    // 初始化偏移量，用于迭代计算
+                    Location offsets = new Location(nozzleLocation.getUnits());
+                    // 尝试多次获取零件的正确位置
+                    for (int pass = 0; ; ) {
+
+                        // 处理管道并获取结果的旋转矩形
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, part, nozzle,
+                                wantedLocation, nozzleLocation, bottomVisionSettings);
+
+                        // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
+                        Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+
+                        // 创建偏移量对象，表示相机中心到定位零件的物理距离
+                        offsets = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+
+                        // 计算角度偏移量
+                        double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngle;
+
+                        // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
+                        // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
+                        if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+                            angleOffset = Utils2D.angleNorm(angleOffset);
+                        } else {
+                            // 旋转超过180°在一个方向上没有意义
+                            angleOffset = Utils2D.angleNorm(angleOffset, 180);
+                        }
+
+                        // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
+                        offsets = offsets.rotateXy(-angleOffset)
+                                .derive(null, null, null, angleOffset);
+                        nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
+
+                        if (++pass >= maxVisionPasses) {
+                            // 达到最大尝试次数，结束循环
+                            break;
+                        }
+
+                        // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
+                        Point corners[] = new Point[4];
+                        rect.points(corners);
+                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                                .convertToUnits(maxLinearOffset.getUnits());
+                        Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
+                        partSizeCheck(part, bottomVisionSettings, rect, camera);
+
+                        if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                            Logger.debug("Offsets too large {} : center offset {} > {}",
+                                    offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
+                        } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
+                            Logger.debug("Offsets too large {} : corner offset {} > {}",
+                                    offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
+                        } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
+                            Logger.debug("Offsets too large {} : angle offset {} > {}",
+                                    offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                        } else {
+                            // 找到足够好的位置修正，结束循环
+                            break;
+                        }
+
+                        // 位置修正不足，尝试使用修正后的位置再次计算
+                    }
+
+                    // 记录偏移量已接受
+                    Logger.debug("Offsets accepted {}", offsets);
+
+                    // 计算所有尝试的累积偏移量
+                    offsets = wantedLocation.subtractWithRotation(nozzleLocation);
+
+                    // 减去视觉中心偏移
+                    offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
+
+                    // 显示处理结果，包括图像、零件、偏移量、相机和喷嘴信息
+                    displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
+
+                    // 检查偏移量是否符合要求
+                    offsetsCheck(part, nozzle, offsets);
+                    p.alignmentOffsets = new PartAlignment.PartAlignmentOffset(offsets, true);
+                }
+            } catch (Exception e) {
+
+            }
+        });
+        Logger.trace("666");
+        return pps;
+
     }
 
     private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
@@ -449,6 +595,168 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
+    public void preparePipelineMulti(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
+                                     Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
+                                     Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+// 从Package对象中获取VisionCompositing对象
+        VisionCompositing visionCompositing = pkg.getVisionCompositing();
+        // 创建一个Composite对象，用于合成视觉信息
+        VisionCompositing.Composite composite = visionCompositing.new Composite(
+                pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
+        // 如果视觉合成方法被强制启用且合成解决方案无效，则抛出异常
+        if (visionCompositing.getCompositingMethod().isEnforced()
+                && composite.getCompositingSolution().isInvalid()) {
+            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". "
+                    + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". "
+                    + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
+        }
+        // 重置可重用的CvPipeline
+        pipeline.resetReusedPipeline();
+        // 遍历Composite对象中的ShotsTravel列表
+        for (Shot shot : composite.getShotsTravel()) {
+            // 获取相机的像素单元大小
+            Location upp = camera.getUnitsPerPixelAtZ();
+            // 设置CvPipeline中的属性
+            pipeline.setProperty("camera", camera);
+            Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip.
+            // Set the footprint.
+            pipeline.setProperty("footprint", composite.getFootprint());
+            pipeline.setProperty("footprint.rotation", wantedLocation.getRotation());
+            pipeline.setProperty("footprint.xOffset", new Length(shot.getX(), composite.getUnits()));
+            pipeline.setProperty("footprint.yOffset", new Length(shot.getY(), composite.getUnits()));
+            // Crop to fit into the mask.
+            // TODO: make the template circular.
+            // 裁剪以适应掩模
+            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits())
+                    .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
+            pipeline.setProperty("footprint.maxWidth", maxDim);
+            pipeline.setProperty("footprint.maxHeight", maxDim);
+            // Set alignment parameters.
+            // 设置对齐参数
+            pipeline.setProperty("MinAreaRect.center", wantedLocation);
+            pipeline.setProperty("MinAreaRect.expectedAngle", wantedLocation.getRotation());
+            pipeline.setProperty("DetectRectlinearSymmetry.center", wantedLocation);
+            pipeline.setProperty("DetectRectlinearSymmetry.expectedAngle", wantedLocation.getRotation());
+            // Set the background removal properties.
+            // 设置背景去除属性
+            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance()
+                    .multiply(1.2)); // Allow for some tolerance, we will check the result later.
+            pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius() * 2, composite.getUnits()));
+            // 如果喷嘴是ReferenceNozzleTip类型，考虑背景校准
+            if (nozzleTip instanceof ReferenceNozzleTip) {
+                ReferenceNozzleTipCalibration calibration = ((ReferenceNozzleTip) nozzleTip).getCalibration();
+                if (calibration != null
+                        && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+                    samplingSize = calibration.getMinimumDetailSize().multiply(0.5);
+                    pipeline.setProperty("MaskHsv.hueMin",
+                            Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.hueMax",
+                            Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.saturationMin",
+                            Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
+                    pipeline.setProperty("MaskHsv.saturationMax", 255);
+                    // no need to restrict to this: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
+                    pipeline.setProperty("MaskHsv.valueMin", 0);
+                    // no need to restrict to this: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
+                    pipeline.setProperty("MaskHsv.valueMax",
+                            Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
+                }
+            }
+            // 如果采样大小小于2个像素，则将其设置为至少为2个像素，否则子采样将成本过高
+            if (samplingSize.compareTo(upp.getLengthX().multiply(2)) < 0) {
+                // We want the sampling size to at least be 2 pixels, otherwise subSampling will be too costly.
+                // This means: a camera with less than 4 pixels per smallest contact size, is likely to cause problems
+                // but that's to be expected anyways.
+                samplingSize = upp.getLengthX().multiply(2);
+            }
+            pipeline.setProperty("BlurGaussian.kernelSize", samplingSize);
+            pipeline.setProperty("DetectRectlinearSymmetry.subSampling", samplingSize);
+            // Add a margin for edge detection.
+            // 为边缘检测添加边缘
+            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth",
+                    new Length(shot.getWidth(), composite.getUnits())
+                            .add(samplingSize.multiply(2)));
+            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight",
+                    new Length(shot.getHeight(), composite.getUnits())
+                            .add(samplingSize.multiply(2)));
+            // 如果合成解决方案是高级的，则设置更多属性
+            if (composite.getCompositingSolution().isAdvanced()) {
+                pipeline.setProperty("MinAreaRect.leftEdge", shot.hasLeftEdge());
+                pipeline.setProperty("MinAreaRect.rightEdge", shot.hasRightEdge());
+                pipeline.setProperty("MinAreaRect.topEdge", shot.hasTopEdge());
+                pipeline.setProperty("MinAreaRect.bottomEdge", shot.hasBottomEdge());
+                pipeline.setProperty("MinAreaRect.searchAngle", Math.toDegrees(Math.atan2(composite.getTolerance(), composite.getMaxCornerRadius())));
+            }
+            // 将pipelineParameterAssignments中的属性添加到CvPipeline中
+            pipeline.addProperties(pipelineParameterAssignments);
+
+            // Get the shot location, but adjusted by the adjustedNozzleLocation.
+            // 获取校准后的Shot位置
+            Location shotLocation = composite.getShotLocation(shot)
+                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
+            // 创建PipelineShot对象并实现其apply、processResult和processCompositeResult方法
+            pipeline.new PipelineShot() {
+                @Override
+                public void apply() {
+                    UiUtils.messageBoxOnException(() -> {
+
+                        Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
+                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+                        if (nozzles.size() == 2 && camera.getWidth() > 2000 && pkgNozzles.size() > 1) {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                        .compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    //MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+
+                                } else {
+                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveTo(shotLocation);
+                                }
+                            }
+                        } else {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                        .compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                } else {
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            } else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                Location shotLocationNew = shotLocation;
+                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocationNew);
+
+                            }
+                        }
+
+                        super.apply();
+                    });
+                }
+
+                @Override
+                public void processResult(Result result) {
+                    // 积累Shot检测结果
+                    composite.accumulateShotDetection(shot, (RotatedRect) result.model);
+                }
+
+                @Override
+                public Result processCompositeResult() {
+                    // 解释Composite结果
+                    composite.interpret();
+                    return new Result(null, composite.getDetectedRotatedRect());
+                }
+            };
+        }
+    }
+
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
                                 Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
                                 Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
@@ -610,6 +918,126 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             };
         }
     }
+
+    private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera,
+                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+        // 准备并配置视觉管道，以进行零件识别
+        preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
+                nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
+        for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
+
+            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            AffineWarp affineWarp = new AffineWarp();
+            List<CvStage> stages = pipeline.getStages();
+            for (int i = 0; i < stages.size(); i++) {
+                if (stages.get(i) instanceof AffineWarp) {
+                    pipeline.remove(stages.get(i));
+                }
+            }
+            if (camera.getWidth() > 2000) {
+                if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
+                    //左半边
+                    //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
+                    Location unitsPerPixel = camera.getUnitsPerPixel();
+
+                    Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                    affineWarp.setX0(lefUpLocation.getX());
+                    affineWarp.setY0(lefUpLocation.getY());
+                    affineWarp.setX1(rightUpLocation.getX());
+                    affineWarp.setY1(rightUpLocation.getY());
+                    affineWarp.setX2(leftDownLocation.getX());
+                    affineWarp.setY2(leftDownLocation.getY());
+                } else {
+                    //右半边
+                    Location unitsPerPixel = camera.getUnitsPerPixelAtZ().convertToUnits(LengthUnit.Millimeters);
+                    Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+
+                    Location n1Offset = n1.getHeadOffsets();
+                    Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
+                    double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
+                    double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
+
+
+                    Location leftCenteLocation = unitsPerPixel.convertToUnits(LengthUnit.Millimeters).multiply(camera.getWidth() / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                    Location rightCenteLocation = unitsPerPixel.convertToUnits(LengthUnit.Millimeters).multiply(camera.getWidth() * 3 / 4 - camera.getWidth() / 2, -camera.getHeight() / 2 + camera.getHeight(), 0, 0);
+                    double leftRightOffsetX = rightCenteLocation.getX() - leftCenteLocation.getX();
+                    double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
+
+
+                    double cameraNozzelOffsetX, cameraNozzelOffsetY;
+                    leftRightOffsetX = 29.75;
+/*
+                    if (n2N1OffsetX > leftRightOffsetX) {
+                        cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);
+                    } else {
+                        cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX);
+                    }
+*/
+                    cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
+                    cameraNozzelOffsetY = n2N1OffsetY * 2;
+
+
+                    affineWarp.setX0(lefUpLocation.getX() + cameraNozzelOffsetX);
+                    affineWarp.setY0(lefUpLocation.getY() + cameraNozzelOffsetY);
+                    affineWarp.setX1(rightUpLocation.getX() + cameraNozzelOffsetX);
+                    affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
+                    affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
+                    affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                    pipeline.setProperty("needSettle", false);
+                }
+                pipeline.insert(affineWarp, 3);
+                pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+            }
+            // 处理管道，执行图像处理操作
+            pipeline.process();
+
+            // 获取管道处理的结果
+            Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
+
+            // 如果找不到名为"results"的结果，则回退到旧名称"result"
+            if (result == null) {
+                result = pipeline.getResult("result");
+            }
+
+            // 如果结果仍然为null，则抛出异常
+            if (result == null) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
+                        part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
+            }
+
+            // 如果结果模型为null，则抛出异常
+            if (result.model == null) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): No result found.",
+                        part.getId()));
+            }
+
+            // 检查结果模型是否为正确的类型（RotatedRect）
+            if (!(result.model instanceof RotatedRect)) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
+                        part.getId(), result.model.getClass().getSimpleName()));
+            }
+
+            // 处理管道阶段的结果
+            pipelineShot.processResult(result);
+
+            // 显示管道阶段的处理结果
+            displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
+
+        }
+
+        return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
+    }
+
 
     private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera,
                                                     Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
@@ -865,6 +1293,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 new PropertySheetWizardAdapter(new ReferenceBottomVisionConfigurationWizard(this)),
                 new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getBottomVisionSettings(), this))};
     }
+
 
     public enum PreRotateUsage {
         Default, AlwaysOn, AlwaysOff

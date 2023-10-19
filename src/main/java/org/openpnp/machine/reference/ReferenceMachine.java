@@ -179,8 +179,9 @@ public class ReferenceMachine extends AbstractMachine {
                     @Override
                     public void configurationLoaded(Configuration configuration)
                             throws Exception {
-                        if (partAlignments.isEmpty()) {
+                        if (partAlignments.isEmpty() | partAlignmentMultis.isEmpty()) {
                             partAlignments.add(new ReferenceBottomVision());
+                            partAlignmentMultis.add(new ReferenceBottomVision());
                         }
                         // Migrate the driver.
                         if (driver != null && driver instanceof AbstractDriver) {
@@ -580,6 +581,7 @@ public class ReferenceMachine extends AbstractMachine {
     public boolean getHomeAfterEnabled() {
         return homeAfterEnabled;
     }
+
 
     public void setHomeAfterEnabled(boolean newValue) {
         this.homeAfterEnabled = newValue;
