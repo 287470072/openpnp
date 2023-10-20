@@ -407,7 +407,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Logger.debug("Offsets accepted {}", offsets2);
 
                 // 计算所有尝试的累积偏移量
-                offsets2 = wantedLocationN1.subtractWithRotation(LocationN2);
+                offsets2 = wantedLocationN2.subtractWithRotation(LocationN2);
 
                 // 减去视觉中心偏移
                 offsets2 = offsets2.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngleN2));
