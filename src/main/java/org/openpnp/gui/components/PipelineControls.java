@@ -266,6 +266,7 @@ public abstract class PipelineControls extends JPanel {
                             affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                             affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
                             affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                            pipeline.setProperty("needSettle", false);
                         }
                         pipeline.insert(affineWarp, 3);
                         pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
