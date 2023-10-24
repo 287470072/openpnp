@@ -2,6 +2,7 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Location;
+import org.openpnp.model.Location2;
 
 /**
  * Anything that can be mounted to the machine and is Movable has its mapped Axes.
@@ -15,6 +16,8 @@ public interface MovableMountable extends Movable {
     Axis getAxisZ();
 
     Axis getAxisRotation();
+
+    Axis getAxisRotation2();
 
     Axis getAxis(Axis.Type type);
 
@@ -37,6 +40,7 @@ public interface MovableMountable extends Movable {
      * @return
      */
     Location toTransformed(AxesLocation location, LocationOption... options);
+    Location2 toTransformed2(AxesLocation location, LocationOption... options);
 
     /**
      * Converts the specified transformed Head Location into a raw motion-controller AxesLocation. 

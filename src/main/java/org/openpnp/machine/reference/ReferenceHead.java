@@ -20,6 +20,8 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.Action;
 
@@ -160,6 +162,19 @@ public class ReferenceHead extends AbstractHead {
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
+            LinkedHashMap<Axis, Double> newLocationLocation = axesLocation.getLocation();
+            for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
+                Axis axis = entry.getKey(); // 获取Axis对象
+                Double value = entry.getValue(); // 获取对应的Double值
+                if (axis.getName().equals("B") | axis.getName().equals("C2")) {
+                    // 执行操作，例如将Double值增加10.0
+                    value = rotateB;
+                }
+
+                // 更新LinkedHashMap中的值
+                newLocationLocation.put(axis, value);
+            }
+            axesLocation.setLocation(newLocationLocation);
             machine.getMotionPlanner().moveToTogether(hm, axesLocation, rotateA, rotateB, options);
         }
     }

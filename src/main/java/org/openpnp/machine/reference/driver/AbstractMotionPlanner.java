@@ -33,13 +33,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Motion;
+import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Actuator;
@@ -271,19 +265,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 currentLocation
                         .put(axesLocation);
 
-        LinkedHashMap<Axis, Double> newLocationLocation = newLocation.getLocation();
-        for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
-            Axis axis = entry.getKey(); // 获取Axis对象
-            Double value = entry.getValue(); // 获取对应的Double值
-            if (axis.getName().equals("B")|axis.getName().equals("C2")) {
-                // 执行操作，例如将Double值增加10.0
-                value = rotateB;
-            }
 
-            // 更新LinkedHashMap中的值
-            newLocationLocation.put(axis, value);
-        }
-        newLocation.setLocation(newLocationLocation);
 
 
         // Create the motion commands needed for backlash compensation if enabled.
@@ -662,6 +644,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 }
             }
         }
+
         return axesLocation;
     }
 
@@ -723,6 +706,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         // We need to transform to HeadMountable coordinates in order to perform the correct angular math, the axis might be transformed. 
         Location location = hm.toTransformed(axesLocation);
+        Location2 location2 = hm.toTransformed2(axesLocation);
         location = hm.toHeadMountableLocation(location);
         double limitedRotation = location.getRotation();
         // Lower limit.
@@ -775,6 +759,21 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         limitedAxesLocation.getCoordinate(axis) + " (transformed " + hm.getName() + " to " + location.getRotation() + "°)");
             }
         }
+
+        LinkedHashMap<Axis, Double> newLocationLocation = limitedAxesLocation.getLocation();
+        for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
+            Axis axisTemp = entry.getKey(); // 获取Axis对象
+            Double value = entry.getValue(); // 获取对应的Double值
+            if (axisTemp.getName().equals("B") | axisTemp.getName().equals("C2")) {
+                // 执行操作，例如将Double值增加10.0
+                value = location2.getRotation2();
+            }
+
+            // 更新LinkedHashMap中的值
+            newLocationLocation.put(axisTemp, value);
+        }
+        axesLocation.setLocation(newLocationLocation);
+
         return limitedAxesLocation;
     }
 

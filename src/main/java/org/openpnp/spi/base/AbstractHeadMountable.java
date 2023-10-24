@@ -8,12 +8,7 @@ import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
+import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
@@ -28,7 +23,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     private AbstractAxis axisY;
     private AbstractAxis axisZ;
     private AbstractAxis axisRotation;
-
+    private AbstractAxis axisRotation2;
     @Attribute(required = false)
     private String axisXId;
     @Attribute(required = false)
@@ -37,6 +32,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     private String axisZId;
     @Attribute(required = false)
     private String axisRotationId;
+
+    @Attribute(required = false)
+    private String axisRotationId2;
 
     public AbstractHeadMountable() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -54,6 +52,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         axisY = (AbstractAxis) machine.getAxis(axisYId);
         axisZ = (AbstractAxis) machine.getAxis(axisZId);
         axisRotation = (AbstractAxis) machine.getAxis(axisRotationId);
+        axisRotation2 = (AbstractAxis) machine.getAxis("AXS176ab1ba72abd000");
     }
 
     @Override
@@ -92,6 +91,11 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public AbstractAxis getAxisRotation() {
         return axisRotation;
+    }
+
+    @Override
+    public AbstractAxis getAxisRotation2() {
+        return axisRotation2;
     }
 
     public void setAxisRotation(AbstractAxis axisRotation) {
@@ -248,7 +252,6 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
 
-
     @Override
     public void moveToSafeZ(double speed) throws Exception {
         Location l = getLocation();
@@ -288,7 +291,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         location = substituteUnchangedCoordinates(location, currentLocation);
         Location headLocation = toHeadLocation(location, currentLocation);
 
-       getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
+        getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
     }
 
     @Override
@@ -313,7 +316,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 AbstractAxis.getCoordinateAxes(axisX, machine),
                 AbstractAxis.getCoordinateAxes(axisY, machine),
                 AbstractAxis.getCoordinateAxes(axisZ, machine),
-                AbstractAxis.getCoordinateAxes(axisRotation, machine));
+                AbstractAxis.getCoordinateAxes(axisRotation, machine),
+                AbstractAxis.getCoordinateAxes(axisRotation2, machine));
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
@@ -363,7 +367,18 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         double y = location.getLengthCoordinate(axisY).convertToUnits(units).getValue();
         double z = location.getLengthCoordinate(axisZ).convertToUnits(units).getValue();
         double rotation = location.getCoordinate(axisRotation);
+
         return new Location(units, x, y, z, rotation);
+    }
+
+    protected Location2 toMappedLocation2(LengthUnit units, AxesLocation location) {
+        double x = location.getLengthCoordinate(axisX).convertToUnits(units).getValue();
+        double y = location.getLengthCoordinate(axisY).convertToUnits(units).getValue();
+        double z = location.getLengthCoordinate(axisZ).convertToUnits(units).getValue();
+        double rotation = location.getCoordinate(axisRotation);
+        double rotation2 = location.getCoordinate(axisRotation2);
+
+        return new Location2(units, x, y, z, rotation, rotation2);
     }
 
     protected AxesLocation toAxesLocation(Location location) {
@@ -371,7 +386,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 new AxesLocation(axisX, location.getLengthX()),
                 new AxesLocation(axisY, location.getLengthY()),
                 new AxesLocation(axisZ, location.getLengthZ()),
-                new AxesLocation(axisRotation, location.getRotation()));
+                new AxesLocation(axisRotation, location.getRotation()),
+                new AxesLocation(axisRotation2, location.getRotation()));
     }
 
     @Override
@@ -381,6 +397,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         axesLocation = AbstractTransformedAxis.toTransformed(axisZ, axesLocation, options);
         axesLocation = AbstractTransformedAxis.toTransformed(axisRotation, axesLocation, options);
         Location location = toMappedLocation(Configuration.get().getSystemUnits(), axesLocation);
+        return location;
+    }
+
+    @Override
+    public Location2 toTransformed2(AxesLocation axesLocation, LocationOption... options) {
+        axesLocation = AbstractTransformedAxis.toTransformed(axisX, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisY, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisZ, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toTransformed(axisRotation, axesLocation, options);
+        Location2 location = toMappedLocation2(Configuration.get().getSystemUnits(), axesLocation);
         return location;
     }
 
