@@ -57,7 +57,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     protected boolean preRotate = false;
 
     @Attribute(required = false)
-    protected int maxVisionPasses = 3;
+    protected int maxVisionPasses = 1;
 
     @Element(required = false)
     protected Length maxLinearOffset = new Length(1, LengthUnit.Millimeters);
@@ -190,7 +190,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 .derive(null, null, null, angle);
     }
 
-    private Location getShotLocation(Part part, Camera camera, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation) {
+    private Location getShotLocation2(Part part, Camera camera, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation) {
         try {
 
             BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
@@ -258,8 +258,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             final Location center = new Location(maxLinearOffset.getUnits());
             // 获取零件的继承的视觉设置
-            Location shotLocationN1 = getShotLocation(partN1, camera, n1, wantedLocationN1, LocationN1);
-            Location shotLocationN2 = getShotLocation(partN2, camera, n2, wantedLocationN2, LocationN2);
+            Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, LocationN1);
+            Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, LocationN2);
 
             //n1.moveTo(shotLocationN1);
             //n2.moveTo(shotLocationN2);
@@ -388,6 +388,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         break;
                     }
 
+                    break;
+/*
                     // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                     Point corners[] = new Point[4];
                     rect.points(corners);
@@ -408,7 +410,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     } else {
                         // 找到足够好的位置修正，结束循环
                         break;
-                    }
+                    }*/
 
                     // 位置修正不足，尝试使用修正后的位置再次计算
                 }
@@ -455,7 +457,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location LocationN1 = wantedLocationN1;
                 final Location center = new Location(maxLinearOffset.getUnits());
                 // 获取零件的继承的视觉设置
-                Location shotLocationN1 = getShotLocation(partN1, camera, n1, wantedLocationN1, LocationN1);
+                Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, LocationN1);
                 n1.moveTo(shotLocationN1);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     // 初始化偏移量，用于迭代计算
@@ -563,7 +565,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 final Location center = new Location(maxLinearOffset.getUnits());
                 // 获取零件的继承的视觉设置
-                Location shotLocationN2 = getShotLocation(partN2, camera, n2, wantedLocationN2, LocationN2);
+                Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, LocationN2);
 
                 List<Nozzle> nozzles=Configuration.get().getMachine().getHeads().get(0).getNozzles();
 

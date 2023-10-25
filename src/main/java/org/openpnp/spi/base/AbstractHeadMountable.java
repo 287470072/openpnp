@@ -289,12 +289,10 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         Location currentLocation = getLocation();
         location = substituteUnchangedCoordinates(location, currentLocation);
         Location headLocation = toHeadLocation(location, currentLocation);
-        location2 = substituteUnchangedCoordinates(location2, currentLocation);
-
-        Location headLocation2 = toHeadLocation(location2, currentLocation);
 
 
-        getHead().moveToTogether(this, headLocation, headLocation2, rotateA, rotateB, options);
+
+        getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
     }
 
     @Override
