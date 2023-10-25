@@ -52,7 +52,6 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         axisY = (AbstractAxis) machine.getAxis(axisYId);
         axisZ = (AbstractAxis) machine.getAxis(axisZId);
         axisRotation = (AbstractAxis) machine.getAxis(axisRotationId);
-        axisRotation2 = (AbstractAxis) machine.getAxis("AXS176ab1ba72abd000");
     }
 
     @Override
@@ -418,6 +417,20 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         axesLocation = AbstractTransformedAxis.toRaw(axisY, axesLocation, options);
         axesLocation = AbstractTransformedAxis.toRaw(axisZ, axesLocation, options);
         axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation, options);
+        return axesLocation;
+    }
+
+    @Override
+    public AxesLocation toRaw2(Location location, LocationOption... options)
+            throws Exception {
+        AxesLocation axesLocation = toAxesLocation(location);
+        axesLocation = AbstractTransformedAxis.toRaw(axisX, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisY, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisZ, axesLocation, options);
+        axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation, options);
+
+        axesLocation = AbstractTransformedAxis.toRaw(axisRotation, axesLocation, options);
+
         return axesLocation;
     }
 

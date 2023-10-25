@@ -162,19 +162,24 @@ public class ReferenceHead extends AbstractHead {
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
             AxesLocation axesLocation = hm.toRaw(location);
-            LinkedHashMap<Axis, Double> newLocationLocation = axesLocation.getLocation();
+
+            AxesLocation currentLocation = new AxesLocation(getMachine());
+            LinkedHashMap<Axis, Double> newLocationLocation = currentLocation.getLocation();
+            LinkedHashMap<Axis, Double> newLocationLocation2 = axesLocation.getLocation();
+
             for (Map.Entry<Axis, Double> entry : newLocationLocation.entrySet()) {
                 Axis axis = entry.getKey(); // 获取Axis对象
                 Double value = entry.getValue(); // 获取对应的Double值
                 if (axis.getName().equals("B") | axis.getName().equals("C2")) {
                     // 执行操作，例如将Double值增加10.0
                     value = rotateB;
+                    // 更新LinkedHashMap中的值
+                    newLocationLocation2.put(axis, value);
                 }
 
-                // 更新LinkedHashMap中的值
-                newLocationLocation.put(axis, value);
+
             }
-            axesLocation.setLocation(newLocationLocation);
+            axesLocation.setLocation(newLocationLocation2);
             machine.getMotionPlanner().moveToTogether(hm, axesLocation, rotateA, rotateB, options);
         }
     }

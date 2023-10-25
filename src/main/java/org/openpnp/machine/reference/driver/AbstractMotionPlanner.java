@@ -609,9 +609,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     // we would need sorting the axes by dependency.  
                     if (refAxis.isWrapAroundRotation()) {
                         // Set the rotation to be the shortest way around from the current rotation
-                        axesLocation = wrapRotationAxis(hm, axesLocation, refAxis);
+                        //axesLocation = wrapRotationAxis(hm, axesLocation, refAxis);
                     } else if (refAxis.isLimitRotation()) {
-                        axesLocation = limitRotationAxis(hm, axesLocation, refAxis);
+                        //axesLocation = limitRotationAxis(hm, axesLocation, refAxis);
                     }
                     // Note, the combination isLimitRotation() and isWrapAroundRotation() will be handled
                     // when the motion is complete, i.e. in waitForCompletion().

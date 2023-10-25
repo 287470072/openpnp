@@ -54,4 +54,6 @@ public interface MovableMountable extends Movable {
      */
     AxesLocation toRaw(Location location, LocationOption... options) 
             throws Exception;
+    AxesLocation toRaw2(Location location, LocationOption... options)
+            throws Exception;
 }
