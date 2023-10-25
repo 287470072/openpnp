@@ -157,7 +157,7 @@ public class ReferenceHead extends AbstractHead {
     }
 
     @Override
-    public void moveToTogether(HeadMountable hm, Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
+    public void moveToTogether(HeadMountable hm, Location location, Location location2, double rotateA, double rotateB, MotionOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
@@ -172,7 +172,7 @@ public class ReferenceHead extends AbstractHead {
                 Double value = entry.getValue(); // 获取对应的Double值
                 if (axis.getName().equals("B") | axis.getName().equals("C2")) {
                     // 执行操作，例如将Double值增加10.0
-                    value = rotateB;
+                    value = location2.getRotation();
                     // 更新LinkedHashMap中的值
                     newLocationLocation2.put(axis, value);
                 }

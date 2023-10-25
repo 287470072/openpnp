@@ -154,7 +154,7 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
      */
     public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception;
 
-    public void moveToTogether(HeadMountable hm, Location location, double rotateA, double rotateB, MotionOption... options) throws Exception;
+    public void moveToTogether(HeadMountable hm, Location location,Location location2, double rotateA, double rotateB, MotionOption... options) throws Exception;
 
     /**
      * Returns true if any nozzle on the Head is currently carrying a part.

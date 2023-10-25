@@ -261,14 +261,18 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Location shotLocationN1 = getShotLocation(partN1, camera, n1, wantedLocationN1, LocationN1);
             Location shotLocationN2 = getShotLocation(partN2, camera, n2, wantedLocationN2, LocationN2);
 
-            n1.moveToTogether(shotLocationN1, shotLocationN1.getRotation(), shotLocationN2.getRotation());
+            //n1.moveTo(shotLocationN1);
+            //n2.moveTo(shotLocationN2);
+            n1.moveToTogether(shotLocationN1,shotLocationN2, shotLocationN1.getRotation(), shotLocationN2.getRotation());
+            BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
+
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(LocationN1.getUnits());
-                Location offsets2 = new Location(LocationN2.getUnits());
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
+                    pipeline.setProperty("needSettle", true);
 
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
@@ -342,13 +346,19 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 检查偏移量是否符合要求
                 offsetsCheck(partN1, n1, offsets1);
                 n1P.alignmentOffsets = new PartAlignment.PartAlignmentOffset(offsets1, true);
+            }
+
+            BottomVisionSettings bottomVisionSettings2 = getInheritedVisionSettings(partN2);
+
+            try (CvPipeline pipeline = bottomVisionSettings2.getPipeline()) {
+                Location offsets2 = new Location(LocationN2.getUnits());
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
-
+                    pipeline.setProperty("needSettle", false);
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
-                            wantedLocationN2, LocationN2, bottomVisionSettings);
+                            wantedLocationN2, LocationN2, bottomVisionSettings2);
 
                     // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                     Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
@@ -361,7 +371,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                     // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
                     // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
-                    if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+                    if (bottomVisionSettings2.getMaxRotation() == MaxRotation.Adjust) {
                         angleOffset = Utils2D.angleNorm(angleOffset);
                     } else {
                         // 旋转超过180°在一个方向上没有意义
@@ -384,7 +394,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                             .convertToUnits(maxLinearOffset.getUnits());
                     Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                    partSizeCheck(partN2, bottomVisionSettings, rect, camera);
+                    partSizeCheck(partN2, bottomVisionSettings2, rect, camera);
 
                     if (center.getLinearDistanceTo(offsets2) > getMaxLinearOffset().getValue()) {
                         Logger.debug("Offsets too large {} : center offset {} > {}",
@@ -410,7 +420,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 offsets2 = wantedLocationN2.subtractWithRotation(LocationN2);
 
                 // 减去视觉中心偏移
-                offsets2 = offsets2.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngleN2));
+                offsets2 = offsets2.subtract(bottomVisionSettings2.getVisionOffset().rotateXy(wantedAngleN2));
 
                 // 显示处理结果，包括图像、零件、偏移量、相机和喷嘴信息
                 displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), partN2, offsets2, camera, n2);
@@ -554,7 +564,17 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 final Location center = new Location(maxLinearOffset.getUnits());
                 // 获取零件的继承的视觉设置
                 Location shotLocationN2 = getShotLocation(partN2, camera, n2, wantedLocationN2, LocationN2);
-                n2.moveTo(shotLocationN2);
+
+                List<Nozzle> nozzles=Configuration.get().getMachine().getHeads().get(0).getNozzles();
+
+                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                Location shotLocationNew = shotLocationN2;
+                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+
+
+                n2.moveTo(shotLocationNew);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     // 初始化偏移量，用于迭代计算
                     Location offsets2 = new Location(LocationN2.getUnits());
@@ -1023,10 +1043,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                     // 喷嘴还不在相机漫游半径内。以安全的Z轴移
                                     //MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
 
                                 } else {
-                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
                                     //nozzle.moveTo(shotLocation);
                                 }
                             }
@@ -1185,10 +1205,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                     // 喷嘴还不在相机漫游半径内。以安全的Z轴移
                                     //MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
 
                                 } else {
-                                    nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
                                     //nozzle.moveTo(shotLocation);
                                 }
                             }
@@ -1304,7 +1324,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                     affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
                     affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
-                    pipeline.setProperty("needSettle", false);
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);

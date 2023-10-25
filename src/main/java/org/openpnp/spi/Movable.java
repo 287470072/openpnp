@@ -20,7 +20,7 @@ public interface Movable extends Locatable {
 
     void moveTo(Location location, MotionOption... options) throws Exception;
 
-    void moveToTogether(Location location, double rotateA, double rotateB, MotionOption... options) throws Exception;
+    void moveToTogether(Location location,Location location2, double rotateA, double rotateB, MotionOption... options) throws Exception;
 
 
     /**

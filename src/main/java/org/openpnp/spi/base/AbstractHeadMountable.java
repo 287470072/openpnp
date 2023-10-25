@@ -284,13 +284,17 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveToTogether(Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
+    public void moveToTogether(Location location, Location location2, double rotateA, double rotateB, MotionOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, getMachine().getSpeed());
         Location currentLocation = getLocation();
         location = substituteUnchangedCoordinates(location, currentLocation);
         Location headLocation = toHeadLocation(location, currentLocation);
+        location2 = substituteUnchangedCoordinates(location2, currentLocation);
 
-        getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
+        Location headLocation2 = toHeadLocation(location2, currentLocation);
+
+
+        getHead().moveToTogether(this, headLocation, headLocation2, rotateA, rotateB, options);
     }
 
     @Override
