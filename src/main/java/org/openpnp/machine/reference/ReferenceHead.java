@@ -173,13 +173,10 @@ public class ReferenceHead extends AbstractHead {
                 Axis axis = entry.getKey(); // 获取Axis对象
                 Double value = entry.getValue(); // 获取对应的Double值
                 if (axis.getName().equals("B") | axis.getName().equals("C2")) {
-                    Double newRotationModeOffset = Utils2D.angleNorm(n2.getLocation().getRotation() - n1.getPart().getFeeder().getPickLocation().getRotation(), 180);
-
-                    location2 = location2.subtractWithRotation(new Location(location2.getUnits(), 0, 0, 0, newRotationModeOffset));
                     double n2Offset = n2.getRotationModeOffset();
 
-                    // 执行操作，例如将Double值增加10.0
-                    value += location2.getRotation();
+                    location2 = location2.subtractWithRotation(new Location(location2.getUnits(), 0, 0, 0, n2Offset));
+                    value = location2.getRotation();
                     // 更新LinkedHashMap中的值
                     newLocationLocation2.put(axis, value);
                 }
