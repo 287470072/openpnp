@@ -131,7 +131,7 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed,
                 MotionOption... options) throws Exception;
 
-    void moveToTogether(HeadMountable hm, AxesLocation axesLocation, double rotateA, double rotateB, MotionOption... options) throws Exception;
+    void moveToTogether(HeadMountable hm, AxesLocation axesLocation, Nozzle n1, Nozzle n2, MotionOption... options) throws Exception;
 
     public enum CompletionType {
         /**

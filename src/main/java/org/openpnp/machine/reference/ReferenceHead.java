@@ -42,8 +42,10 @@ import org.openpnp.model.Solutions;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -157,7 +159,7 @@ public class ReferenceHead extends AbstractHead {
     }
 
     @Override
-    public void moveToTogether(HeadMountable hm, Location location, double rotateA, double rotateB, MotionOption... options) throws Exception {
+    public void moveToTogether(HeadMountable hm, Location location, Location location2, Nozzle n1, Nozzle n2, MotionOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
         if (!mappedAxes.isEmpty()) {
@@ -171,8 +173,13 @@ public class ReferenceHead extends AbstractHead {
                 Axis axis = entry.getKey(); // 获取Axis对象
                 Double value = entry.getValue(); // 获取对应的Double值
                 if (axis.getName().equals("B") | axis.getName().equals("C2")) {
+                    Double newRotationModeOffset = Utils2D.angleNorm(n2.getLocation().getRotation() - n1.getPart().getFeeder().getPickLocation().getRotation(), 180);
+
+                    location2 = location2.subtractWithRotation(new Location(location2.getUnits(), 0, 0, 0, newRotationModeOffset));
+                    double n2Offset = n2.getRotationModeOffset();
+
                     // 执行操作，例如将Double值增加10.0
-                    value = rotateB;
+                    value += location2.getRotation();
                     // 更新LinkedHashMap中的值
                     newLocationLocation2.put(axis, value);
                 }
@@ -180,7 +187,7 @@ public class ReferenceHead extends AbstractHead {
 
             }
             axesLocation.setLocation(newLocationLocation2);
-            machine.getMotionPlanner().moveToTogether(hm, axesLocation, rotateA, rotateB, options);
+            machine.getMotionPlanner().moveToTogether(hm, axesLocation, n1, n2, options);
         }
     }
 

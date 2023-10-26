@@ -36,17 +36,9 @@ import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Axis;
+import org.openpnp.spi.*;
 import org.openpnp.spi.Axis.Type;
-import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.CoordinateAxis;
-import org.openpnp.spi.Driver;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
-import org.openpnp.spi.MotionPlanner;
-import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
@@ -209,7 +201,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveToTogether(HeadMountable hm, AxesLocation axesLocation, double rotateA, double rotateB, MotionOption... options) throws Exception {
+    public void moveToTogether(HeadMountable hm, AxesLocation axesLocation, Nozzle n1, Nozzle n2, MotionOption... options) throws Exception {
         double speed = getMachine().getSpeed();
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");

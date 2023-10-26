@@ -29,6 +29,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 
 /**
  * Simplest possible implementation of the motion planner. Just executes the unmodified motion commands 1:1.
@@ -53,8 +54,8 @@ public class NullMotionPlanner extends AbstractMotionPlanner {
     }
 
     @Override
-    public void moveToTogether(HeadMountable hm, AxesLocation axesLocation, double rotateA, double rotateB, MotionOption... options) throws Exception {
-        super.moveToTogether(hm, axesLocation, rotateA, rotateB, options);
+    public void moveToTogether(HeadMountable hm, AxesLocation axesLocation, Nozzle n1, Nozzle n2, MotionOption... options) throws Exception {
+        super.moveToTogether(hm, axesLocation, n1, n2, options);
         getMachine().getMotionPlanner().waitForCompletion(hm,
                 Arrays.asList(options).contains(MotionOption.JogMotion) ?
                         CompletionType.CommandJog :

@@ -10,11 +10,9 @@ import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
-import org.openpnp.spi.Axis;
-import org.openpnp.spi.ControllerAxis;
-import org.openpnp.spi.CoordinateAxis;
-import org.openpnp.spi.Machine;
+import org.openpnp.spi.*;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -284,15 +282,14 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void moveToTogether(Location location, Location location2, double rotateA, double rotateB, MotionOption... options) throws Exception {
+    public void moveToTogether(Location location, Location location2, Nozzle n1, Nozzle n2, MotionOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, getMachine().getSpeed());
         Location currentLocation = getLocation();
         location = substituteUnchangedCoordinates(location, currentLocation);
         Location headLocation = toHeadLocation(location, currentLocation);
 
 
-
-        getHead().moveToTogether(this, headLocation, rotateA, rotateB, options);
+        getHead().moveToTogether(this, headLocation,location2, n1, n2, options);
     }
 
     @Override
