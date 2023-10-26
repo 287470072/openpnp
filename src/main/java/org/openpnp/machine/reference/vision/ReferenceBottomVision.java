@@ -278,10 +278,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(LocationN1.getUnits());
+                pipeline.setProperty("needSettle", true);
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
-                    pipeline.setProperty("needSettle", true);
 
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
@@ -361,10 +361,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             try (CvPipeline pipeline = bottomVisionSettings2.getPipeline()) {
                 Location offsets2 = new Location(LocationN2.getUnits());
+                pipeline.setProperty("needSettle", false);
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
-                    pipeline.setProperty("needSettle", false);
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
                             wantedLocationN2, LocationN2, bottomVisionSettings2);
@@ -396,8 +396,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 达到最大尝试次数，结束循环
                         break;
                     }
+                    break;
 
-                    // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
+   /*                 // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                     Point corners[] = new Point[4];
                     rect.points(corners);
                     Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
@@ -418,7 +419,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 找到足够好的位置修正，结束循环
                         break;
                     }
-
+*/
                     // 位置修正不足，尝试使用修正后的位置再次计算
                 }
 
@@ -1456,7 +1457,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                     affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
                     affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
-                    pipeline.setProperty("needSettle", false);
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
