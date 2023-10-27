@@ -262,13 +262,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             Location wantedLocationN2 = getCameraLocationAtPartHeight(partN2, camera, n2, wantedAngleN2);
             // 初始化吸嘴位置和中心位置
-            Location LocationN1 = wantedLocationN1;
-            Location LocationN2 = wantedLocationN2;
+            Location locationN1 = wantedLocationN1;
+            Location locationN2 = wantedLocationN2;
 
             final Location center = new Location(maxLinearOffset.getUnits());
             // 获取零件的继承的视觉设置
-            Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, LocationN1);
-            Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, LocationN2);
+            Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
+            Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, locationN2);
 
             //n1.moveTo(shotLocationN1);
             //n2.moveTo(shotLocationN2);
@@ -277,7 +277,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                 // 初始化偏移量，用于迭代计算
-                Location offsets1 = new Location(LocationN1.getUnits());
+                Location offsets1 = new Location(locationN1.getUnits());
                 pipeline.setProperty("needSettle", true);
 
                 // 尝试多次获取零件的正确位置
@@ -285,7 +285,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
-                            wantedLocationN1, LocationN1, bottomVisionSettings);
+                            wantedLocationN1, locationN1, bottomVisionSettings);
 
                     // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                     Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -308,7 +308,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
                     offsets1 = offsets1.rotateXy(-angleOffset)
                             .derive(null, null, null, angleOffset);
-                    LocationN1 = LocationN1.subtractWithRotation(offsets1);
+                    locationN1 = locationN1.subtractWithRotation(offsets1);
 
                     if (++pass >= maxVisionPasses) {
                         // 达到最大尝试次数，结束循环
@@ -344,7 +344,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Logger.debug("Offsets accepted {}", offsets1);
 
                 // 计算所有尝试的累积偏移量
-                offsets1 = wantedLocationN1.subtractWithRotation(LocationN1);
+                offsets1 = wantedLocationN1.subtractWithRotation(locationN1);
 
                 // 减去视觉中心偏移
                 offsets1 = offsets1.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngleN1));
@@ -360,14 +360,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             BottomVisionSettings bottomVisionSettings2 = getInheritedVisionSettings(partN2);
 
             try (CvPipeline pipeline = bottomVisionSettings2.getPipeline()) {
-                Location offsets2 = new Location(LocationN2.getUnits());
+                Location offsets2 = new Location(locationN2.getUnits());
                 pipeline.setProperty("needSettle", false);
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
-                            wantedLocationN2, LocationN2, bottomVisionSettings2);
+                            wantedLocationN2, locationN2, bottomVisionSettings2);
 
                     // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                     Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
@@ -390,7 +390,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
                     offsets2 = offsets2.rotateXy(-angleOffset)
                             .derive(null, null, null, angleOffset);
-                    LocationN2 = LocationN2.subtractWithRotation(offsets2);
+                    locationN2 = locationN2.subtractWithRotation(offsets2);
 
                     if (++pass >= maxVisionPasses) {
                         // 达到最大尝试次数，结束循环
@@ -427,7 +427,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Logger.debug("Offsets accepted {}", offsets2);
 
                 // 计算所有尝试的累积偏移量
-                offsets2 = wantedLocationN2.subtractWithRotation(LocationN2);
+                offsets2 = wantedLocationN2.subtractWithRotation(locationN2);
 
                 // 减去视觉中心偏移
                 offsets2 = offsets2.subtract(bottomVisionSettings2.getVisionOffset().rotateXy(wantedAngleN2));
@@ -462,20 +462,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 Location wantedLocationN1 = getCameraLocationAtPartHeight(partN1, camera, n1, wantedAngleN1);
                 // 初始化吸嘴位置和中心位置
-                Location LocationN1 = wantedLocationN1;
+                Location locationN1 = wantedLocationN1;
                 final Location center = new Location(maxLinearOffset.getUnits());
                 // 获取零件的继承的视觉设置
-                Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, LocationN1);
+                Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
                 n1.moveTo(shotLocationN1);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     // 初始化偏移量，用于迭代计算
-                    Location offsets1 = new Location(LocationN1.getUnits());
+                    Location offsets1 = new Location(locationN1.getUnits());
                     // 尝试多次获取零件的正确位置
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
                         RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
-                                wantedLocationN1, LocationN1, bottomVisionSettings);
+                                wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -498,7 +498,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
                         offsets1 = offsets1.rotateXy(-angleOffset)
                                 .derive(null, null, null, angleOffset);
-                        LocationN1 = LocationN1.subtractWithRotation(offsets1);
+                        locationN1 = locationN1.subtractWithRotation(offsets1);
 
                         if (++pass >= maxVisionPasses) {
                             // 达到最大尝试次数，结束循环
@@ -534,7 +534,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Logger.debug("Offsets accepted {}", offsets1);
 
                     // 计算所有尝试的累积偏移量
-                    offsets1 = wantedLocationN1.subtractWithRotation(LocationN1);
+                    offsets1 = wantedLocationN1.subtractWithRotation(locationN1);
 
                     // 减去视觉中心偏移
                     offsets1 = offsets1.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngleN1));
@@ -569,11 +569,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location wantedLocationN2 = getCameraLocationAtPartHeight(partN2, camera, n2, wantedAngleN2);
 
                 // 初始化吸嘴位置和中心位置
-                Location LocationN2 = wantedLocationN2;
+                Location locationN2 = wantedLocationN2;
 
                 final Location center = new Location(maxLinearOffset.getUnits());
                 // 获取零件的继承的视觉设置
-                Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, LocationN2);
+                Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, locationN2);
 
                 List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
 
@@ -587,13 +587,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 n2.moveTo(shotLocationNew);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     // 初始化偏移量，用于迭代计算
-                    Location offsets2 = new Location(LocationN2.getUnits());
+                    Location offsets2 = new Location(locationN2.getUnits());
                     // 尝试多次获取零件的正确位置
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
                         RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
-                                wantedLocationN2, LocationN2, bottomVisionSettings);
+                                wantedLocationN2, locationN2, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
@@ -616,7 +616,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
                         offsets2 = offsets2.rotateXy(-angleOffset)
                                 .derive(null, null, null, angleOffset);
-                        LocationN2 = LocationN2.subtractWithRotation(offsets2);
+                        locationN2 = locationN2.subtractWithRotation(offsets2);
 
                         if (++pass >= maxVisionPasses) {
                             // 达到最大尝试次数，结束循环
@@ -652,7 +652,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Logger.debug("Offsets accepted {}", offsets2);
 
                     // 计算所有尝试的累积偏移量
-                    offsets2 = wantedLocationN2.subtractWithRotation(LocationN2);
+                    offsets2 = wantedLocationN2.subtractWithRotation(locationN2);
 
                     // 减去视觉中心偏移
                     offsets2 = offsets2.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngleN2));
