@@ -114,7 +114,7 @@ public class ImageCapture extends CvStage {
                 if (needSettle) {
                     bufferedImage = camera.settleAndCapture(settleOption);
                 } else {
-                    bufferedImage = camera.capture();
+                    bufferedImage = camera.settleAndCapture(settleOption);
                 }
 
                 // 记录最后捕获的图像，这将记录原始相机图像而不应用平均（用于分析目的）

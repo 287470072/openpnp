@@ -214,7 +214,12 @@ public abstract class PipelineControls extends JPanel {
                     }
 
                     Camera camera = (Camera) pipeline.getProperty("camera");
-                    if (camera.getWidth() > 2000) {
+                    int cameraHeight = camera.getHeight();
+                    int cameraWidth = camera.getWidth();
+
+
+                    if ((camera.isInRange(cameraHeight,2550,2570) && camera.isInRange(cameraHeight,700,750))
+                            || (camera.isInRange(cameraWidth,1260,1290) && camera.isInRange(cameraHeight,460,500))) {
                         if (movable == n1 && camera.getLooking() == Camera.Looking.Up) {
                             //左半边
                             //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -257,7 +262,7 @@ public abstract class PipelineControls extends JPanel {
                             }*/
 
                             cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
-                            cameraNozzelOffsetY = n2N1OffsetY *2;
+                            cameraNozzelOffsetY = n2N1OffsetY * 2;
 
 
                             affineWarp.setX0(lefUpLocation.getX() + cameraNozzelOffsetX);
@@ -265,7 +270,8 @@ public abstract class PipelineControls extends JPanel {
                             affineWarp.setX1(rightUpLocation.getX() + cameraNozzelOffsetX);
                             affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                             affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
-                            affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);}
+                            affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                        }
                         pipeline.insert(affineWarp, 3);
                         pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
                     }

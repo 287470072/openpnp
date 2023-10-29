@@ -59,6 +59,10 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     public void setLooking(Looking looking);
 
+    public default boolean isInRange(int number, int lowerBound, int upperBound) {
+        return number >= lowerBound && number <= upperBound;
+    }
+
     /**
      * The number of X and Y units per pixel this camera shows when in perfect focus. The Z value of
      * this location is the height at which the units per pixel were measured.
