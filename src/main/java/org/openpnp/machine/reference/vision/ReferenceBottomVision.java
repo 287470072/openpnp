@@ -956,8 +956,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". "
                     + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
         }
+        boolean needSettle = true;
+        if (camera.getLooking() == Camera.Looking.Up && pipeline.getProperty("needSettle") != null) {
+            needSettle = (boolean) pipeline.getProperty("needSettle");
+        }
         // 重置可重用的CvPipeline
         pipeline.resetReusedPipeline();
+
+        pipeline.setProperty("needSettle", needSettle);
+
         // 遍历Composite对象中的ShotsTravel列表
         for (Shot shot : composite.getShotsTravel()) {
             // 获取相机的像素单元大小
@@ -1245,8 +1252,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(),2550,2570) && camera.isInRange(camera.getHeight(),700,750))
-                    || (camera.isInRange(camera.getWidth(),1260,1290) && camera.isInRange(camera.getHeight(),460,500)))) {
+            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1369,8 +1376,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(),2550,2570) && camera.isInRange(camera.getHeight(),700,750))
-                    || (camera.isInRange(camera.getWidth(),1260,1290) && camera.isInRange(camera.getHeight(),460,500)))) {
+            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);

@@ -3,6 +3,7 @@ package org.openpnp.vision.pipeline.stages;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.openpnp.logging.Logger;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.SettleOption;
@@ -112,9 +113,10 @@ public class ImageCapture extends CvStage {
 
                 // 根据需要执行相机的稳定和捕获操作，或者直接捕获图像
                 if (needSettle) {
+
                     bufferedImage = camera.settleAndCapture(settleOption);
                 } else {
-                    bufferedImage = camera.settleAndCapture(settleOption);
+                    bufferedImage = camera.capture();
                 }
 
                 // 记录最后捕获的图像，这将记录原始相机图像而不应用平均（用于分析目的）
