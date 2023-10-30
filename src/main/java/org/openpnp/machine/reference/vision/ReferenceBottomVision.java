@@ -1236,6 +1236,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera,
                                                          Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+        Logger.trace("双目识别开始：" + System.currentTimeMillis());
+
         // 准备并配置视觉管道，以进行零件识别
         preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
                 nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
@@ -1349,6 +1351,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
 
         }
+        Logger.trace("双目识别结束：" + System.currentTimeMillis());
 
         return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
     }
