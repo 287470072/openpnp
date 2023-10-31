@@ -30,6 +30,7 @@ import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.*;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.Package;
 import org.openpnp.spi.*;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
@@ -556,7 +557,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-
+                Package pkg = feeder.getPart().getPackage();
+                if (pkg == null) {
+                    MessageBoxes.errorBox(mainFrame, "错误！", "元件未关联封装，请在Part页面关联对应封装。");
+                    return;
+                }
                 pickFeeder(feeder);
             });
         }
@@ -621,28 +626,27 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 placementLocation);
 
 
-            // Go to the pick location and pick.
-            nozzle.moveToPickLocation(feeder);
-            nozzle.pick(feeder.getPart());
-            nozzle.moveToSafeZ();
+        // Go to the pick location and pick.
+        nozzle.moveToPickLocation(feeder);
+        nozzle.pick(feeder.getPart());
+        nozzle.moveToSafeZ();
 
-            // After the pick.
-            feeder.postPick(nozzle);
+        // After the pick.
+        feeder.postPick(nozzle);
 
-            // Perform the vacuum check, if enabled.
-            if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
-                if (!nozzle.isPartOn()) {
-                    throw new JobProcessorException(nozzle, "No part detected.");
-                }
+        // Perform the vacuum check, if enabled.
+        if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
+            if (!nozzle.isPartOn()) {
+                throw new JobProcessorException(nozzle, "No part detected.");
             }
-            // The part is now on the nozzle.
-            MovableUtils.fireTargetedUserAction(nozzle);
-            if (MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getFeedersTab()
-                    && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-                MainFrame.get().getPartsTab().selectPartInTable(feeder.getPart());
-                MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
-            }
-
+        }
+        // The part is now on the nozzle.
+        MovableUtils.fireTargetedUserAction(nozzle);
+        if (MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getFeedersTab()
+                && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+            MainFrame.get().getPartsTab().selectPartInTable(feeder.getPart());
+            MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
+        }
 
 
     }

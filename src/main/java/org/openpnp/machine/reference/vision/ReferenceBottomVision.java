@@ -38,6 +38,7 @@ import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.stages.AffineWarp;
+import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -270,12 +271,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
             Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, locationN2);
 
-            //n1.moveTo(shotLocationN1);
-            //n2.moveTo(shotLocationN2);
-            n1.moveToTogether(shotLocationN1, shotLocationN2, n1, n2);
+
+            //n1.moveToTogether(shotLocationN1, shotLocationN2, n1, n2);
             BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
 
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+
+                CvStage stage = new ImageCapture();
+
+
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(locationN1.getUnits());
                 pipeline.setProperty("needSettle", true);
@@ -592,6 +596,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Location offsets2 = new Location(locationN2.getUnits());
                     // 尝试多次获取零件的正确位置
                     for (int pass = 0; ; ) {
+
 
                         // 处理管道并获取结果的旋转矩形
                         RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
@@ -944,7 +949,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     public void preparePipelineMulti(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
                                      Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
                                      Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
-// 从Package对象中获取VisionCompositing对象
+        // 从Package对象中获取VisionCompositing对象
         VisionCompositing visionCompositing = pkg.getVisionCompositing();
         // 创建一个Composite对象，用于合成视觉信息
         VisionCompositing.Composite composite = visionCompositing.new Composite(

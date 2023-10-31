@@ -172,6 +172,10 @@ public class CvPipeline implements AutoCloseable {
         return getResult(getStage(name));
     }
 
+    public void setResults(CvStage stage, Result result) {
+        results.put(stage, result);
+    }
+
     /**
      * Get the Result returned by the CvStage with the given name, expected to be defined in the pipeline
      * and to return a non-null model.
