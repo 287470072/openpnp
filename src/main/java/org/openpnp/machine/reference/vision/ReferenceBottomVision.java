@@ -9,9 +9,8 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotRenderingInfo;
+import org.opencv.core.*;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Size;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
@@ -33,6 +32,7 @@ import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
 import org.openpnp.vision.pipeline.CvStage;
@@ -276,13 +276,31 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
 
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+                    ImageCapture stage = new ImageCapture();
 
-                CvStage stage = new ImageCapture();
+                    pipeline.getStages().forEach(s -> {
+                        if (s instanceof ImageCapture) {
+                            stage.setSettleOption(((ImageCapture) s).getSettleOption());
+                        }
+                    });
+                    // 检查相机是否为null，如果为null则抛出异常
+                    if (camera == null) {
+                        throw new Exception("No Camera set on pipeline.");
+                    }
+
+                    BufferedImage bufferedImage;
+
+                    bufferedImage = camera.settleAndCapture(stage.getSettleOption());
+                    pipeline.setLastCapturedImage(bufferedImage);
+                    Mat image = OpenCvUtils.toMat(bufferedImage);
+                    pipeline.setResults(stage,new Result(image, FluentCv.ColorSpace.Bgr));
 
 
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(locationN1.getUnits());
                 pipeline.setProperty("needSettle", true);
+
+                pipeline.setProperty("needClear",true);
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
@@ -365,7 +383,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             BottomVisionSettings bottomVisionSettings2 = getInheritedVisionSettings(partN2);
 
-            try (CvPipeline pipeline = bottomVisionSettings2.getPipeline()) {
+            try (CvPipeline pipeline = bottomVisionSettings2.getPipeline())
+            {
                 Location offsets2 = new Location(locationN2.getUnits());
                 pipeline.setProperty("needSettle", false);
 
@@ -474,6 +493,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
                 n1.moveTo(shotLocationN1);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+
                     // 初始化偏移量，用于迭代计算
                     Location offsets1 = new Location(locationN1.getUnits());
                     // 尝试多次获取零件的正确位置

@@ -18,6 +18,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -264,17 +265,23 @@ public class CvPipeline implements AutoCloseable {
         terminalException = null;
         totalProcessingTimeNs = 0;
 
+
         // 释放资源（清理工作）
         release();
 
         // 遍历处理阶段
         for (CvStage stage : stages) {
             // 准备处理阶段
-            stage.processPrepare(this);
+            if (stage instanceof ImageCapture && !this.getProperty("needClear").equals(true)) {
+                stage.processPrepare(this);
+            }
         }
 
         // 再次遍历处理阶段，执行图像处理和计时
         for (CvStage stage : stages) {
+            if (stage instanceof ImageCapture && !this.getProperty("needClear").equals(true)) {
+                continue;
+            }
             // 记录处理开始时间
             long processingTimeNs = System.nanoTime();
             Result result = null;
@@ -379,7 +386,7 @@ public class CvPipeline implements AutoCloseable {
             workingImage = null;
         }
         for (Result result : results.values()) {
-            if (result.image != null) {
+            if (result.image != null && !this.getProperty("needClear").equals(true)) {
                 result.image.release();
             }
         }
