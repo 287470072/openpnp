@@ -260,6 +260,160 @@ public class CvPipeline implements AutoCloseable {
         this.totalProcessingTimeNs = totalProcessingTimeNs;
     }
 
+    public void processMulti() throws Exception {
+        // 初始化终止异常和总处理时间
+        terminalException = null;
+        totalProcessingTimeNs = 0;
+
+        // 遍历处理阶段
+        for (CvStage stage : stages) {
+            // 准备处理阶段
+            if (stage instanceof ImageCapture && this.getProperty("needCapture") != null && this.getProperty("needCapture").equals(true)) {
+                stage.processPrepare(this);
+            }
+        }
+
+        // 再次遍历处理阶段，执行图像处理和计时
+        for (CvStage stage : stages) {
+
+            // 记录处理开始时间
+            long processingTimeNs = System.nanoTime();
+            Result result = null;
+            try {
+                // 检查阶段是否启用
+                if (!stage.isEnabled()) {
+                    throw new Exception(String.format("Stage \"%s\" not enabled.", stage.getName()));
+                }
+
+                // 执行阶段的处理操作，获取处理结果
+                if (stage instanceof ImageCapture && this.getProperty("needCapture") != null && this.getProperty("needCapture").equals(false)) {
+
+                    for (Map.Entry<CvStage, Result> entry : results.entrySet()) {
+                        CvStage cvStage = entry.getKey();
+                        if (cvStage instanceof ImageCapture) {
+                            result = entry.getValue();
+                        }
+                    }
+
+                    // 计算处理时间
+                    processingTimeNs = System.nanoTime() - processingTimeNs;
+                    totalProcessingTimeNs += processingTimeNs;
+
+                    Mat image = null;
+                    Object model = null;
+                    ColorSpace colorSpace = null;
+
+                    // 从结果对象中提取图像、模型和颜色空间
+                    if (result != null) {
+                        image = result.image;
+                        model = result.model;
+                        colorSpace = result.colorSpace;
+                    }
+
+                    // 如果阶段启用且模型不为空，将工作模型设置为当前模型
+                    if (stage.isEnabled() && model != null) {
+                        workingModel = model;
+                    }
+
+                    // 如果阶段启用且颜色空间不为空，将工作颜色空间设置为当前颜色空间
+                    if (stage.isEnabled() && colorSpace != null) {
+                        workingColorSpace = colorSpace;
+                    }
+
+                    // 如果结果图像为空，并且有工作图像，用工作图像的克隆替换结果图像
+                    if (image == null) {
+                        if (workingImage != null) {
+                            image = workingImage.clone();
+                        }
+                    } else { // 如果结果图像不为空
+                        if (workingImage != null && workingImage != image) {
+                            // 释放工作图像资源
+                            workingImage.release();
+                        }
+
+                        // 将工作图像替换为结果图像，并为存储克隆结果图像
+                        workingImage = image;
+                        image = image.clone();
+                    }
+
+                    // 如果结果颜色空间为空，并且有工作颜色空间，将结果颜色空间替换为工作颜色空间
+                    if (colorSpace == null) {
+                        if (workingColorSpace != null) {
+                            colorSpace = workingColorSpace;
+                        }
+                    }
+
+                    // 将阶段处理结果存储到结果映射中
+                    results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
+                    continue;
+                }
+                result = stage.process(this);
+            } catch (TerminalException e) {
+                // 处理终止异常
+                result = new Result(null, e.getOriginalException());
+                setTerminalException(e.getOriginalException());
+                Logger.debug("Stage \"" + stage.getName() + "\" throws " + e.getOriginalException());
+            } catch (Exception e) {
+                // 处理其他异常
+                result = new Result(null, e);
+                if (stage.isEnabled()) {
+                    Logger.debug("Stage \"" + stage.getName() + "\" throws " + e);
+                }
+            }
+
+            // 计算处理时间
+            processingTimeNs = System.nanoTime() - processingTimeNs;
+            totalProcessingTimeNs += processingTimeNs;
+
+            Mat image = null;
+            Object model = null;
+            ColorSpace colorSpace = null;
+
+            // 从结果对象中提取图像、模型和颜色空间
+            if (result != null) {
+                image = result.image;
+                model = result.model;
+                colorSpace = result.colorSpace;
+            }
+
+            // 如果阶段启用且模型不为空，将工作模型设置为当前模型
+            if (stage.isEnabled() && model != null) {
+                workingModel = model;
+            }
+
+            // 如果阶段启用且颜色空间不为空，将工作颜色空间设置为当前颜色空间
+            if (stage.isEnabled() && colorSpace != null) {
+                workingColorSpace = colorSpace;
+            }
+
+            // 如果结果图像为空，并且有工作图像，用工作图像的克隆替换结果图像
+            if (image == null) {
+                if (workingImage != null) {
+                    image = workingImage.clone();
+                }
+            } else { // 如果结果图像不为空
+                if (workingImage != null && workingImage != image) {
+                    // 释放工作图像资源
+                    workingImage.release();
+                }
+
+                // 将工作图像替换为结果图像，并为存储克隆结果图像
+                workingImage = image;
+                image = image.clone();
+            }
+
+            // 如果结果颜色空间为空，并且有工作颜色空间，将结果颜色空间替换为工作颜色空间
+            if (colorSpace == null) {
+                if (workingColorSpace != null) {
+                    colorSpace = workingColorSpace;
+                }
+            }
+
+            // 将阶段处理结果存储到结果映射中
+            results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
+        }
+    }
+
     public void process() throws Exception {
         // 初始化终止异常和总处理时间
         terminalException = null;
@@ -272,16 +426,11 @@ public class CvPipeline implements AutoCloseable {
         // 遍历处理阶段
         for (CvStage stage : stages) {
             // 准备处理阶段
-            if (stage instanceof ImageCapture && !this.getProperty("needClear").equals(true)) {
-                stage.processPrepare(this);
-            }
+            stage.processPrepare(this);
         }
 
         // 再次遍历处理阶段，执行图像处理和计时
         for (CvStage stage : stages) {
-            if (stage instanceof ImageCapture && !this.getProperty("needClear").equals(true)) {
-                continue;
-            }
             // 记录处理开始时间
             long processingTimeNs = System.nanoTime();
             Result result = null;
@@ -386,9 +535,21 @@ public class CvPipeline implements AutoCloseable {
             workingImage = null;
         }
         for (Result result : results.values()) {
-            if (result.image != null && !this.getProperty("needClear").equals(true)) {
+            if (result.image != null) {
                 result.image.release();
             }
+        }
+        workingModel = null;
+        results.clear();
+    }
+
+    public void releaseMulti() {
+        if (workingImage != null) {
+            workingImage.release();
+            workingImage = null;
+        }
+        for (Result result : results.values()) {
+            result.image.release();
         }
         workingModel = null;
         results.clear();

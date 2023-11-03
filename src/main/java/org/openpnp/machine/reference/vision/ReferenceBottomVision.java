@@ -276,32 +276,31 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
 
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
-                    ImageCapture stage = new ImageCapture();
+                //清空pipline中的results
+                pipeline.release();
 
-                    pipeline.getStages().forEach(s -> {
-                        if (s instanceof ImageCapture) {
-                            stage.setSettleOption(((ImageCapture) s).getSettleOption());
-                        }
-                    });
-                    // 检查相机是否为null，如果为null则抛出异常
-                    if (camera == null) {
-                        throw new Exception("No Camera set on pipeline.");
+                ImageCapture stage = new ImageCapture();
+
+                pipeline.getStages().forEach(s -> {
+                    if (s instanceof ImageCapture) {
+                        stage.setSettleOption(((ImageCapture) s).getSettleOption());
                     }
+                });
+                // 检查相机是否为null，如果为null则抛出异常
+                if (camera == null) {
+                    throw new Exception("No Camera set on pipeline.");
+                }
 
-                    BufferedImage bufferedImage;
+                BufferedImage bufferedImage;
 
-                    bufferedImage = camera.settleAndCapture(stage.getSettleOption());
-                    pipeline.setLastCapturedImage(bufferedImage);
-                    Mat image = OpenCvUtils.toMat(bufferedImage);
-                    pipeline.setResults(stage,new Result(image, FluentCv.ColorSpace.Bgr));
-
+                bufferedImage = camera.settleAndCapture(stage.getSettleOption());
+                pipeline.setLastCapturedImage(bufferedImage);
+                Mat image = OpenCvUtils.toMat(bufferedImage);
+                pipeline.setResults(stage, new Result(image, FluentCv.ColorSpace.Bgr));
 
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(locationN1.getUnits());
-                pipeline.setProperty("needSettle", true);
-
-                pipeline.setProperty("needClear",true);
-
+                pipeline.setProperty("needCapture", false);
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
 
@@ -383,8 +382,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             BottomVisionSettings bottomVisionSettings2 = getInheritedVisionSettings(partN2);
 
-            try (CvPipeline pipeline = bottomVisionSettings2.getPipeline())
-            {
+            try (CvPipeline pipeline = bottomVisionSettings2.getPipeline()) {
                 Location offsets2 = new Location(locationN2.getUnits());
                 pipeline.setProperty("needSettle", false);
 
@@ -982,13 +980,19 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
         }
         boolean needSettle = true;
+        boolean needCapture = true;
         if (camera.getLooking() == Camera.Looking.Up && pipeline.getProperty("needSettle") != null) {
             needSettle = (boolean) pipeline.getProperty("needSettle");
+        }
+
+        if (camera.getLooking() == Camera.Looking.Up && pipeline.getProperty("needCapture") != null) {
+            needCapture=(boolean) pipeline.getProperty("needCapture");
         }
         // 重置可重用的CvPipeline
         pipeline.resetReusedPipeline();
 
         pipeline.setProperty("needSettle", needSettle);
+        pipeline.setProperty("needCapture", needCapture);
 
         // 遍历Composite对象中的ShotsTravel列表
         for (Shot shot : composite.getShotsTravel()) {
