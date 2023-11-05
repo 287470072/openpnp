@@ -260,7 +260,7 @@ public class CvPipeline implements AutoCloseable {
         this.totalProcessingTimeNs = totalProcessingTimeNs;
     }
 
-    public void processMulti() throws Exception {
+    public void processMulti() {
         // 初始化终止异常和总处理时间
         terminalException = null;
         totalProcessingTimeNs = 0;

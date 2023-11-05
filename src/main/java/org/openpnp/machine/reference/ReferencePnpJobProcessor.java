@@ -1235,6 +1235,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to the caller.
          */
         public Step step() throws JobProcessorException {
+            Step result;
             PlannedPlacement plannedPlacement = plannedPlacements
                     .stream()
                     .filter(p -> p.jobPlacement.getStatus() == Status.Processing)
@@ -1242,11 +1243,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .findFirst()
                     .orElse(null);
             try {
-                Step result;
                 if (this instanceof Align) {
                     result = multiAlign(plannedPlacements);
                     plannedPlacements.forEach(p -> {
-                        completed.add(p);
+                        if (p.alignmentOffsets != null) {
+                            completed.add(p);
+                        }
                     });
                 } else {
                     result = stepImpl(plannedPlacement);
@@ -1254,6 +1256,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 return result;
             } catch (JobProcessorException e) {
+                if (plannedPlacement.alignmentOffsets != null) {
+                    completed.add(plannedPlacement);
+                    return this;
+                }else {
+                    plannedPlacement.jobPlacement.setStatus(Status.Errored);
+                }
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
                     case Alert:
                         throw e;

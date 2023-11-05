@@ -685,7 +685,7 @@ public class VisionCompositing extends AbstractModelObject{
         private String diagnostics = "";
 
         public Composite(org.openpnp.model.Package pkg, BottomVisionSettings visionSettings,
-                Nozzle nozzle, NozzleTip nozzleTip, Camera camera, Location locationAndRotation) throws Exception {
+                Nozzle nozzle, NozzleTip nozzleTip, Camera camera, Location locationAndRotation) {
             this.pkg = pkg;
             this.visionSettings = visionSettings;
             this.footprint = pkg.getFootprint();
@@ -806,7 +806,7 @@ public class VisionCompositing extends AbstractModelObject{
          * @return
          * @throws Exception
          */
-        public void compute() throws Exception {
+        public void compute()  {
             // Compute some lengths.
             tolerance = maxPickTolerance.convertToUnits(units).getValue();
             if (tolerance <= 0) {
@@ -864,7 +864,7 @@ public class VisionCompositing extends AbstractModelObject{
             for (Footprint.Pad pad : pads) {
                 if (Math.abs(pad.getRotation() % 90) > eps) {
                     if (compositingMethod.isEnforced()) { 
-                        throw new Exception("Package "+pkg.getId()+" pad "+pad.getName()+" not at 90° step angle.");
+                        //throw new Exception("Package "+pkg.getId()+" pad "+pad.getName()+" not at 90° step angle.");
                     }
                 }
                 Pad rectifiedPad = pad.boundingBox();

@@ -171,13 +171,14 @@ public class VisionUtils {
         return locations;
     }
 
-    public static Camera getBottomVisionCamera() throws Exception {
+    public static Camera getBottomVisionCamera()  {
         for (Camera camera : Configuration.get().getMachine().getCameras()) {
             if (camera.getLooking() == Camera.Looking.Up) {
                 return camera;
             }
         }
-        throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
+        //throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
+        return null;
     }
 
     public static Camera getTopVisionCamera() throws Exception {

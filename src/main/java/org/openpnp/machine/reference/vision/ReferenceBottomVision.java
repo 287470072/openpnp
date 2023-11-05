@@ -223,6 +223,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     private List<PnpJobPlanner.PlannedPlacement> findOffsetsPreRotateMulti(List<PnpJobPlanner.PlannedPlacement> pps) throws Exception {
+        Logger.trace("双目识别开始：" + System.currentTimeMillis());
         Camera camera = VisionUtils.getBottomVisionCamera();
         //需要贴的元件有两个的时候
         if (pps.size() > 1) {
@@ -272,12 +273,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, locationN2);
 
 
-            //n1.moveToTogether(shotLocationN1, shotLocationN2, n1, n2);
+            n1.moveToTogether(shotLocationN1, shotLocationN2, n1, n2);
             BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
+
+            BufferedImage bufferedImage;
 
             try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                 //清空pipline中的results
                 pipeline.release();
+                camera.actuateLightBeforeCapture(true);
+
 
                 ImageCapture stage = new ImageCapture();
 
@@ -291,12 +296,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     throw new Exception("No Camera set on pipeline.");
                 }
 
-                BufferedImage bufferedImage;
 
                 bufferedImage = camera.settleAndCapture(stage.getSettleOption());
                 pipeline.setLastCapturedImage(bufferedImage);
                 Mat image = OpenCvUtils.toMat(bufferedImage);
                 pipeline.setResults(stage, new Result(image, FluentCv.ColorSpace.Bgr));
+
+                camera.actuateLightAfterCapture();
+
 
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(locationN1.getUnits());
@@ -386,6 +393,28 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location offsets2 = new Location(locationN2.getUnits());
                 pipeline.setProperty("needSettle", false);
 
+                //清空pipline中的results
+                pipeline.release();
+
+                ImageCapture stage = new ImageCapture();
+
+                pipeline.getStages().forEach(s -> {
+                    if (s instanceof ImageCapture) {
+                        stage.setSettleOption(((ImageCapture) s).getSettleOption());
+                    }
+                });
+                // 检查相机是否为null，如果为null则抛出异常
+                if (camera == null) {
+                    throw new Exception("No Camera set on pipeline.");
+                }
+
+
+                //bufferedImage = camera.settleAndCapture(stage.getSettleOption());
+                pipeline.setLastCapturedImage(bufferedImage);
+                Mat image = OpenCvUtils.toMat(bufferedImage);
+                pipeline.setResults(stage, new Result(image, FluentCv.ColorSpace.Bgr));
+
+
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
                     // 处理管道并获取结果的旋转矩形
@@ -462,6 +491,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 offsetsCheck(partN2, n2, offsets2);
                 n2P.alignmentOffsets = new PartAlignment.PartAlignmentOffset(offsets2, true);
             }
+            Logger.trace("双目识别结束：" + System.currentTimeMillis());
+
         } else {
             Nozzle n = pps.get(0).nozzle;
             //只有N1有元件的时候
@@ -491,14 +522,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
                 n1.moveTo(shotLocationN1);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
-
+                    pipeline.release();
                     // 初始化偏移量，用于迭代计算
                     Location offsets1 = new Location(locationN1.getUnits());
                     // 尝试多次获取零件的正确位置
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
+                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1,
                                 wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
@@ -610,6 +641,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 n2.moveTo(shotLocationNew);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
+                    pipeline.release();
+
                     // 初始化偏移量，用于迭代计算
                     Location offsets2 = new Location(locationN2.getUnits());
                     // 尝试多次获取零件的正确位置
@@ -617,7 +650,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
+                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN2, n2,
                                 wantedLocationN2, locationN2, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
@@ -986,7 +1019,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
 
         if (camera.getLooking() == Camera.Looking.Up && pipeline.getProperty("needCapture") != null) {
-            needCapture=(boolean) pipeline.getProperty("needCapture");
+            needCapture = (boolean) pipeline.getProperty("needCapture");
         }
         // 重置可重用的CvPipeline
         pipeline.resetReusedPipeline();
@@ -1264,8 +1297,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera,
-                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
-        Logger.trace("双目识别开始：" + System.currentTimeMillis());
+                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception{
+
 
         // 准备并配置视觉管道，以进行零件识别
         preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
@@ -1342,7 +1375,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
             }
             // 处理管道，执行图像处理操作
-            pipeline.process();
+            pipeline.processMulti();
 
             // 获取管道处理的结果
             Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
@@ -1352,7 +1385,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 result = pipeline.getResult("result");
             }
 
-            // 如果结果仍然为null，则抛出异常
+/*            // 如果结果仍然为null，则抛出异常
             if (result == null) {
                 throw new Exception(String.format(
                         "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
@@ -1371,7 +1404,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 throw new Exception(String.format(
                         "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
                         part.getId(), result.model.getClass().getSimpleName()));
-            }
+            }*/
 
             // 处理管道阶段的结果
             pipelineShot.processResult(result);
@@ -1380,7 +1413,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
 
         }
-        Logger.trace("双目识别结束：" + System.currentTimeMillis());
 
         return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
     }
@@ -1395,7 +1427,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         // 遍历管道中的每个阶段
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             // 应用管道阶段操作
-            pipelineShot.apply();
+            //pipelineShot.apply();
 
             Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
                     .stream()
