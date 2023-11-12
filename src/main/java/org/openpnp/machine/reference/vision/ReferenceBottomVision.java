@@ -307,43 +307,45 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 // 初始化偏移量，用于迭代计算
                 Location offsets1 = new Location(locationN1.getUnits());
-                pipeline.setProperty("needCapture", false);
+                pipeline.setProperty("needCapture", true);
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
+                    try {
 
-                    // 处理管道并获取结果的旋转矩形
-                    RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
-                            wantedLocationN1, locationN1, bottomVisionSettings);
 
-                    // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
-                    Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
+                        // 处理管道并获取结果的旋转矩形
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
+                                wantedLocationN1, locationN1, bottomVisionSettings);
 
-                    // 创建偏移量对象，表示相机中心到定位零件的物理距离
-                    offsets1 = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+                        // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
+                        Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
 
-                    // 计算角度偏移量
-                    double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngleN1;
+                        // 创建偏移量对象，表示相机中心到定位零件的物理距离
+                        offsets1 = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
-                    // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
-                    // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
-                    if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
-                        angleOffset = Utils2D.angleNorm(angleOffset);
-                    } else {
-                        // 旋转超过180°在一个方向上没有意义
-                        angleOffset = Utils2D.angleNorm(angleOffset, 180);
-                    }
+                        // 计算角度偏移量
+                        double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngleN1;
 
-                    // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                    offsets1 = offsets1.rotateXy(-angleOffset)
-                            .derive(null, null, null, angleOffset);
-                    locationN1 = locationN1.subtractWithRotation(offsets1);
+                        // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
+                        // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
+                        if (bottomVisionSettings.getMaxRotation() == MaxRotation.Adjust) {
+                            angleOffset = Utils2D.angleNorm(angleOffset);
+                        } else {
+                            // 旋转超过180°在一个方向上没有意义
+                            angleOffset = Utils2D.angleNorm(angleOffset, 180);
+                        }
 
-                    if (++pass >= maxVisionPasses) {
-                        // 达到最大尝试次数，结束循环
+                        // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
+                        offsets1 = offsets1.rotateXy(-angleOffset)
+                                .derive(null, null, null, angleOffset);
+                        locationN1 = locationN1.subtractWithRotation(offsets1);
+
+                        if (++pass >= maxVisionPasses) {
+                            // 达到最大尝试次数，结束循环
+                            break;
+                        }
+
                         break;
-                    }
-
-                    break;
 
                    /* // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                     Point corners[] = new Point[4];
@@ -367,7 +369,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         break;
                     }
 */
-                    // 位置修正不足，尝试使用修正后的位置再次计算
+                        // 位置修正不足，尝试使用修正后的位置再次计算
+                    } catch (Exception e) {
+                        break;
+                    }
                 }
 
                 // 记录偏移量已接受
@@ -417,6 +422,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
+                    try{
                     // 处理管道并获取结果的旋转矩形
                     RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
                             wantedLocationN2, locationN2, bottomVisionSettings2);
@@ -473,6 +479,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     }
 */
                     // 位置修正不足，尝试使用修正后的位置再次计算
+                    } catch (Exception e) {
+                        break;
+                    }
                 }
 
                 // 记录偏移量已接受
@@ -523,6 +532,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 n1.moveTo(shotLocationN1);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     pipeline.release();
+
+                    pipeline.setProperty("needSettle", true);
+
                     // 初始化偏移量，用于迭代计算
                     Location offsets1 = new Location(locationN1.getUnits());
                     // 尝试多次获取零件的正确位置
@@ -642,6 +654,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 n2.moveTo(shotLocationNew);
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     pipeline.release();
+
+
+                    pipeline.setProperty("needSettle", true);
 
                     // 初始化偏移量，用于迭代计算
                     Location offsets2 = new Location(locationN2.getUnits());
@@ -1297,7 +1312,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera,
-                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception{
+                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
 
 
         // 准备并配置视觉管道，以进行零件识别

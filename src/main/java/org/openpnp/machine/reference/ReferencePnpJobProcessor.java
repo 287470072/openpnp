@@ -1246,10 +1246,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (this instanceof Align) {
                     result = multiAlign(plannedPlacements);
                     plannedPlacements.forEach(p -> {
-                        if (p.alignmentOffsets != null) {
+                        if (p.alignmentOffsets != null && p.alignmentOffsets.getLocation().getX() != 0) {
                             completed.add(p);
+                        } else {
+                            p.jobPlacement.setStatus(Status.Errored);
+                            p.jobPlacement.setError(new Exception("老铁666！！！"));
                         }
                     });
+
                 } else {
                     result = stepImpl(plannedPlacement);
                     completed.add(plannedPlacement);
@@ -1259,8 +1263,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 if (plannedPlacement.alignmentOffsets != null) {
                     completed.add(plannedPlacement);
                     return this;
-                }else {
+                } else {
                     plannedPlacement.jobPlacement.setStatus(Status.Errored);
+
                 }
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
                     case Alert:
