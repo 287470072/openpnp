@@ -111,8 +111,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
     @Override
-    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
-                                           Placement placement, Nozzle nozzle) throws Exception {
+    public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
         // 获取零件的继承的视觉设置
         BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
 
@@ -134,8 +133,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         Camera camera = VisionUtils.getBottomVisionCamera();
         // 根据预旋转模式开关来判断具体的执行逻辑
         PartAlignmentOffset offsets;
-        if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
-                || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
+        if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate) || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
             offsets = findOffsetsPreRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         } else {
             offsets = findOffsetsPostRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
@@ -155,28 +153,21 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
         if (part == null) {
             // No part height accounted for.
-            return camera.getLocation(nozzle)
-                    .derive(null, null, null, angle);
+            return camera.getLocation(nozzle).derive(null, null, null, angle);
         }
         if (part.isPartHeightUnknown()) {
-            if (camera.getFocusProvider() != null
-                    && nozzle.getNozzleTip() != null) {
+            if (camera.getFocusProvider() != null && nozzle.getNozzleTip() != null) {
                 NozzleTip nt = nozzle.getNozzleTip();
 
-                Location locationNominal = camera.getLocation(nozzle)
-                        .derive(null, null, null, angle);
-                BottomVisionSettings bottomVisionSettings = ReferenceBottomVision.getDefault()
-                        .getInheritedVisionSettings(part);
-                Composite composite = part.getPackage().getVisionCompositing().new Composite(part.getPackage(), bottomVisionSettings, nozzle, nt,
-                        camera, locationNominal);
+                Location locationNominal = camera.getLocation(nozzle).derive(null, null, null, angle);
+                BottomVisionSettings bottomVisionSettings = ReferenceBottomVision.getDefault().getInheritedVisionSettings(part);
+                Composite composite = part.getPackage().getVisionCompositing().new Composite(part.getPackage(), bottomVisionSettings, nozzle, nt, camera, locationNominal);
                 Length partHeight = new Length(0, LengthUnit.Millimeters);
                 int weight = 0;
                 for (Shot shot : composite.getShotsTravel()) {
                     Location location1 = composite.getShotLocation(shot);
-                    Location location0 = location1.add(new Location(nt.getMaxPartHeight().getUnits(),
-                            0, 0, nt.getMaxPartHeight().getValue(), 0));
-                    Location focus = camera.getFocusProvider().autoFocus(camera, nozzle, nt.getMaxPartDiameter()
-                            .add(nt.getMaxPickTolerance().multiply(2.0)), location0, location1);
+                    Location location0 = location1.add(new Location(nt.getMaxPartHeight().getUnits(), 0, 0, nt.getMaxPartHeight().getValue(), 0));
+                    Location focus = camera.getFocusProvider().autoFocus(camera, nozzle, nt.getMaxPartDiameter().add(nt.getMaxPickTolerance().multiply(2.0)), location0, location1);
                     partHeight = partHeight.add(focus.getLengthZ().subtract(location1.getLengthZ()));
                     weight++;
                 }
@@ -191,13 +182,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 throw new Exception("Part height unknown and camera " + camera.getName() + " does not support part height sensing.");
             }
         }
-        return camera.getLocation(nozzle)
-                .add(new Location(part.getHeight()
-                        .getUnits(),
-                        0.0, 0.0, part.getHeight()
-                        .getValue(),
-                        0.0))
-                .derive(null, null, null, angle);
+        return camera.getLocation(nozzle).add(new Location(part.getHeight().getUnits(), 0.0, 0.0, part.getHeight().getValue(), 0.0)).derive(null, null, null, angle);
     }
 
     private Location getShotLocation2(Part part, Camera camera, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation) {
@@ -209,12 +194,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // 从Package对象中获取VisionCompositing对象
             VisionCompositing visionCompositing = part.getPackage().getVisionCompositing();
             // 创建一个Composite对象，用于合成视觉信息
-            VisionCompositing.Composite composite = visionCompositing.new Composite(
-                    part.getPackage(), bottomVisionSettings, nozzle, nozzle.getNozzleTip(), camera, wantedLocation);
+            VisionCompositing.Composite composite = visionCompositing.new Composite(part.getPackage(), bottomVisionSettings, nozzle, nozzle.getNozzleTip(), camera, wantedLocation);
 
             Shot shot = composite.getCompositeShots().get(0);
-            Location shotLocation = composite.getShotLocation(shot)
-                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
+            Location shotLocation = composite.getShotLocation(shot).addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
             return shotLocation;
         } catch (Exception exception) {
 
@@ -248,12 +231,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             double wantedAngleN1 = placementN1.getLocation().getRotation();
             double wantedAngleN2 = placementN2.getLocation().getRotation();
             if (boardLocationN1 != null) {
-                wantedAngleN1 = Utils2D.calculateBoardPlacementLocation(boardLocationN1, placementN1.getLocation())
-                        .getRotation();
+                wantedAngleN1 = Utils2D.calculateBoardPlacementLocation(boardLocationN1, placementN1.getLocation()).getRotation();
             }
             if (boardLocationN2 != null) {
-                wantedAngleN2 = Utils2D.calculateBoardPlacementLocation(boardLocationN2, placementN2.getLocation())
-                        .getRotation();
+                wantedAngleN2 = Utils2D.calculateBoardPlacementLocation(boardLocationN2, placementN2.getLocation()).getRotation();
             }
             // 规范化旋转角度为-180°到180°之间的范围
             wantedAngleN1 = Utils2D.angleNorm(wantedAngleN1, 180.);
@@ -314,8 +295,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1,
-                                wantedLocationN1, locationN1, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -336,8 +316,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         }
 
                         // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                        offsets1 = offsets1.rotateXy(-angleOffset)
-                                .derive(null, null, null, angleOffset);
+                        offsets1 = offsets1.rotateXy(-angleOffset).derive(null, null, null, angleOffset);
                         locationN1 = locationN1.subtractWithRotation(offsets1);
 
                         if (++pass >= maxVisionPasses) {
@@ -422,39 +401,37 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 // 尝试多次获取零件的正确位置
                 for (int pass = 0; ; ) {
-                    try{
-                    // 处理管道并获取结果的旋转矩形
-                    RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2,
-                            wantedLocationN2, locationN2, bottomVisionSettings2);
+                    try {
+                        // 处理管道并获取结果的旋转矩形
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2, wantedLocationN2, locationN2, bottomVisionSettings2);
 
-                    // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
-                    Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
+                        // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
+                        Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
 
-                    // 创建偏移量对象，表示相机中心到定位零件的物理距离
-                    offsets2 = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
+                        // 创建偏移量对象，表示相机中心到定位零件的物理距离
+                        offsets2 = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y);
 
-                    // 计算角度偏移量
-                    double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngleN2;
+                        // 计算角度偏移量
+                        double angleOffset = VisionUtils.getPixelAngle(camera, rect.angle) - wantedAngleN2;
 
-                    // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
-                    // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
-                    if (bottomVisionSettings2.getMaxRotation() == MaxRotation.Adjust) {
-                        angleOffset = Utils2D.angleNorm(angleOffset);
-                    } else {
-                        // 旋转超过180°在一个方向上没有意义
-                        angleOffset = Utils2D.angleNorm(angleOffset, 180);
-                    }
+                        // 大多数OpenCV管道只能告诉我们识别到的矩形的角度位于0°到90°的范围内，
+                        // 因此需要规范化角度范围为-45°到+45°。参见angleNorm()。
+                        if (bottomVisionSettings2.getMaxRotation() == MaxRotation.Adjust) {
+                            angleOffset = Utils2D.angleNorm(angleOffset);
+                        } else {
+                            // 旋转超过180°在一个方向上没有意义
+                            angleOffset = Utils2D.angleNorm(angleOffset, 180);
+                        }
 
-                    // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                    offsets2 = offsets2.rotateXy(-angleOffset)
-                            .derive(null, null, null, angleOffset);
-                    locationN2 = locationN2.subtractWithRotation(offsets2);
+                        // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
+                        offsets2 = offsets2.rotateXy(-angleOffset).derive(null, null, null, angleOffset);
+                        locationN2 = locationN2.subtractWithRotation(offsets2);
 
-                    if (++pass >= maxVisionPasses) {
-                        // 达到最大尝试次数，结束循环
+                        if (++pass >= maxVisionPasses) {
+                            // 达到最大尝试次数，结束循环
+                            break;
+                        }
                         break;
-                    }
-                    break;
 
    /*                 // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                     Point corners[] = new Point[4];
@@ -478,7 +455,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         break;
                     }
 */
-                    // 位置修正不足，尝试使用修正后的位置再次计算
+                        // 位置修正不足，尝试使用修正后的位置再次计算
                     } catch (Exception e) {
                         break;
                     }
@@ -516,8 +493,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
                 double wantedAngleN1 = placementN1.getLocation().getRotation();
                 if (boardLocationN1 != null) {
-                    wantedAngleN1 = Utils2D.calculateBoardPlacementLocation(boardLocationN1, placementN1.getLocation())
-                            .getRotation();
+                    wantedAngleN1 = Utils2D.calculateBoardPlacementLocation(boardLocationN1, placementN1.getLocation()).getRotation();
                 }
                 // 规范化旋转角度为-180°到180°之间的范围
                 wantedAngleN1 = Utils2D.angleNorm(wantedAngleN1, 180.);
@@ -541,8 +517,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1,
-                                wantedLocationN1, locationN1, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -563,8 +538,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         }
 
                         // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                        offsets1 = offsets1.rotateXy(-angleOffset)
-                                .derive(null, null, null, angleOffset);
+                        offsets1 = offsets1.rotateXy(-angleOffset).derive(null, null, null, angleOffset);
                         locationN1 = locationN1.subtractWithRotation(offsets1);
 
                         if (++pass >= maxVisionPasses) {
@@ -575,20 +549,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                         Point corners[] = new Point[4];
                         rect.points(corners);
-                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
-                                .convertToUnits(maxLinearOffset.getUnits());
+                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y).convertToUnits(maxLinearOffset.getUnits());
                         Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
                         partSizeCheck(partN1, bottomVisionSettings, rect, camera);
 
                         if (center.getLinearDistanceTo(offsets1) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : center offset {} > {}",
-                                    offsets1, center.getLinearDistanceTo(offsets1), getMaxLinearOffset().getValue());
+                            Logger.debug("Offsets too large {} : center offset {} > {}", offsets1, center.getLinearDistanceTo(offsets1), getMaxLinearOffset().getValue());
                         } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : corner offset {} > {}",
-                                    offsets1, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
+                            Logger.debug("Offsets too large {} : corner offset {} > {}", offsets1, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
                         } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
-                            Logger.debug("Offsets too large {} : angle offset {} > {}",
-                                    offsets1, Math.abs(angleOffset), getMaxAngularOffset());
+                            Logger.debug("Offsets too large {} : angle offset {} > {}", offsets1, Math.abs(angleOffset), getMaxAngularOffset());
                         } else {
                             // 找到足够好的位置修正，结束循环
                             break;
@@ -626,8 +596,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
                 double wantedAngleN2 = placementN2.getLocation().getRotation();
                 if (boardLocationN2 != null) {
-                    wantedAngleN2 = Utils2D.calculateBoardPlacementLocation(boardLocationN2, placementN2.getLocation())
-                            .getRotation();
+                    wantedAngleN2 = Utils2D.calculateBoardPlacementLocation(boardLocationN2, placementN2.getLocation()).getRotation();
                 }
                 // 规范化旋转角度为-180°到180°之间的范围
                 wantedAngleN2 = Utils2D.angleNorm(wantedAngleN2, 180.);
@@ -665,8 +634,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN2, n2,
-                                wantedLocationN2, locationN2, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN2, n2, wantedLocationN2, locationN2, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
@@ -687,8 +655,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         }
 
                         // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                        offsets2 = offsets2.rotateXy(-angleOffset)
-                                .derive(null, null, null, angleOffset);
+                        offsets2 = offsets2.rotateXy(-angleOffset).derive(null, null, null, angleOffset);
                         locationN2 = locationN2.subtractWithRotation(offsets2);
 
                         if (++pass >= maxVisionPasses) {
@@ -699,20 +666,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                         Point corners[] = new Point[4];
                         rect.points(corners);
-                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
-                                .convertToUnits(maxLinearOffset.getUnits());
+                        Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y).convertToUnits(maxLinearOffset.getUnits());
                         Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
                         partSizeCheck(partN2, bottomVisionSettings, rect, camera);
 
                         if (center.getLinearDistanceTo(offsets2) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : center offset {} > {}",
-                                    offsets2, center.getLinearDistanceTo(offsets2), getMaxLinearOffset().getValue());
+                            Logger.debug("Offsets too large {} : center offset {} > {}", offsets2, center.getLinearDistanceTo(offsets2), getMaxLinearOffset().getValue());
                         } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
-                            Logger.debug("Offsets too large {} : corner offset {} > {}",
-                                    offsets2, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
+                            Logger.debug("Offsets too large {} : corner offset {} > {}", offsets2, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
                         } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
-                            Logger.debug("Offsets too large {} : angle offset {} > {}",
-                                    offsets2, Math.abs(angleOffset), getMaxAngularOffset());
+                            Logger.debug("Offsets too large {} : angle offset {} > {}", offsets2, Math.abs(angleOffset), getMaxAngularOffset());
                         } else {
                             // 找到足够好的位置修正，结束循环
                             break;
@@ -745,14 +708,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     }
 
-    private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
-                                                     Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
-            throws Exception {
+    private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings) throws Exception {
         // 获取所需的旋转角度，首先使用放置位置的旋转角度，如果存在板位置，则使用修正后的位置的角度
         double wantedAngle = placement.getLocation().getRotation();
         if (boardLocation != null) {
-            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
-                    .getRotation();
+            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation()).getRotation();
         }
         // 规范化旋转角度为-180°到180°之间的范围
         wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
@@ -773,8 +733,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // 尝试多次获取零件的正确位置
             for (int pass = 0; ; ) {
                 // 处理管道并获取结果的旋转矩形
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
-                        wantedLocation, nozzleLocation, bottomVisionSettings);
+                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle, wantedLocation, nozzleLocation, bottomVisionSettings);
 
                 // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -795,8 +754,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
 
                 // 当后续旋转喷嘴以补偿角度偏移时，X、Y偏移也会发生变化，因此需要补偿
-                offsets = offsets.rotateXy(-angleOffset)
-                        .derive(null, null, null, angleOffset);
+                offsets = offsets.rotateXy(-angleOffset).derive(null, null, null, angleOffset);
                 nozzleLocation = nozzleLocation.subtractWithRotation(offsets);
 
                 if (++pass >= maxVisionPasses) {
@@ -807,20 +765,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 检查中心和角的偏移是否在允许的范围内，如果不在范围内，则继续尝试
                 Point corners[] = new Point[4];
                 rect.points(corners);
-                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
-                        .convertToUnits(maxLinearOffset.getUnits());
+                Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y).convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
                 partSizeCheck(part, bottomVisionSettings, rect, camera);
 
                 if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
-                    Logger.debug("Offsets too large {} : center offset {} > {}",
-                            offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
+                    Logger.debug("Offsets too large {} : center offset {} > {}", offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue());
                 } else if (corner.getLinearDistanceTo(cornerWithAngularOffset) > getMaxLinearOffset().getValue()) {
-                    Logger.debug("Offsets too large {} : corner offset {} > {}",
-                            offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
+                    Logger.debug("Offsets too large {} : corner offset {} > {}", offsets, corner.getLinearDistanceTo(cornerWithAngularOffset), getMaxLinearOffset().getValue());
                 } else if (Math.abs(angleOffset) > getMaxAngularOffset()) {
-                    Logger.debug("Offsets too large {} : angle offset {} > {}",
-                            offsets, Math.abs(angleOffset), getMaxAngularOffset());
+                    Logger.debug("Offsets too large {} : angle offset {} > {}", offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 } else {
                     // 找到足够好的位置修正，结束循环
                     break;
@@ -850,9 +804,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
 
-    private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
-                                                      Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
-            throws Exception {
+    private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings) throws Exception {
         // 创建一个位置，其X、Y坐标与相机的X、Y坐标相同，Z坐标为零件高度，并且旋转角度为0（除非启用了预旋转）
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, 0.);
 
@@ -907,9 +859,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Length maxPickTolerance = nt.getMaxPickTolerance();
             if (offsetsLength.compareTo(maxPickTolerance) > 0) {
                 LengthConverter lengthConverter = new LengthConverter();
-                throw new Exception("Part " + part.getId() + " bottom vision offsets length " + lengthConverter.convertForward(offsetsLength)
-                        + " larger than the allowed Max. Pick Tolerance " + lengthConverter.convertForward(maxPickTolerance) + " set on nozzle tip "
-                        + nt.getName() + ".");
+                throw new Exception("Part " + part.getId() + " bottom vision offsets length " + lengthConverter.convertForward(offsetsLength) + " larger than the allowed Max. Pick Tolerance " + lengthConverter.convertForward(maxPickTolerance) + " set on nozzle tip " + nt.getName() + ".");
             }
         }
     }
@@ -953,28 +903,19 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         String nominalLength = lengthConverter.convertForward(partSize.getLengthY());
         String msg;
         if (measuredSize.width > pxMaxWidth) {
-            msg = String.format("Part %s width too large: nominal %s, limit %s, measured %s", part.getId(),
-                    nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMaxWidth)),
-                    measuredWidth);
+            msg = String.format("Part %s width too large: nominal %s, limit %s, measured %s", part.getId(), nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMaxWidth)), measuredWidth);
             ret = false;
         } else if (measuredSize.width < pxMinWidth) {
-            msg = String.format("Part %s width too small: nominal %s, limit %s, measured %s", part.getId(),
-                    nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMinWidth)),
-                    measuredWidth);
+            msg = String.format("Part %s width too small: nominal %s, limit %s, measured %s", part.getId(), nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMinWidth)), measuredWidth);
             ret = false;
         } else if (measuredSize.height > pxMaxLength) {
-            msg = String.format("Part %s length too large: nominal %s, limit %s, measured %s", part.getId(),
-                    nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMaxLength)),
-                    measuredLength);
+            msg = String.format("Part %s length too large: nominal %s, limit %s, measured %s", part.getId(), nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMaxLength)), measuredLength);
             ret = false;
         } else if (measuredSize.height < pxMinLength) {
-            msg = String.format("Part %s length too small: nominal %s, limit %s, measured %s", part.getId(),
-                    nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinLength)),
-                    measuredLength);
+            msg = String.format("Part %s length too small: nominal %s, limit %s, measured %s", part.getId(), nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinLength)), measuredLength);
             ret = false;
         } else {
-            msg = String.format("Part %s size ok. Width %s, Length %s", part.getId(),
-                    measuredWidth, measuredLength);
+            msg = String.format("Part %s size ok. Width %s, Length %s", part.getId(), measuredWidth, measuredLength);
             ret = true;
         }
         Logger.debug(msg);
@@ -990,20 +931,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (offsets != null) {
             LengthConverter lengthConverter = new LengthConverter();
             DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-            s += "  |  X:" + lengthConverter.convertForward(offsets.getLengthX()) + " "
-                    + "Y:" + lengthConverter.convertForward(offsets.getLengthY()) + " "
-                    + "C:" + doubleConverter.convertForward(offsets.getRotation())
-                    + " Δ:" + lengthConverter.convertForward(offsets.getLinearLengthTo(Location.origin));
+            s += "  |  X:" + lengthConverter.convertForward(offsets.getLengthX()) + " " + "Y:" + lengthConverter.convertForward(offsets.getLengthY()) + " " + "C:" + doubleConverter.convertForward(offsets.getRotation()) + " Δ:" + lengthConverter.convertForward(offsets.getLinearLengthTo(Location.origin));
         }
         Logger.debug("Alignment result: {}", s);
         MainFrame mainFrame = MainFrame.get();
         if (mainFrame != null) {
             try {
-                mainFrame
-                        .getCameraViews()
-                        .getCameraView(camera)
-                        .showFilteredImage(image, s,
-                                2000);
+                mainFrame.getCameraViews().getCameraView(camera).showFilteredImage(image, s, 2000);
                 // Also make sure the right nozzle is selected for correct cross-hair rotation.
                 MovableUtils.fireTargetedUserAction(nozzle);
             } catch (Exception e) {
@@ -1012,20 +946,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    public void preparePipelineMulti(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
-                                     Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
-                                     Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+    public void preparePipelineMulti(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         // 从Package对象中获取VisionCompositing对象
         VisionCompositing visionCompositing = pkg.getVisionCompositing();
         // 创建一个Composite对象，用于合成视觉信息
-        VisionCompositing.Composite composite = visionCompositing.new Composite(
-                pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
+        VisionCompositing.Composite composite = visionCompositing.new Composite(pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
         // 如果视觉合成方法被强制启用且合成解决方案无效，则抛出异常
-        if (visionCompositing.getCompositingMethod().isEnforced()
-                && composite.getCompositingSolution().isInvalid()) {
-            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". "
-                    + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". "
-                    + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
+        if (visionCompositing.getCompositingMethod().isEnforced() && composite.getCompositingSolution().isInvalid()) {
+            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". " + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". " + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
         }
         boolean needSettle = true;
         boolean needCapture = true;
@@ -1057,8 +985,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // Crop to fit into the mask.
             // TODO: make the template circular.
             // 裁剪以适应掩模
-            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits())
-                    .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
+            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits()).subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
             pipeline.setProperty("footprint.maxWidth", maxDim);
             pipeline.setProperty("footprint.maxHeight", maxDim);
             // Set alignment parameters.
@@ -1069,27 +996,21 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("DetectRectlinearSymmetry.expectedAngle", wantedLocation.getRotation());
             // Set the background removal properties.
             // 设置背景去除属性
-            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance()
-                    .multiply(1.2)); // Allow for some tolerance, we will check the result later.
+            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance().multiply(1.2)); // Allow for some tolerance, we will check the result later.
             pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius() * 2, composite.getUnits()));
             // 如果喷嘴是ReferenceNozzleTip类型，考虑背景校准
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTipCalibration calibration = ((ReferenceNozzleTip) nozzleTip).getCalibration();
-                if (calibration != null
-                        && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+                if (calibration != null && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
                     samplingSize = calibration.getMinimumDetailSize().multiply(0.5);
-                    pipeline.setProperty("MaskHsv.hueMin",
-                            Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
-                    pipeline.setProperty("MaskHsv.hueMax",
-                            Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
-                    pipeline.setProperty("MaskHsv.saturationMin",
-                            Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
+                    pipeline.setProperty("MaskHsv.hueMin", Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.hueMax", Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.saturationMin", Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
                     pipeline.setProperty("MaskHsv.saturationMax", 255);
                     // no need to restrict to this: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
                     pipeline.setProperty("MaskHsv.valueMin", 0);
                     // no need to restrict to this: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
-                    pipeline.setProperty("MaskHsv.valueMax",
-                            Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
+                    pipeline.setProperty("MaskHsv.valueMax", Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
                 }
             }
             // 如果采样大小小于2个像素，则将其设置为至少为2个像素，否则子采样将成本过高
@@ -1103,12 +1024,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("DetectRectlinearSymmetry.subSampling", samplingSize);
             // Add a margin for edge detection.
             // 为边缘检测添加边缘
-            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth",
-                    new Length(shot.getWidth(), composite.getUnits())
-                            .add(samplingSize.multiply(2)));
-            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight",
-                    new Length(shot.getHeight(), composite.getUnits())
-                            .add(samplingSize.multiply(2)));
+            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth", new Length(shot.getWidth(), composite.getUnits()).add(samplingSize.multiply(2)));
+            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight", new Length(shot.getHeight(), composite.getUnits()).add(samplingSize.multiply(2)));
             // 如果合成解决方案是高级的，则设置更多属性
             if (composite.getCompositingSolution().isAdvanced()) {
                 pipeline.setProperty("MinAreaRect.leftEdge", shot.hasLeftEdge());
@@ -1122,8 +1039,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             // Get the shot location, but adjusted by the adjustedNozzleLocation.
             // 获取校准后的Shot位置
-            Location shotLocation = composite.getShotLocation(shot)
-                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
+            Location shotLocation = composite.getShotLocation(shot).addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
             // 创建PipelineShot对象并实现其apply、processResult和processCompositeResult方法
             pipeline.new PipelineShot() {
                 @Override
@@ -1149,20 +1065,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments,
-                                Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation,
-                                Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+    public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera, Package pkg, Nozzle nozzle, NozzleTip nozzleTip, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         // 从Package对象中获取VisionCompositing对象
         VisionCompositing visionCompositing = pkg.getVisionCompositing();
         // 创建一个Composite对象，用于合成视觉信息
-        VisionCompositing.Composite composite = visionCompositing.new Composite(
-                pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
+        VisionCompositing.Composite composite = visionCompositing.new Composite(pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
         // 如果视觉合成方法被强制启用且合成解决方案无效，则抛出异常
-        if (visionCompositing.getCompositingMethod().isEnforced()
-                && composite.getCompositingSolution().isInvalid()) {
-            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". "
-                    + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". "
-                    + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
+        if (visionCompositing.getCompositingMethod().isEnforced() && composite.getCompositingSolution().isInvalid()) {
+            throw new Exception("Vision Compositing has not found a valid solution for package " + pkg.getId() + ". " + "Status: " + composite.getCompositingSolution() + ", " + composite.getDiagnostics() + ". " + "For more diagnostic information go to the Vision Compositing tab on package " + pkg.getId() + ". ");
         }
         // 重置可重用的CvPipeline
         pipeline.resetReusedPipeline();
@@ -1181,8 +1091,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // Crop to fit into the mask.
             // TODO: make the template circular.
             // 裁剪以适应掩模
-            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits())
-                    .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
+            Length maxDim = new Length(Math.sqrt(2) * shot.getMaxMaskRadius(), composite.getUnits()).subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
             pipeline.setProperty("footprint.maxWidth", maxDim);
             pipeline.setProperty("footprint.maxHeight", maxDim);
             // Set alignment parameters.
@@ -1193,27 +1102,21 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("DetectRectlinearSymmetry.expectedAngle", wantedLocation.getRotation());
             // Set the background removal properties.
             // 设置背景去除属性
-            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance()
-                    .multiply(1.2)); // Allow for some tolerance, we will check the result later.
+            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", nozzleTip.getMaxPickTolerance().multiply(1.2)); // Allow for some tolerance, we will check the result later.
             pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius() * 2, composite.getUnits()));
             // 如果喷嘴是ReferenceNozzleTip类型，考虑背景校准
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTipCalibration calibration = ((ReferenceNozzleTip) nozzleTip).getCalibration();
-                if (calibration != null
-                        && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+                if (calibration != null && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
                     samplingSize = calibration.getMinimumDetailSize().multiply(0.5);
-                    pipeline.setProperty("MaskHsv.hueMin",
-                            Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
-                    pipeline.setProperty("MaskHsv.hueMax",
-                            Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
-                    pipeline.setProperty("MaskHsv.saturationMin",
-                            Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
+                    pipeline.setProperty("MaskHsv.hueMin", Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.hueMax", Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
+                    pipeline.setProperty("MaskHsv.saturationMin", Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
                     pipeline.setProperty("MaskHsv.saturationMax", 255);
                     // no need to restrict to this: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
                     pipeline.setProperty("MaskHsv.valueMin", 0);
                     // no need to restrict to this: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
-                    pipeline.setProperty("MaskHsv.valueMax",
-                            Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
+                    pipeline.setProperty("MaskHsv.valueMax", Math.min(255, calibration.getBackgroundMaxValue() + calibration.getBackgroundTolValue()));
                 }
             }
             // 如果采样大小小于2个像素，则将其设置为至少为2个像素，否则子采样将成本过高
@@ -1227,12 +1130,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("DetectRectlinearSymmetry.subSampling", samplingSize);
             // Add a margin for edge detection.
             // 为边缘检测添加边缘
-            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth",
-                    new Length(shot.getWidth(), composite.getUnits())
-                            .add(samplingSize.multiply(2)));
-            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight",
-                    new Length(shot.getHeight(), composite.getUnits())
-                            .add(samplingSize.multiply(2)));
+            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth", new Length(shot.getWidth(), composite.getUnits()).add(samplingSize.multiply(2)));
+            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight", new Length(shot.getHeight(), composite.getUnits()).add(samplingSize.multiply(2)));
             // 如果合成解决方案是高级的，则设置更多属性
             if (composite.getCompositingSolution().isAdvanced()) {
                 pipeline.setProperty("MinAreaRect.leftEdge", shot.hasLeftEdge());
@@ -1246,8 +1145,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             // Get the shot location, but adjusted by the adjustedNozzleLocation.
             // 获取校准后的Shot位置
-            Location shotLocation = composite.getShotLocation(shot)
-                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
+            Location shotLocation = composite.getShotLocation(shot).addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
             // 创建PipelineShot对象并实现其apply、processResult和processCompositeResult方法
             pipeline.new PipelineShot() {
                 @Override
@@ -1258,8 +1156,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
                         if (nozzles.size() == 2 && camera.getWidth() > 2000 && pkgNozzles.size() > 1) {
                             if (nozzle.equals(nozzles.get(0))) {
-                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                        .compareTo(camera.getRoamingRadius()) > 0) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                     // 喷嘴还不在相机漫游半径内。以安全的Z轴移
                                     //MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
@@ -1272,8 +1169,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             }
                         } else {
                             if (nozzle.equals(nozzles.get(0))) {
-                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                        .compareTo(camera.getRoamingRadius()) > 0) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                     // 喷嘴还不在相机漫游半径内。以安全的Z轴移
                                     MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
@@ -1311,19 +1207,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera,
-                                                         Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+    private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera, Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
 
 
         // 准备并配置视觉管道，以进行零件识别
-        preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
-                nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
+        preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
-
-            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            if (pipeline.getPipelineShots().size() > 1) {
+                pipelineShot.apply();
+            }
+            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
             AffineWarp affineWarp = new AffineWarp();
             List<CvStage> stages = pipeline.getStages();
             for (int i = 0; i < stages.size(); i++) {
@@ -1331,8 +1224,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
-                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1433,21 +1325,18 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
 
-    private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera,
-                                                    Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+    private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         // 准备并配置视觉管道，以进行零件识别
-        preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(),
-                nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
+        preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
 
         // 遍历管道中的每个阶段
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             // 应用管道阶段操作
-            //pipelineShot.apply();
+            if (pipeline.getPipelineShots().size() > 1) {
+                pipelineShot.apply();
+            }
 
-            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles()
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
             AffineWarp affineWarp = new AffineWarp();
             List<CvStage> stages = pipeline.getStages();
             for (int i = 0; i < stages.size(); i++) {
@@ -1455,8 +1344,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
-                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1526,23 +1414,17 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             // 如果结果仍然为null，则抛出异常
             if (result == null) {
-                throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
-                        part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
+                throw new Exception(String.format("ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.", part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
             }
 
             // 如果结果模型为null，则抛出异常
             if (result.model == null) {
-                throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): No result found.",
-                        part.getId()));
+                throw new Exception(String.format("ReferenceBottomVision (%s): No result found.", part.getId()));
             }
 
             // 检查结果模型是否为正确的类型（RotatedRect）
             if (!(result.model instanceof RotatedRect)) {
-                throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
-                        part.getId(), result.model.getClass().getSimpleName()));
+                throw new Exception(String.format("ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.", part.getId(), result.model.getClass().getSimpleName()));
             }
 
             // 处理管道阶段的结果
@@ -1563,8 +1445,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (visionSettings != null) {
             boolean isEnabled = (enabled && visionSettings.isEnabled());
             if (!allowDisabled) {
-                Logger.trace("{}.canHandle({}) => {}, {}", this.getClass().getSimpleName(),
-                        settingsHolder == null ? "" : settingsHolder.getId(), visionSettings, isEnabled ? "enabled" : "disabled");
+                Logger.trace("{}.canHandle({}) => {}, {}", this.getClass().getSimpleName(), settingsHolder == null ? "" : settingsHolder.getId(), visionSettings, isEnabled ? "enabled" : "disabled");
             }
             return allowDisabled || isEnabled;
         }
@@ -1668,8 +1549,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     public static CvPipeline createStockPipeline(String variant) {
         try {
-            String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceBottomVision-" + variant + "Pipeline.xml"));
+            String xml = IOUtils.toString(ReferenceBottomVision.class.getResource("ReferenceBottomVision-" + variant + "Pipeline.xml"));
             return new CvPipeline(xml);
         } catch (Exception e) {
             throw new Error(e);
@@ -1683,9 +1563,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[]{
-                new PropertySheetWizardAdapter(new ReferenceBottomVisionConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getBottomVisionSettings(), this))};
+        return new PropertySheet[]{new PropertySheetWizardAdapter(new ReferenceBottomVisionConfigurationWizard(this)), new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getBottomVisionSettings(), this))};
     }
 
 
@@ -1866,13 +1744,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     protected BottomVisionSettings createRectlinearBottomVisionSettings() {
-        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID,
-                "- Rectlinear Symmetry Bottom Vision Settings -", createStockPipeline("Rectlinear"));
+        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, "- Rectlinear Symmetry Bottom Vision Settings -", createStockPipeline("Rectlinear"));
     }
 
     protected BottomVisionSettings createStockBottomVisionSettings() {
-        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID,
-                "- Stock Bottom Vision Settings -", createStockPipeline("Default"));
+        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID, "- Stock Bottom Vision Settings -", createStockPipeline("Default"));
     }
 
     public void optimizeVisionSettings(Configuration configuration) {
@@ -1887,15 +1763,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
                 if (firstVisionSettings == null) {
                     bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
-                } else if (visionSettings != defaultVisionSettings
-                        && !visionSettings.isStockSetting()) {
+                } else if (visionSettings != defaultVisionSettings && !visionSettings.isStockSetting()) {
                     // Duplicate, remove any references.
                     for (PartSettingsHolder holder : visionSettings.getUsedBottomVisionIn()) {
                         holder.setBottomVisionSettings((BottomVisionSettings) firstVisionSettings);
                     }
                     if (visionSettings.getUsedBottomVisionIn().size() == 0) {
-                        if (firstVisionSettings != defaultVisionSettings
-                                && !firstVisionSettings.isStockSetting()) {
+                        if (firstVisionSettings != defaultVisionSettings && !firstVisionSettings.isStockSetting()) {
                             firstVisionSettings.setName(firstVisionSettings.getName() + " + " + visionSettings.getName());
                         }
                         configuration.removeVisionSettings(visionSettings);
@@ -1934,17 +1808,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         if (part.getBottomVisionSettings() == mostFrequentVisionSettings) {
                             // Parts inherit from package now.
                             part.setBottomVisionSettings(null);
-                        } else if (part.getBottomVisionSettings() == null
-                                && packageVisionSettings != mostFrequentVisionSettings) {
+                        } else if (part.getBottomVisionSettings() == null && packageVisionSettings != mostFrequentVisionSettings) {
                             // Former package settings were inherited, now we must freeze them.
                             part.setBottomVisionSettings(packageVisionSettings);
                         }
                     }
                 }
-                if (mostFrequentVisionSettings != defaultVisionSettings
-                        && !mostFrequentVisionSettings.isStockSetting()
-                        && !mostFrequentVisionSettings.getName().isEmpty()
-                        && mostFrequentVisionSettings.getUsedBottomVisionIn().size() == 1) {
+                if (mostFrequentVisionSettings != defaultVisionSettings && !mostFrequentVisionSettings.isStockSetting() && !mostFrequentVisionSettings.getName().isEmpty() && mostFrequentVisionSettings.getUsedBottomVisionIn().size() == 1) {
                     // If these part settings are now unique to the package, name them so.
                     mostFrequentVisionSettings.setName(pkg.getShortName());
                 }
@@ -1957,9 +1827,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
             if (visionSettings instanceof BottomVisionSettings) {
                 List<PartSettingsHolder> usedIn = visionSettings.getUsedBottomVisionIn();
-                if (!visionSettings.isStockSetting()
-                        && visionSettings != defaultVisionSettings
-                        && usedIn.isEmpty()) {
+                if (!visionSettings.isStockSetting() && visionSettings != defaultVisionSettings && usedIn.isEmpty()) {
                     configuration.removeVisionSettings(visionSettings);
                 } else if (visionSettings.getName().isEmpty()) {
                     if (usedIn.size() <= 3) {

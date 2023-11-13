@@ -331,13 +331,23 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                 OpenPnpCaptureCamera.CapturePropertyHolder gamma = openPnpCaptureCamera1.getGamma();
                 gamma.setValue(100);
                 String openPnpCaptureCamera1Name = openPnpCaptureCamera1.getName();
+                int startIndex = openPnpCaptureCamera1Name.indexOf('[');
+                if (startIndex != -1) {
+                    openPnpCaptureCamera1Name = openPnpCaptureCamera1Name.substring(0, startIndex);
+                }
                 for (CaptureDevice captureDevice : captureDevices) {
                     String captureDeviceName = captureDevice.getName();
                     if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
                         ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
+
+                        //设置分辨率
                         List<CaptureFormat> formats = captureDevice.getFormats();
                         if (camera1.getLooking() == Camera.Looking.Up) {
-                            //((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
+                            String cameraName = camera1.getName();
+                            startIndex = cameraName.indexOf('[');
+                            int endIndex = cameraName.indexOf(']', startIndex) + 1;
+                            int cameraIndex = Integer.parseInt(cameraName.substring(startIndex, endIndex));
+                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(cameraIndex));
 
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));

@@ -1250,7 +1250,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             completed.add(p);
                         } else {
                             p.jobPlacement.setStatus(Status.Errored);
-                            p.jobPlacement.setError(new Exception("老铁666！！！"));
+                            p.jobPlacement.setError(new Exception("有部分元件识别失败！"));
                         }
                     });
 
