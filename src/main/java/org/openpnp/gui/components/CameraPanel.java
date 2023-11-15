@@ -346,8 +346,10 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                             String cameraName = camera1.getName();
                             startIndex = cameraName.indexOf('[');
                             int endIndex = cameraName.indexOf(']', startIndex) + 1;
-                            int cameraIndex = Integer.parseInt(cameraName.substring(startIndex, endIndex));
-                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(cameraIndex));
+                            if (startIndex != -1 && endIndex != -1) {
+                                int cameraIndex = Integer.parseInt(cameraName.substring(startIndex, endIndex));
+                                ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(cameraIndex));
+                            }
 
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
