@@ -517,7 +517,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -1045,6 +1045,40 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
+                        Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
+                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+                        if (nozzles.size() == 2 && camera.getWidth() > 2000 && pkgNozzles.size() > 1) {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+
+                                } else {
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            }
+                        } else {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                } else {
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            } else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                Location shotLocationNew = shotLocation;
+                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocationNew);
+
+                            }
+                        }
                         super.apply();
                     });
                 }
@@ -1260,13 +1294,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                     double cameraNozzelOffsetX, cameraNozzelOffsetY;
                     leftRightOffsetX = 29.75;
-/*
-                    if (n2N1OffsetX > leftRightOffsetX) {
-                        cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);
-                    } else {
-                        cameraNozzelOffsetX = (leftRightOffsetX - n2N1OffsetX);
-                    }
-*/
+
                     cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
                     cameraNozzelOffsetY = n2N1OffsetY * 2;
 

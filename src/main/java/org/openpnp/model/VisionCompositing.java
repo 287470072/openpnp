@@ -1541,7 +1541,7 @@ public class VisionCompositing extends AbstractModelObject{
             // For pipeline result compatibility, make the RotatedRect in OpenCv pixel coordinates. 
             double angle = VisionUtils.getPixelAngle(camera, detectedAngle);
             org.opencv.core.Point center = new org.opencv.core.Point(
-                    camera.getWidth()*0.5 + detectedCenter.x/upp.getX(), 
+                    camera.getWidth()*0.5*0.5 + detectedCenter.x/upp.getX(),
                     camera.getHeight()*0.5 - detectedCenter.y/upp.getY());
             org.opencv.core.Size size = new org.opencv.core.Size(
                     detectedSize.x/upp.getX(), 
