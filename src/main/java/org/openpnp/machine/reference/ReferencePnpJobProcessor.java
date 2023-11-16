@@ -459,14 +459,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 //如果有的话，就删除小芯片，只处理大芯片，如果没有，就按正常逻辑进行
                 if (hasBigPart) {
-                    for (PlannedPlacement p:plannedPlacements){
+                    for (PlannedPlacement p : plannedPlacements) {
                         if (p.jobPlacement.getPlacement().getPart().getPackage().getFootprint().getBodyWidth() < 5) {
                             plannedPlacements.remove(p);
                             break;
                         }
                     }
                 } else {
-                    //删除第二个元件的的放置任务，准备用新的进行替换
+/*                    //删除第二个元件的的放置任务，准备用新的进行替换
                     plannedPlacements.remove(1);
                     double n1X = plannedPlacements.get(0).jobPlacement.getPartFeederX();
                     double n1Offset = nozzles.get(0).getHeadOffsets().getX();
@@ -475,10 +475,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     double offsetDiff = n2Offset - n1Offset;
                     double n2X = n1X + offsetDiff;
 
-                    JobPlacement nearFeeder=getPendingJobPlacements().stream()
+                    JobPlacement nearFeeder = getPendingJobPlacements().stream()
                             .min(Comparator.comparingDouble(a -> Math.abs(a.getPartFeederX() - n2X)))
                             .orElse(null);
-                    plannedPlacements.add(new PlannedPlacement(nozzles.get(1), nozzles.get(1).getNozzleTip(), nearFeeder));
+                    plannedPlacements.add(new PlannedPlacement(nozzles.get(1), nozzles.get(1).getNozzleTip(), nearFeeder));*/
                 }
 
             }
@@ -1264,14 +1264,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 if (this instanceof Align) {
                     result = multiAlign(plannedPlacements);
-                    plannedPlacements.forEach(p -> {
-                        if (p.alignmentOffsets != null && p.alignmentOffsets.getLocation().getX() != 0) {
-                            completed.add(p);
-                        } else {
-                            p.jobPlacement.setStatus(Status.Errored);
-                            p.jobPlacement.setError(new Exception("有部分元件识别失败！"));
-                        }
-                    });
+                    if(plannedPlacement != null){
+                    if ( plannedPlacement.alignmentOffsets != null && plannedPlacement.alignmentOffsets.getLocation().getX() != 0) {
+                        completed.add(plannedPlacement);
+                    } else {
+                        plannedPlacement.jobPlacement.setError(new Exception("有部分元件识别失败！"));
+
+                    }}
 
                 } else {
                     result = stepImpl(plannedPlacement);
