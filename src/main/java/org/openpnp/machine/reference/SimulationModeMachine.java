@@ -2,20 +2,20 @@
  * Copyright (C) 2020 <mark@makr.zone>
  * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -64,36 +64,34 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 /**
- * Add a basic simulation mode to the ReferenceMachine. 
- * 
+ * Add a basic simulation mode to the ReferenceMachine.
+ * <p>
  * These are just the foundations of something that could become bigger with time.
- * The idea is to be able to put any machine configuration in simulation mode. 
- * 
- * For a NullDriver this is the only operating mode, for GcodeDriver this mode could mean to redirect 
- * its communications to a GcodeServer back-end. 
- *  
- * Cameras should be redirected to either a SimulatedUpCamera or and ImageCamera. Ideally the image source could  
- * one day be scanned off the real machine table by the regular camera (some concepts exist).  
- * 
- * Because of the new Axis design, multiple simulated drivers must be supported to test new features (in the future), 
- * plus the cameras are obviously involved. Therefore this simulation switchboard must be in the Machine, rather than 
- * the driver. 
- * 
- * For now this only works with NullDriver, SimulatedUpCamera and ImageCamera. Some physical imperfections are 
- * simulated.  
- *
+ * The idea is to be able to put any machine configuration in simulation mode.
+ * <p>
+ * For a NullDriver this is the only operating mode, for GcodeDriver this mode could mean to redirect
+ * its communications to a GcodeServer back-end.
+ * <p>
+ * Cameras should be redirected to either a SimulatedUpCamera or and ImageCamera. Ideally the image source could
+ * one day be scanned off the real machine table by the regular camera (some concepts exist).
+ * <p>
+ * Because of the new Axis design, multiple simulated drivers must be supported to test new features (in the future),
+ * plus the cameras are obviously involved. Therefore this simulation switchboard must be in the Machine, rather than
+ * the driver.
+ * <p>
+ * For now this only works with NullDriver, SimulatedUpCamera and ImageCamera. Some physical imperfections are
+ * simulated.
  */
 public class SimulationModeMachine extends ReferenceMachine {
 
     /**
      * The SimulationMode sets the level of simulation.
-     * Off: Only available for real machines with real drivers. Switches drivers and cameras to regular operation.  
-     * IdealMachine: Simulates the ideal machine, i.e. no imperfections are simulated (same as original NullDriver).  
+     * Off: Only available for real machines with real drivers. Switches drivers and cameras to regular operation.
+     * IdealMachine: Simulates the ideal machine, i.e. no imperfections are simulated (same as original NullDriver).
      * StaticImperfectionsMachine: Simulates static imperfections such as non-squareness, i.e. those that are configured
-     * in the Machine Configuration and might break operations, if switched off.   
-     * DynamicImperfectionsMachine: Simulates all the imperfections, including dynamic ones, i.e. those that are calibrated 
+     * in the Machine Configuration and might break operations, if switched off.
+     * DynamicImperfectionsMachine: Simulates all the imperfections, including dynamic ones, i.e. those that are calibrated
      * each time.
-     *  
      */
     public enum SimulationMode {
         Off,
@@ -111,6 +109,7 @@ public class SimulationModeMachine extends ReferenceMachine {
             return this.ordinal() > StaticImperfectionsMachine.ordinal();
         }
     }
+
     @Attribute(required = false)
     private SimulationMode simulationMode = SimulationMode.Off;
 
@@ -132,18 +131,18 @@ public class SimulationModeMachine extends ReferenceMachine {
     private double simulatedRunoutPhase = 30;
 
     /**
-     * Simulated camera noise (number of sparks per frame) to test camera settle. 
+     * Simulated camera noise (number of sparks per frame) to test camera settle.
      * Works on ImageCamera and SimulatedUpCamera.
      */
     @Attribute(required = false)
     private int simulatedCameraNoise = 0;
 
     /**
-     * Simulated camera lag [s] to test camera settle. 
+     * Simulated camera lag [s] to test camera settle.
      * Works on ImageCamera and SimulatedUpCamera.
      */
     @Attribute(required = false)
-    private double simulatedCameraLag= 0;
+    private double simulatedCameraLag = 0;
 
     /**
      * Simulated vibration to test camera settle. Initial max. amplitude.
@@ -180,7 +179,7 @@ public class SimulationModeMachine extends ReferenceMachine {
     @Override
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(super.getPropertySheets(),
-                new PropertySheet[] {
+                new PropertySheet[]{
                         new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode")
                 });
     }
@@ -193,8 +192,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         if (this.simulationMode != simulationMode) {
             try {
                 setEnabled(false);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Logger.error(e);
             }
         }
@@ -288,41 +286,41 @@ public class SimulationModeMachine extends ReferenceMachine {
         for (Feeder feeder : getFeeders()) {
             if (feeder instanceof ReferenceFeeder) {
                 ((ReferenceFeeder) feeder)
-                .setLocation(((ReferenceFeeder) feeder).getLocation()
-                        .derive(null, null, 
-                                machineTableZ.convertToUnits(((ReferenceFeeder) feeder).getLocation().getUnits())
-                                .getValue(), 
-                                null));
+                        .setLocation(((ReferenceFeeder) feeder).getLocation()
+                                .derive(null, null,
+                                        machineTableZ.convertToUnits(((ReferenceFeeder) feeder).getLocation().getUnits())
+                                                .getValue(),
+                                        null));
             }
             if (feeder instanceof ReferenceStripFeeder) {
                 ((ReferenceStripFeeder) feeder)
-                .setReferenceHoleLocation(((ReferenceStripFeeder) feeder).getReferenceHoleLocation()
-                        .derive(null, null, 
-                                machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getReferenceHoleLocation().getUnits())
-                                .getValue(), 
-                                null));
+                        .setReferenceHoleLocation(((ReferenceStripFeeder) feeder).getReferenceHoleLocation()
+                                .derive(null, null,
+                                        machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getReferenceHoleLocation().getUnits())
+                                                .getValue(),
+                                        null));
                 ((ReferenceStripFeeder) feeder)
-                .setLastHoleLocation(((ReferenceStripFeeder) feeder).getLastHoleLocation()
-                        .derive(null, null, 
-                                machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getLastHoleLocation().getUnits())
-                                .getValue(), 
-                                null));
+                        .setLastHoleLocation(((ReferenceStripFeeder) feeder).getLastHoleLocation()
+                                .derive(null, null,
+                                        machineTableZ.convertToUnits(((ReferenceStripFeeder) feeder).getLastHoleLocation().getUnits())
+                                                .getValue(),
+                                        null));
             }
         }
         for (BoardLocation boardLocation : MainFrame.get().getJobTab().getJob().getBoardLocations()) {
-            boardLocation.setGlobalLocation(boardLocation.getGlobalLocation().derive(null, null, 
+            boardLocation.setGlobalLocation(boardLocation.getGlobalLocation().derive(null, null,
                     machineTableZ.convertToUnits(boardLocation.getGlobalLocation().getUnits())
-                    .getValue(), 
+                            .getValue(),
                     null));
         }
         for (Camera camera : getCameras()) {
             if (camera instanceof ReferenceCamera) {
                 ((ReferenceCamera) camera)
-                .setHeadOffsets(((ReferenceCamera) camera).getHeadOffsets()
-                        .derive(null, null, 
-                                machineTableZ.convertToUnits(((ReferenceCamera) camera).getHeadOffsets().getUnits())
-                                .getValue(), 
-                                null));
+                        .setHeadOffsets(((ReferenceCamera) camera).getHeadOffsets()
+                                .derive(null, null,
+                                        machineTableZ.convertToUnits(((ReferenceCamera) camera).getHeadOffsets().getUnits())
+                                                .getValue(),
+                                        null));
             }
         }
     }
@@ -337,10 +335,10 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
 
     static private HashMap<Nozzle, Double> rotationModeOffsetAtPick = new HashMap<>();
-    
+
     /**
-     * Simulates the Actuator. 
-     * 
+     * Simulates the Actuator.
+     *
      * @param actuator
      * @param value
      * @param realtime
@@ -348,7 +346,7 @@ public class SimulationModeMachine extends ReferenceMachine {
      */
     public static void simulateActuate(Actuator actuator, Object value, boolean realtime) throws Exception {
         SimulationModeMachine machine = getSimulationModeMachine();
-        if (machine != null 
+        if (machine != null
                 && machine.getSimulationMode() != SimulationMode.Off) {
             if (value instanceof Boolean) {
                 // Check if this is a nozzle vacuum actuator.
@@ -356,37 +354,36 @@ public class SimulationModeMachine extends ReferenceMachine {
                     Camera camera = actuator.getHead().getDefaultCamera();
                     if (camera instanceof ImageCamera) {
                         for (Nozzle nozzle : actuator.getHead().getNozzles()) {
-                            if (nozzle instanceof ReferenceNozzle 
+                            if (nozzle instanceof ReferenceNozzle
                                     && ((ReferenceNozzle) nozzle).getVacuumActuator() == actuator) {
                                 // Got the vacuum actuator, which is a signal to check for pick/place.
                                 if (nozzle.getPart() != null) {
-                                    if ((Boolean)value == true) {
+                                    if ((Boolean) value == true) {
                                         // New pick, remove any old offsets.
                                         rotationModeOffsetAtPick.remove(nozzle);
                                     }
                                     Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, null, true);
                                     boolean checkPnP = machine.isPickAndPlaceChecking()
-                                            && (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0); 
-                                    if ((Boolean)value == true) {
+                                            && (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0);
+                                    if ((Boolean) value == true) {
                                         // Pick
                                         if (checkPnP) {
                                             if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
-                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
-                                                        +" pick location not recognized.");
+                                                throw new Exception("Nozzle " + nozzle.getName() + " part " + nozzle.getPart().getId()
+                                                        + " pick location not recognized.");
                                             }
                                         }
                                         if (nozzle instanceof AbstractNozzle) {
                                             Double rotationModeOffset = ((AbstractNozzle) nozzle).getRotationModeOffset();
                                             rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         // Place
                                         if (checkPnP) {
                                             rotationModeOffsetAtPick.remove(nozzle);
                                             if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
-                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
-                                                        +" place location not recognized.");
+                                                throw new Exception("Nozzle " + nozzle.getName() + " part " + nozzle.getPart().getId()
+                                                        + " place location not recognized.");
                                             }
                                         }
                                     }
@@ -399,19 +396,19 @@ public class SimulationModeMachine extends ReferenceMachine {
         }
         if (realtime) {
             try {
-                Thread.sleep(50);
-            }
-            catch (InterruptedException e) {
+                Logger.trace("{} simulate actuation, sleep 5ms", actuator.getName());
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
             }
         }
     }
 
     /**
-     * Simulates imperfections in the physical location of a HeadMountable.  
-     *  
+     * Simulates imperfections in the physical location of a HeadMountable.
+     *
      * @param hm
      * @param looking
-     * @param partRotation 
+     * @param partRotation
      * @return
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking, boolean partRotation) {
@@ -428,22 +425,20 @@ public class SimulationModeMachine extends ReferenceMachine {
             // Not a simulation machine. Just take the momentary nominal location.
             if (plainMachine instanceof ReferenceMachine) {
                 double cameraTime = NanosecondTime.getRuntimeSeconds();
-                Motion momentary = ((ReferenceMachine)plainMachine).getMotionPlanner()
+                Motion momentary = ((ReferenceMachine) plainMachine).getMotionPlanner()
                         .getMomentaryMotion(cameraTime);
                 AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
                 try {
                     axesLocation = applyHomingOffsets(plainMachine, axesLocation, hm.getMappedAxes(plainMachine), looking);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     //Logger.trace(e);
                 }
                 location = hm.toTransformed(axesLocation);
-                location = hm.toHeadMountableLocation(location, 
+                location = hm.toHeadMountableLocation(location,
                         LocationOption.SuppressCameraCalibration);
             }
             // else: Configuration is still being loaded (Unit tests).
-        } 
-        else {
+        } else {
             try {
                 double lag = 0;
                 if (looking != null
@@ -461,27 +456,27 @@ public class SimulationModeMachine extends ReferenceMachine {
                         double vibrationDuration = machine.getSimulatedVibrationDuration(); // s (practical, down to ~1%)
                         double vibrationEigen = 13.313; // Hz
                         double xIntegral = 0, yIntegral = 0;
-                        double dt = 1/vibrationEigen/10;
+                        double dt = 1 / vibrationEigen / 10;
                         Axis xAxis = mappedAxes.getAxis(Axis.Type.X);
                         Axis yAxis = mappedAxes.getAxis(Axis.Type.Y);
                         double t;
                         for (t = 0; t < vibrationDuration; t += dt) {
-                            AxesLocation a = getMomentaryVector(machine, cameraTime - t, (m, time) -> m.getMomentaryAcceleration(time)); 
+                            AxesLocation a = getMomentaryVector(machine, cameraTime - t, (m, time) -> m.getMomentaryAcceleration(time));
                             double x = a.getCoordinate(xAxis);
                             double y = a.getCoordinate(yAxis);
                             if (x != 0 || y != 0) {
-                                double amp = Math.exp(-t*4/vibrationDuration)*amplitude*dt;
-                                double ph = t*2*Math.PI*vibrationEigen;
+                                double amp = Math.exp(-t * 4 / vibrationDuration) * amplitude * dt;
+                                double ph = t * 2 * Math.PI * vibrationEigen;
                                 //Logger.trace("t="+(cameraTime - t)+" ax="+x+" ay="+y+" damp="+Math.exp(-t*3/vibrationDuration)+" cos(ph)="+Math.cos(ph));
-                                xIntegral += Math.cos(ph)*x*amp;
-                                yIntegral += Math.cos(ph)*y*amp;
+                                xIntegral += Math.cos(ph) * x * amp;
+                                yIntegral += Math.cos(ph) * y * amp;
                             }
                         }
 
                         if (xIntegral != 0 || yIntegral != 0) {
                             //Logger.trace("vibration t="+(cameraTime - t)+" x="+xIntegral+" y="+yIntegral);
                             axesLocation = axesLocation.add(new AxesLocation((a, b) -> (b),
-                                    new AxesLocation(xAxis, -xIntegral), 
+                                    new AxesLocation(xAxis, -xIntegral),
                                     new AxesLocation(yAxis, -yIntegral)));
                         }
 
@@ -491,7 +486,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                 if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Need to convert to transformed (head) coordinates for real rotation:
-                    Location rotationLocation = hm.toTransformed(axesLocation, 
+                    Location rotationLocation = hm.toTransformed(axesLocation,
                             LocationOption.SuppressCameraCalibration,
                             LocationOption.SuppressStaticCompensation,
                             LocationOption.SuppressDynamicCompensation);
@@ -505,23 +500,23 @@ public class SimulationModeMachine extends ReferenceMachine {
                     Location runoutVector = new Location(AxesLocation.getUnits(),
                             runout, 0, 0, 0)
                             .rotateXy(rotation - machine.getSimulatedRunoutPhase());
-                    axesLocation = axesLocation.add(mappedAxes.getTypedLocation(runoutVector)); 
+                    axesLocation = axesLocation.add(mappedAxes.getTypedLocation(runoutVector));
                 }
 
                 if (machine.getSimulationMode().isImperfectMachine()) {
                     // Subtract Non-Squareness to simulate it in the sim cameras.
                     double y = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Y));
-                    axesLocation = axesLocation.add(new AxesLocation(mappedAxes.getAxis(Axis.Type.X), 
-                            machine.getSimulatedNonSquarenessFactor()*y)); 
+                    axesLocation = axesLocation.add(new AxesLocation(mappedAxes.getAxis(Axis.Type.X),
+                            machine.getSimulatedNonSquarenessFactor() * y));
                 }
 
                 // NOTE this specifically makes the assumption that the axes transform from raw 1:1
-                location = hm.toTransformed(axesLocation, 
+                location = hm.toTransformed(axesLocation,
                         LocationOption.SuppressCameraCalibration,
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
                 // Transform back. This bypasses any compensations, such as runout compensation.
-                location = hm.toHeadMountableLocation(location, 
+                location = hm.toHeadMountableLocation(location,
                         LocationOption.SuppressCameraCalibration,
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
@@ -530,16 +525,14 @@ public class SimulationModeMachine extends ReferenceMachine {
                     Double rotationOffset = rotationModeOffsetAtPick.get(hm);
                     if (rotationOffset != null) {
                         location = location.derive(null, null, null, location.getRotation() + rotationOffset);
-                    }
-                    else {
-                        rotationOffset = ((AbstractNozzle)hm).getRotationModeOffset();
+                    } else {
+                        rotationOffset = ((AbstractNozzle) hm).getRotationModeOffset();
                         if (rotationOffset != null) {
                             location = location.derive(null, null, null, location.getRotation() + rotationOffset);
                         }
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Logger.error(e);
             }
         }
@@ -547,16 +540,15 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
 
     protected static AxesLocation applyHomingOffsets(Machine machine,
-            AxesLocation axesLocation, AxesLocation mappedAxes, Looking looking) throws Exception {
+                                                     AxesLocation axesLocation, AxesLocation mappedAxes, Looking looking) throws Exception {
         if (looking == Looking.Down) {
             // This is a down-looking camera, apply the homing error. 
             for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
                 if (driver instanceof NullDriver) {
-                    AxesLocation homingOffsets = ((NullDriver)driver).getHomingOffsets();
+                    AxesLocation homingOffsets = ((NullDriver) driver).getHomingOffsets();
                     // Apply homing offset
                     axesLocation = axesLocation.subtract(homingOffsets);
-                }
-                else if (driver instanceof GcodeDriver) {
+                } else if (driver instanceof GcodeDriver) {
                     ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
                     GcodeServer server = comms.getGcodeServer();
                     if (server != null) {
@@ -571,7 +563,7 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
 
     public static AxesLocation getMomentaryVector(SimulationModeMachine machine,
-            double cameraTime, BiFunction<Motion, Double, AxesLocation> function) throws Exception {
+                                                  double cameraTime, BiFunction<Motion, Double, AxesLocation> function) throws Exception {
         // First take it from the motion planner.
         Motion momentary = machine.getMotionPlanner()
                 .getMomentaryMotion(cameraTime);
@@ -599,7 +591,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated() != null && actuator.isActuated());
     }
 
-    private static class ActuatorHistory  {
+    private static class ActuatorHistory {
         private TreeMap<Double, Boolean> stateHistory = new TreeMap<>();
 
         public void put(double t, boolean actuated) {
@@ -618,7 +610,9 @@ public class SimulationModeMachine extends ReferenceMachine {
             return false;
         }
     }
+
     private HashMap<Actuator, ActuatorHistory> cameraLightActuatorHistories = new HashMap<>();
+
     protected ActuatorHistory getActuatorHistory(Actuator lightActuator) {
         ActuatorHistory actuatorHistory = cameraLightActuatorHistories.get(lightActuator);
         if (actuatorHistory == null) {
@@ -630,7 +624,7 @@ public class SimulationModeMachine extends ReferenceMachine {
 
     public static void simulateCameraExposure(Camera camera, Graphics2D gFrame, int width, int height) {
         SimulationModeMachine machine = getSimulationModeMachine();
-        if (machine != null 
+        if (machine != null
                 && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
             Actuator lightActuator = camera.getLightActuator();
             if (lightActuator != null) {
@@ -641,12 +635,12 @@ public class SimulationModeMachine extends ReferenceMachine {
                     gFrame.fillRect(0, 0, width, height);
                 }
             }
-            if (machine.getSimulatedCameraNoise() > 0) { 
-                for (int noise = (int) (Math.random()*machine.getSimulatedCameraNoise()); noise > 0; noise--) {
-                    int x = (int) (Math.random()*width) - 1;
-                    int y = (int) (Math.random()*height) - 1;
-                    gFrame.setColor(new Color(255, 255, 255, (int)(Math.random()*16)));
-                    gFrame.drawLine(x, y, x+(int)(Math.random()*3-1.0), y+(int)(Math.random()*3-1.0));
+            if (machine.getSimulatedCameraNoise() > 0) {
+                for (int noise = (int) (Math.random() * machine.getSimulatedCameraNoise()); noise > 0; noise--) {
+                    int x = (int) (Math.random() * width) - 1;
+                    int y = (int) (Math.random() * height) - 1;
+                    gFrame.setColor(new Color(255, 255, 255, (int) (Math.random() * 16)));
+                    gFrame.drawLine(x, y, x + (int) (Math.random() * 3 - 1.0), y + (int) (Math.random() * 3 - 1.0));
                 }
             }
         }

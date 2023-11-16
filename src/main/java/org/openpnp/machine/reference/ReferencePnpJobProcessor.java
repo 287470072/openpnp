@@ -448,20 +448,39 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
 
             List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
-            if (plannedPlacements.size() > 1 && nozzles.size() > 1 && jobPlacements.size() > 0) {
-                //删除第二个元件的的放置任务，准备用新的进行替换
-                plannedPlacements.remove(1);
-                double n1X = plannedPlacements.get(0).jobPlacement.getPartFeederX();
-                double n1Offset = nozzles.get(0).getHeadOffsets().getX();
-                double n2Offset = nozzles.get(1).getHeadOffsets().getX();
-                //获取N1到达飞达上方时N2的X轴坐标
-                double offsetDiff = n2Offset - n1Offset;
-                double n2X = n1X + offsetDiff;
-                JobPlacement nearFeeder = jobPlacements
-                        .stream()
-                        .min(Comparator.comparingDouble(a -> Math.abs(a.getPartFeederX() - n2X)))
-                        .orElse(null);
-                plannedPlacements.add(new PlannedPlacement(nozzles.get(1), nozzles.get(1).getNozzleTip(), nearFeeder));
+            if (plannedPlacements.size() > 1 && nozzles.size() > 1 && getPendingJobPlacements().size() > 0) {
+                boolean hasBigPart = false;
+                //遍历需要贴装的任务列表元件中是否有大芯片
+                for (PlannedPlacement p : plannedPlacements) {
+                    if (p.jobPlacement.getPlacement().getPart().getPackage().getFootprint().getBodyWidth() >= 5) {
+                        hasBigPart = true;
+                        break;
+                    }
+                }
+                //如果有的话，就删除小芯片，只处理大芯片，如果没有，就按正常逻辑进行
+                if (hasBigPart) {
+                    for (PlannedPlacement p:plannedPlacements){
+                        if (p.jobPlacement.getPlacement().getPart().getPackage().getFootprint().getBodyWidth() < 5) {
+                            plannedPlacements.remove(p);
+                            break;
+                        }
+                    }
+                } else {
+                    //删除第二个元件的的放置任务，准备用新的进行替换
+                    plannedPlacements.remove(1);
+                    double n1X = plannedPlacements.get(0).jobPlacement.getPartFeederX();
+                    double n1Offset = nozzles.get(0).getHeadOffsets().getX();
+                    double n2Offset = nozzles.get(1).getHeadOffsets().getX();
+                    //获取N1到达飞达上方时N2的X轴坐标
+                    double offsetDiff = n2Offset - n1Offset;
+                    double n2X = n1X + offsetDiff;
+
+                    JobPlacement nearFeeder=getPendingJobPlacements().stream()
+                            .min(Comparator.comparingDouble(a -> Math.abs(a.getPartFeederX() - n2X)))
+                            .orElse(null);
+                    plannedPlacements.add(new PlannedPlacement(nozzles.get(1), nozzles.get(1).getNozzleTip(), nearFeeder));
+                }
+
             }
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
@@ -576,7 +595,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             /**
              * If anything goes wrong that causes us to fail all the retries, this is the error
-             * that will get thrown. 
+             * that will get thrown.
              */
             JobProcessorException lastException = null;
             for (int partPickTry = 0; partPickTry < 1 + part.getPickRetryCount(); partPickTry++) {
@@ -678,7 +697,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
-                // Part-off check can only be done at safe Z. An explicit move to safe Z is needed, because some feeder classes 
+                // Part-off check can only be done at safe Z. An explicit move to safe Z is needed, because some feeder classes
                 // may move the nozzle to (near) the pick location i.e. down in Z in feed().
                 nozzle.moveToSafeZ();
                 if (!nozzle.isPartOff()) {

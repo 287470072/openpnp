@@ -517,7 +517,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -1247,9 +1247,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         // 准备并配置视觉管道，以进行零件识别
         preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
-            if (pipeline.getPipelineShots().size() > 1) {
+            //这部分主要为了视觉融合的时候移动吸嘴
+   /*         if (pipeline.getPipelineShots().size() > 1) {
                 pipelineShot.apply();
-            }
+            }*/
             Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
             AffineWarp affineWarp = new AffineWarp();
             List<CvStage> stages = pipeline.getStages();
@@ -1320,7 +1321,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 result = pipeline.getResult("result");
             }
 
-/*            // 如果结果仍然为null，则抛出异常
+            // 如果结果仍然为null，则抛出异常
             if (result == null) {
                 throw new Exception(String.format(
                         "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
@@ -1339,7 +1340,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 throw new Exception(String.format(
                         "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
                         part.getId(), result.model.getClass().getSimpleName()));
-            }*/
+            }
 
             // 处理管道阶段的结果
             pipelineShot.processResult(result);
