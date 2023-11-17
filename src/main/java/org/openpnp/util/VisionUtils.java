@@ -319,6 +319,7 @@ public class VisionUtils {
         PartAlignmentOffset offsets = null;
         try {
             // 调用PartAlignment对象的findOffsets方法，计算零件对齐的偏移量
+
             offsets = p.findOffsets(part, boardLocation, placement, nozzle);
             // 返回计算得到的偏移量
             return offsets;

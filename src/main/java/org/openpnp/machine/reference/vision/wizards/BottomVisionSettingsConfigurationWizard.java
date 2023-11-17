@@ -39,10 +39,7 @@ import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
-import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.*;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -565,11 +562,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             throws Exception {
         // perform the alignment
         Camera camera = VisionUtils.getBottomVisionCamera();
+        final PartAlignmentMulti partAlignmentMulti = AbstractPartAlignment.getPartAlignmentMulti();
+
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
         Double rotationBefore = nozzle.getRotationModeOffset();
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, nozzle.getPart(),
                 null, dummy, nozzle);
+
         Location offsets = alignmentOffset.getLocation();
         Double rotationAfter = nozzle.getRotationModeOffset();
 
