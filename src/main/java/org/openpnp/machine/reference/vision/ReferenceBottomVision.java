@@ -208,6 +208,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     private List<PnpJobPlanner.PlannedPlacement> findOffsetsPreRotateMulti(List<PnpJobPlanner.PlannedPlacement> pps) throws Exception {
         Logger.trace("双目识别开始：" + System.currentTimeMillis());
         Camera camera = VisionUtils.getBottomVisionCamera();
+        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+
         //需要贴的元件有两个的时候
         if (pps.size() > 1) {
 
@@ -481,8 +483,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
         } else {
             Nozzle n = pps.get(0).nozzle;
-            //只有N1有元件的时候
-            if (n.getName().equals("N1")) {
+            //通过索引判断吸嘴是第几个
+            int index = nozzles.indexOf(n);
+            if (index == 0) {
                 // TODO 直接计算shotlocation，然后底部视觉处理.
                 PnpJobPlanner.PlannedPlacement n1P = pps.get(0);
                 final Nozzle n1 = n1P.nozzle;
@@ -585,7 +588,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
             }
             //只有N2有元件的时候
-            else if (n.getName().equals("N2")) {
+            else if (index == 1) {
                 //TODO 计算shotlocation，再加上偏移量，然后再底部视觉处理
                 PnpJobPlanner.PlannedPlacement n2P = pps.get(0);
                 final Nozzle n2 = n2P.nozzle;
@@ -611,7 +614,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 获取零件的继承的视觉设置
                 Location shotLocationN2 = getShotLocation2(partN2, camera, n2, wantedLocationN2, locationN2);
 
-                List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
 
                 Location n2Offest = nozzles.get(1).getHeadOffsets();
                 Location n1Offset = nozzles.get(0).getHeadOffsets();
@@ -1360,10 +1362,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
         // 遍历管道中的每个阶段
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
-            // 应用管道阶段操作
-            if (pipeline.getPipelineShots().size() > 1) {
-                pipelineShot.apply();
-            }
+
+            pipelineShot.apply();
 
             Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
             AffineWarp affineWarp = new AffineWarp();
