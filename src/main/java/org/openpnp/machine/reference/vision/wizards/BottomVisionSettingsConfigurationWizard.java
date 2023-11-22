@@ -606,7 +606,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             centeredLocation = centeredLocation.subtract(offsets);
         }
         // Center, rotate and align the part.
-        nozzle.moveTo(centeredLocation);
+        //nozzle.moveTo(centeredLocation);
         // Take a fresh camera shot.
         BufferedImage image = camera.lightSettleAndCapture();
         // Wait a moment to let the last alignment pass result display sink in.

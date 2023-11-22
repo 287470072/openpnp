@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
@@ -251,11 +252,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             if (compatibleNozzleTips.isEmpty()) {
                 if (part.isPartHeightUnknown()) {
-                    throw new JobProcessorException(part, String.format("没有为元件 %s 配置元件高度检测方法。请检查相机、感应探针及兼容的吸嘴尖传感器设置或手动设置元件高度。" +
-                                    "\r\nTips:手动设置元件高度，请在元件页面，元件列表内设置。",
+                    throw new JobProcessorException(part, String.format(Translations.getString("ReferencePnpJobProcessor.part.isPartHeightUnknown.error"),
                             part.getId()));
                 } else {
-                    throw new JobProcessorException(part, String.format("没有为元件 %s 找到合适的已装载的吸嘴。\r\nTips:请打开封装页面，勾选合适吸嘴。或者查看教程，常见问题处理。",
+                    throw new JobProcessorException(part, String.format(Translations.getString("ReferencePnpJobProcessor.part.isEmpty.error"),
                             part.getId()));
                 }
             }
@@ -356,7 +356,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (idlist.contains(placement.getId())) {
                     throw new JobProcessorException(boardLocation,
-                            String.format("此板至少包含一个ID重复的条目: %s 。\r\nTips:请找到该元件，删除或者修改csv文件并重新导入。",
+                            String.format(Translations.getString("ReferencePnpJobProcessor.checkDuplicateRefs.error"),
                                     placement.getId()));
                 } else {
                     idlist.add(placement.getId());

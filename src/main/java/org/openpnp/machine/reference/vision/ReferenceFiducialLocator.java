@@ -17,6 +17,7 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.LengthConverter;
@@ -457,7 +458,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 // Get the results
                 List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                         .getExpectedListModel(KeyPoint.class, 
-                                new Exception(partSettingsHolder.getId()+" no matches found.\rTips:没有找到基准点，请检查基准点坐标是否正确，或查看教程重设基准点。"));
+                                new Exception(partSettingsHolder.getId()+" no matches found."+ Translations.getString("ReferencePnpJobProcessor.getFiducialLocation.error")));
 
                 // Convert to Locations
                 List<Location> locations = new ArrayList<Location>();
