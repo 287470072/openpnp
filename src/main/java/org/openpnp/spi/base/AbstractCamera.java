@@ -103,6 +103,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Element(required = false)
     protected Length roamingRadius = new Length(0, LengthUnit.Millimeters);
 
+    @Element(required = false)
+    protected Length cameraOffset=new Length(0, LengthUnit.Millimeters);
+
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
     protected Head head;
@@ -375,6 +378,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     public void setRoamingRadius(Length roamingRadius) {
         this.roamingRadius = roamingRadius;
+    }
+
+    @Override
+    public Length getCameraOffset() {
+        return cameraOffset;
+    }
+
+
+    public void setCameraOffset(Length cameraOffset) {
+        this.cameraOffset = cameraOffset;
     }
 
     /**

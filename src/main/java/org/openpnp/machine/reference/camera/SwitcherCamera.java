@@ -185,6 +185,8 @@ public class SwitcherCamera extends ReferenceCamera {
     }
 
 
+
+
     @Override
     protected synchronized boolean ensureOpen() {
         if (getCamera() == null || getActuator() == null) {

@@ -1301,7 +1301,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                     double cameraNozzelOffsetX, cameraNozzelOffsetY;
-                    leftRightOffsetX = 29.75;
+                    leftRightOffsetX = 29.75 + camera.getCameraOffset().getValue();
 
                     cameraNozzelOffsetX = n2N1OffsetX - leftRightOffsetX;
                     cameraNozzelOffsetY = n2N1OffsetY * 2;
@@ -1413,7 +1413,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                     double cameraNozzelOffsetX, cameraNozzelOffsetY;
-                    leftRightOffsetX = 29.75;
+                    leftRightOffsetX = 29.75+ camera.getCameraOffset().getValue();
 /*
                     if (n2N1OffsetX > leftRightOffsetX) {
                         cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);

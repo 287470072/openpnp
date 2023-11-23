@@ -58,6 +58,10 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
     private JLabel lblRoamingRadius;
     private JTextField roamingRadius;
 
+    private JLabel lblCameraOffset;
+    private JTextField cameraOffset;
+
+
 
     public ReferenceCameraPositionConfigurationWizard(AbstractMachine machine, ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
@@ -173,6 +177,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblX = new JLabel("X");
@@ -214,6 +220,16 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         roamingRadius = new JTextField();
         panelLocation.add(roamingRadius, "4, 6, fill, default");
         roamingRadius.setColumns(10);
+
+        lblCameraOffset = new JLabel("相机偏移量"); //$NON-NLS-1$
+        lblCameraOffset.setToolTipText("通过该参数对两个相机间距进行微调"); //$NON-NLS-1$
+        panelLocation.add(lblCameraOffset, "2, 8, right, default");
+
+        cameraOffset = new JTextField();
+        panelLocation.add(cameraOffset, "4, 8, fill, default");
+        cameraOffset.setColumns(10);
+
+
         locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
                 textFieldLocationY, textFieldLocationZ, textFieldLocationRotation);
         panelLocation.add(locationButtonsPanel, "12, 4, fill, fill");
@@ -270,6 +286,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         }
         addWrappedBinding(referenceCamera, "roamingRadius", roamingRadius, "text", lengthConverter);
+        addWrappedBinding(referenceCamera, "cameraOffset", cameraOffset, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
@@ -281,6 +298,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(roamingRadius);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cameraOffset);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

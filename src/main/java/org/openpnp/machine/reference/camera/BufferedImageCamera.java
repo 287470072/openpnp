@@ -87,4 +87,6 @@ public class BufferedImageCamera extends ReferenceCamera {
         bufferedCamera.setImage(image);
         return bufferedCamera;
     }
+
+
 }

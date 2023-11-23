@@ -188,6 +188,7 @@ public class Neoden4Camera extends ReferenceCamera {
     }
 
 
+
     public void setHeight(int height) {
         this.height = height;
     }

@@ -253,7 +253,7 @@ public abstract class PipelineControls extends JPanel {
                             double leftRightOffsetY = rightCenteLocation.getY() - leftCenteLocation.getY();
 
                             double cameraNozzelOffsetX, cameraNozzelOffsetY;
-                            leftRightOffsetX = 29.75;
+                            leftRightOffsetX = 29.75+ camera.getCameraOffset().getValue();
     /*                        if (n2N1OffsetX > leftRightOffsetX) {
                                 cameraNozzelOffsetX = (n2N1OffsetX - leftRightOffsetX);
                             } else {

@@ -709,4 +709,5 @@ public class ImageCamera extends ReferenceCamera {
         }
     }
 
+
 }

@@ -283,4 +283,5 @@ public class MjpgCaptureCamera extends ReferenceCamera {
         return null;
     }
 
+
 }

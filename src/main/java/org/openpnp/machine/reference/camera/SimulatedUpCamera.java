@@ -68,6 +68,8 @@ public class SimulatedUpCamera extends ReferenceCamera {
     private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
 
 
+
+
     public enum BackgroundScenario {
         Black(0x000000, 0x00FF00),
         Dark(0x222222, 0x00DD00),

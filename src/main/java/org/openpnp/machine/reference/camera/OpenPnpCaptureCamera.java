@@ -136,6 +136,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
 
+
     @Override
     public synchronized void open() throws Exception {
         stop();

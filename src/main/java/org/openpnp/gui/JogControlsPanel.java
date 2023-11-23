@@ -26,10 +26,12 @@ import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -42,6 +44,7 @@ import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.*;
@@ -102,6 +105,8 @@ public class JogControlsPanel extends JPanel {
 
     private JButton btnApply;
     private JButton btnReset;
+
+    private JTextField cameraOffsetText;
 
 
     /**
@@ -696,31 +701,135 @@ public class JogControlsPanel extends JPanel {
 
         JPanel panelCalibrate = new JPanel();
 
-        JPanel panelAction = new JPanel();
-        panelAction.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        panelCalibrate.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JPanel panelCalibrateChild1 = new JPanel();
+
+        panelCalibrateChild1.setBorder(new TitledBorder(null, "校准设置", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+
+        panelCalibrateChild1.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("30px"),  // 设置行的默认高度为30像素
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         //顶部相机校正
         JButton topCameraCalibrateBtn = new JButton(topCameraCalibrate);
-        panelAction.add(topCameraCalibrateBtn);
+        panelCalibrateChild1.add(topCameraCalibrateBtn, "2, 2, left, default");
 
         //吸嘴偏移量填写
         JButton nozzleOffsetBtn = new JButton(nozzleOffseAction);
-        panelAction.add(nozzleOffsetBtn);
+        panelCalibrateChild1.add(nozzleOffsetBtn, "4, 2, left, default");
 
         //吸嘴偏移量教校正
         JButton nozzleN1OffsetCalibrateBtn = new JButton(nozzleN1OffsetCalibrateAction);
-        panelAction.add(nozzleN1OffsetCalibrateBtn);
+        panelCalibrateChild1.add(nozzleN1OffsetCalibrateBtn, "6, 2, left, default");
 
         //吸嘴偏移量教校正
         JButton nozzleN2OffsetCalibrateBtn = new JButton(nozzleN2OffsetCalibrateAction);
-        panelAction.add(nozzleN2OffsetCalibrateBtn);
+        panelCalibrateChild1.add(nozzleN2OffsetCalibrateBtn, "8, 2, left, default");
 
         //底部相机校正
         JButton bottomCameraCalibrateBtn = new JButton(bottomCameraCalibrate);
-        panelAction.add(bottomCameraCalibrateBtn);
+        panelCalibrateChild1.add(bottomCameraCalibrateBtn, "10, 2, left, default");
 
+        JPanel panelCalibrateChild2 = new JPanel();
+
+        panelCalibrateChild2.setBorder(new TitledBorder(null, "相机偏移", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+
+        panelCalibrateChild2.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("100px"),  // 设置列的默认宽度为100像素
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("30px"),  // 设置行的默认高度为30像素
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        //相机偏移
+        JLabel cameraOffsetLab = new JLabel("相机偏移");
+        panelCalibrateChild2.add(cameraOffsetLab, "2, 2, center, default");
+
+        cameraOffsetText = new JTextField("0.00");
+
+        panelCalibrateChild2.add(cameraOffsetText, "4, 2");
+
+        JButton cameraOffsetApply = new JButton("Apply");
+        panelCalibrateChild2.add(cameraOffsetApply, "9, 2");
+
+        cameraOffsetApply.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Machine machine = configuration.getMachine();
+                machine.getCameras().forEach(c -> {
+                    if (c.getLooking() == Camera.Looking.Up) {
+                        if (c instanceof OpenPnpCaptureCamera && !cameraOffsetText.getText().equals("")) {
+                            Length temp = new Length();
+                            temp.setValue(Double.parseDouble(cameraOffsetText.getText()));
+                            c.setCameraOffset(temp);
+                        }
+                    }
+                });
+            }
+        });
+
+        JButton cameraOffsetReset = new JButton("Reset");
+        panelCalibrateChild2.add(cameraOffsetReset, "11, 2");
+
+
+        panelCalibrate.add(panelCalibrateChild1, "2,2");
+        panelCalibrate.add(panelCalibrateChild2, "2,4");
+
+ /*
 
         panelCalibrate.add(panelAction);
+*/
+
 
         tabbedPane_1.addTab("校准设置", //$NON-NLS-1$
                 null, panelCalibrate, null);
@@ -958,11 +1067,11 @@ public class JogControlsPanel extends JPanel {
                 machine.findIssues(solutions);
 
                 for (Solutions.Issue issue : pendingIssues) {
-                        if (issue.getIssue().equals("Calibrate precise camera ↔ nozzle N1 offsets.")) {
-                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
-                            visionIssue.setFeatureDiameter(67);
-                            visionIssue.setStateCall(Solutions.State.Solved);
-                        }
+                    if (issue.getIssue().equals("Calibrate precise camera ↔ nozzle N1 offsets.")) {
+                        VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
+                        visionIssue.setFeatureDiameter(67);
+                        visionIssue.setStateCall(Solutions.State.Solved);
+                    }
 
                 }
             });
@@ -1351,6 +1460,15 @@ public class JogControlsPanel extends JPanel {
             Machine machine = Configuration.get()
                     .getMachine();
 
+            machine.getCameras().forEach(c -> {
+                if (c.getLooking() == Camera.Looking.Up) {
+                    if (c instanceof OpenPnpCaptureCamera) {
+                        MainFrame.get().getMachineControls().getJogControlsPanel().cameraOffsetText.setText(String.valueOf(c.getCameraOffset().getValue()));
+
+                    }
+                }
+            });
+
             for (Actuator actuator : machine.getActuators()) {
                 addActuator(actuator);
             }
@@ -1413,4 +1531,6 @@ public class JogControlsPanel extends JPanel {
 
     private Map<Actuator, JButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
+
+
 }
