@@ -108,6 +108,8 @@ public class JogControlsPanel extends JPanel {
 
     private JTextField cameraOffsetText;
 
+    private JTextField cameraOffsetYText;
+
 
     /**
      * Create the panel.
@@ -774,7 +776,12 @@ public class JogControlsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("100px"),  // 设置列的默认宽度为100像素
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -784,7 +791,6 @@ public class JogControlsPanel extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[]{
                         FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("30px"),  // 设置行的默认高度为30像素
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
@@ -792,15 +798,26 @@ public class JogControlsPanel extends JPanel {
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         //相机偏移
-        JLabel cameraOffsetLab = new JLabel("相机偏移");
+        JLabel cameraOffsetLab = new JLabel("X");
         panelCalibrateChild2.add(cameraOffsetLab, "2, 2, center, default");
 
         cameraOffsetText = new JTextField("0.00");
 
         panelCalibrateChild2.add(cameraOffsetText, "4, 2");
+        
+        JLabel cameraOffsetLabY = new JLabel("Y");
+        panelCalibrateChild2.add(cameraOffsetLabY, "6, 2, center, default");
+
+        cameraOffsetYText = new JTextField("0.00");
+
+        panelCalibrateChild2.add(cameraOffsetYText, "8, 2");
 
         JButton cameraOffsetApply = new JButton("Apply");
-        panelCalibrateChild2.add(cameraOffsetApply, "9, 2");
+        panelCalibrateChild2.add(cameraOffsetApply, "10, 2");
+
+        JButton cameraOffsetReset = new JButton("Reset");
+        panelCalibrateChild2.add(cameraOffsetReset, "12, 2");
+
 
         cameraOffsetApply.addActionListener(new ActionListener() {
             @Override
@@ -809,17 +826,25 @@ public class JogControlsPanel extends JPanel {
                 machine.getCameras().forEach(c -> {
                     if (c.getLooking() == Camera.Looking.Up) {
                         if (c instanceof OpenPnpCaptureCamera && !cameraOffsetText.getText().equals("")) {
-                            Length temp = new Length();
+                            Length temp = new Length(0, LengthUnit.Millimeters);
                             temp.setValue(Double.parseDouble(cameraOffsetText.getText()));
                             c.setCameraOffset(temp);
+                            cameraOffsetApply.setEnabled(false);
+                            cameraOffsetReset.setEnabled(false);
+
                         }
                     }
                 });
             }
         });
 
-        JButton cameraOffsetReset = new JButton("Reset");
-        panelCalibrateChild2.add(cameraOffsetReset, "11, 2");
+        cameraOffsetReset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cameraOffsetText.setText("0.00");
+            }
+        });
+
 
 
         panelCalibrate.add(panelCalibrateChild1, "2,2");

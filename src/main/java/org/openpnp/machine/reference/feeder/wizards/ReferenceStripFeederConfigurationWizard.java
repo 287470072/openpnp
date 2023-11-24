@@ -22,18 +22,23 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicComboBoxEditor;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.opencv.core.Mat;
@@ -41,8 +46,21 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.components.*;
-import org.openpnp.gui.support.*;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.components.CameraViewActionEvent;
+import org.openpnp.gui.components.CameraViewActionListener;
+import org.openpnp.gui.components.CameraViewFilter;
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
@@ -128,7 +146,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "ReferenceStripFeederConfigurationWizard.PanelPart.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
-        panelPart.setLayout(new FormLayout(new ColumnSpec[]{
+        panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -137,7 +155,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[]{
+                new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -147,7 +165,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
         try {
-        } catch (Throwable t) {
+        }
+        catch (Throwable t) {
             // Swallow this error. This happens during parsing in
             // in WindowBuilder but doesn't happen during normal run.
         }
@@ -156,35 +175,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(lblPart, "2, 2, right, default");
 
         comboBoxPart = new JComboBox();
-
         comboBoxPart.setModel(new PartsComboBoxModel());
-        comboBoxPart.setEditable(true);
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        comboBoxPart.setEditor(new MyItemEditor());
-        comboBoxPart.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                String input = comboBoxPart.getSelectedItem().toString();
-                ComboBoxModel<String> model = comboBoxPart.getModel();
-                int size = model.getSize();
-                List<String> items = new ArrayList<>();
-                for (int i = 0; i < size; i++) {
-                    String item = model.getElementAt(i);
-                    items.add(item);
-                }
-
-                List<String> matchingItems = items.stream()
-                        .filter(item -> item.toLowerCase().startsWith(input.toLowerCase()))
-                        .collect(Collectors.toList());
-
-                DefaultComboBoxModel<String> newModel = new DefaultComboBoxModel<>(matchingItems.toArray(new String[0]));
-                comboBoxPart.setModel(newModel);
-                comboBoxPart.setPopupVisible(true); // 打开下拉列表
-            }
-        });
         panelPart.add(comboBoxPart, "4, 2, 3, 1, left, default");
-
 
         comboBoxPart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -193,7 +186,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
 
         lblPartInfo = new JLabel(" ");
-        panelPart.add(lblPartInfo, "8, 2, left, default");
+        panelPart.add(lblPartInfo,"8, 2, left, default");
 
         lblRotationInTape = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text")); //$NON-NLS-1$
@@ -228,13 +221,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 Translations.getString("ReferenceStripFeederConfigurationWizard.PanelTapeSettings.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
-                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -286,9 +279,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         lblMaxFeedCount = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.MaxFeedCountLabel.text")); //$NON-NLS-1$
-        panelTapeSettings.add(lblMaxFeedCount, "8, 8, right, default");
+        panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
         textFieldMaxFeedCount = new JTextField();
-        panelTapeSettings.add(textFieldMaxFeedCount, "10,8");
+        panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
         textFieldMaxFeedCount.setColumns(10);
         textFieldMaxFeedCount.setToolTipText(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.MaxFeedCountTextField.toolTipText")); //$NON-NLS-1$
@@ -300,13 +293,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 Location h1 = feeder.getLastHoleLocation();
                 Length strip_len = h0.getLinearLengthTo(h1);
                 double part_count = strip_len.divide(feeder.getPartPitch());
-                int ipart_count = 1 + (int) Math.round(part_count);
+                int ipart_count = 1+(int)Math.round(part_count);
                 textFieldMaxFeedCount.setText(Integer.toString(ipart_count));
             }
         });
         btnMaxFeedCount.setToolTipText(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.toolTipText")); //$NON-NLS-1$
-        panelTapeSettings.add(btnMaxFeedCount, "12,8");
+        panelTapeSettings.add(btnMaxFeedCount,"12,8");
 
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, Translations.getString(
@@ -314,9 +307,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(
-                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblUseVision = new JLabel(Translations.getString(
@@ -352,12 +345,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "ReferenceStripFeederConfigurationWizard.PanelLocations.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(
-                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),},
-                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -411,7 +404,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 //        textFieldFeedEndZ.setColumns(8);
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
-                null, //textFieldFeedEndZ, 
+                null, //textFieldFeedEndZ,
                 null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 6");
     }
@@ -470,20 +463,27 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 //        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
 
-    private void updatePartInfo(ActionEvent e) {
+    private void updatePartInfo(ActionEvent e)
+    {
         int count = 0;
-        Part feeder_part = (Part) comboBoxPart.getSelectedItem();
-        for (Board board : Configuration.get().getBoards()) {
-            for (Placement p : board.getPlacements()) {
-                if (p.getPart() == feeder_part) {
+        Part feeder_part =(Part)comboBoxPart.getSelectedItem();
+
+        for (Board board: Configuration.get().getBoards())    {
+            for (Placement p : board.getPlacements())
+            {
+                if (p.getPart() == feeder_part)
+                {
                     count++;
                 }
             }
         }
-        if (count > 0) {
+        if (count > 0)
+        {
             String lbl = Integer.toString(count) + " used by current job";
             lblPartInfo.setText(lbl);
-        } else {
+        }
+        else
+        {
             lblPartInfo.setText("");
         }
     }
@@ -507,7 +507,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     autoSetupCamera.moveTo(autoSetupCamera.getLocation()
                             .deriveLengths(null, null, z, null));
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", ex);
                 return;
             }
@@ -533,11 +534,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         BufferedImage bufferedImage = showHoles(camera, image);
                         hasShownError = false;
                         return bufferedImage;
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         if (!hasShownError) {
                             hasShownError = true;
                             UiUtils.showError(e);
-                        } else {
+                        }
+                        else {
                             Logger.debug("{}: {}", "Error", e);
                         }
                     }
@@ -592,8 +595,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         }
                     }, new FutureCallback<Void>() {
                         @Override
-                        public void onSuccess(Void result) {
-                        }
+                        public void onSuccess(Void result) {}
 
                         @Override
                         public void onFailure(final Throwable t) {
@@ -636,12 +638,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                     .derive(null, null,
                                             null, 0d)
                                     .derive(feeder.getReferenceHoleLocation(),
-                                            false, false, true, false);
+                                            false,  false,  true, false);
                             final Location referenceHole2 = referenceHoles.get(1)
                                     .derive(null, null,
                                             null, 0d)
                                     .derive(feeder.getLastHoleLocation(),
-                                            false, false, true, false);
+                                            false,  false,  true, false);
 
                             feeder.setReferenceHoleLocation(referenceHole1);
                             feeder.setLastHoleLocation(referenceHole2);
@@ -681,8 +683,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         }
                     }, new FutureCallback<Void>() {
                         @Override
-                        public void onSuccess(Void result) {
-                        }
+                        public void onSuccess(Void result) {}
 
                         @Override
                         public void onFailure(final Throwable t) {
@@ -713,7 +714,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
 
             List<Location> holeLocations = new ArrayList<>();
-            for (int i = 0; i < inLine.size(); i++) {
+            for (int i=0; i<inLine.size(); i++) {
                 CvStage.Result.Circle result = inLine.get(i);
                 Location location = VisionUtils.getPixelLocation(camera, result.x, result.y);
                 holeLocations.add(location);
@@ -853,7 +854,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 Point b = bestLine.b;
                 Point ab = new Point(b.x - a.x, b.y - a.y);
                 double lineLen = Math.sqrt(ab.dot(ab));
-                double fittedLineLen = (double) Math.round(lineLen / holePitchPx) * holePitchPx;
+                double fittedLineLen = (double)Math.round(lineLen / holePitchPx) * holePitchPx;
                 Point lineDir = new Point(ab.x / lineLen, ab.y / lineLen);
 
                 Point totalOffsets = new Point();
@@ -864,7 +865,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     Point ap = new Point(p.x - a.x, p.y - a.y);
                     double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
 
-                    double fittedLen = (double) Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
                     Point fittedPos = new Point(a.x + lineDir.x * fittedLen, a.y + lineDir.y * fittedLen);
 
                     totalOffsets.x += fittedPos.x - p.x;
@@ -881,7 +882,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     Point ap = new Point(p.x - a.x, p.y - a.y);
                     double distAlongLine = ap.dot(lineDir) / lineDir.dot(lineDir);
 
-                    double fittedLen = (double) Math.round(distAlongLine / holePitchPx) * holePitchPx;
+                    double fittedLen = (double)Math.round(distAlongLine / holePitchPx) * holePitchPx;
                     Point fittedPosOnLine = new Point(lineDir.x * fittedLen, lineDir.y * fittedLen);
 
                     Point fittedP = new Point(fittedA.x + fittedPosOnLine.x, fittedA.y + fittedPosOnLine.y);
@@ -897,7 +898,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         Color centerColor = new HslColor(color).getComplementary();
 
         numToDraw = (numToDraw <= circles.size()) ? numToDraw : circles.size();
-        for (int i = 0; i < numToDraw; i++) {
+        for (int i=0; i<numToDraw; i++) {
             CvStage.Result.Circle circle = circles.get(i);
 
             double x = circle.x;
@@ -1031,8 +1032,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
 
         try {
-            CvPipeline pipeline = feeder.getPipeline();
-            ;
+            CvPipeline pipeline = feeder.getPipeline();;
             if (clone) {
                 pipeline = pipeline.clone();
             }
@@ -1042,13 +1042,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
             pipeline.setProperty("sprocketHole.diameter", feeder.getHoleDiameter());
-            // Search Range is half camera. 
+            // Search Range is half camera.
             Length range = camera.getWidth() > camera.getHeight() ?
-                    camera.getUnitsPerPixelAtZ().getLengthY().multiply(camera.getHeight() / 2)
-                    : camera.getUnitsPerPixelAtZ().getLengthX().multiply(camera.getWidth() / 2);
+                    camera.getUnitsPerPixelAtZ().getLengthY().multiply(camera.getHeight()/2)
+                    : camera.getUnitsPerPixelAtZ().getLengthX().multiply(camera.getWidth()/2);
             pipeline.setProperty("sprocketHole.maxDistance", range);
             return pipeline;
-        } catch (CloneNotSupportedException e) {
+        }
+        catch (CloneNotSupportedException e) {
             throw new Error(e);
         }
     }

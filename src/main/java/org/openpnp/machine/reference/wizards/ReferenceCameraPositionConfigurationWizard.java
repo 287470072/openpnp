@@ -61,6 +61,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
     private JLabel lblCameraOffset;
     private JTextField cameraOffset;
 
+    private JTextField cameraOffsetY;
+
 
 
     public ReferenceCameraPositionConfigurationWizard(AbstractMachine machine, ReferenceCamera referenceCamera) {
@@ -228,6 +230,10 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         cameraOffset = new JTextField();
         panelLocation.add(cameraOffset, "4, 8, fill, default");
         cameraOffset.setColumns(10);
+
+        cameraOffsetY = new JTextField();
+        panelLocation.add(cameraOffsetY, "6, 8, fill, default");
+        cameraOffsetY.setColumns(10);
 
 
         locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
