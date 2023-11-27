@@ -282,7 +282,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                 bufferedImage = camera.settleAndCapture(stage.getSettleOption());
                 pipeline.setLastCapturedImage(bufferedImage);
+
                 Mat image = OpenCvUtils.toMat(bufferedImage);
+                pipeline.setWorkingImage(image);
                 pipeline.setResults(stage, new Result(image, FluentCv.ColorSpace.Bgr));
 
                 camera.actuateLightAfterCapture();
@@ -398,6 +400,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 //bufferedImage = camera.settleAndCapture(stage.getSettleOption());
                 pipeline.setLastCapturedImage(bufferedImage);
                 Mat image = OpenCvUtils.toMat(bufferedImage);
+                pipeline.setWorkingImage(image);
                 pipeline.setResults(stage, new Result(image, FluentCv.ColorSpace.Bgr));
 
 

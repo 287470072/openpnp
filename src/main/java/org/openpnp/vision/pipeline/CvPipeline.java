@@ -232,6 +232,10 @@ public class CvPipeline implements AutoCloseable {
         return workingImage;
     }
 
+    public void setWorkingImage(Mat image) {
+        this.workingImage = image;
+    }
+
     public Object getWorkingModel() {
         return workingModel;
     }
