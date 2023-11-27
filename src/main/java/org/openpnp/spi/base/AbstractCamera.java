@@ -57,8 +57,8 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * conversion is only valid for objects at the same distance from the camera at which the
      * calibration of the units per pixel was performed. The units per pixel z-coordinate contains
      * the height at which the measurement was made. In combination with {@link #cameraPrimaryZ} a
-     * camera relative Z distance can be computed (necessary for Z-movable cameras). 
-     * 
+     * camera relative Z distance can be computed (necessary for Z-movable cameras).
+     * <p>
      * Also see {@link #unitsPerPixelSecondary}.
      */
     @Element
@@ -67,25 +67,25 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     /**
      * The secondary units per pixel for this camera. This is typically calibrated at a different
      * distance from the camera than the primary {@link #unitsPerPixel} so that the two together
-     * can be used compute an object's true size (in units) assuming its actual z coordinate is known. 
+     * can be used compute an object's true size (in units) assuming its actual z coordinate is known.
      */
     @Element(required = false)
     protected Location unitsPerPixelSecondary = null;
 
     /**
-     * The Z coordinate of camera at the primary units per pixel measurement for this camera. 
+     * The Z coordinate of camera at the primary units per pixel measurement for this camera.
      */
     @Element(required = false)
     protected Length cameraPrimaryZ = null;
 
     /**
-     * The Z coordinate of camera at the secondary units per pixel measurement for this camera. 
+     * The Z coordinate of camera at the secondary units per pixel measurement for this camera.
      */
     @Element(required = false)
     protected Length cameraSecondaryZ = null;
 
     /**
-     * The Z coordinate at which objects are assumed to be if their true height is unknown. 
+     * The Z coordinate at which objects are assumed to be if their true height is unknown.
      */
     @Element(required = false)
     protected Length defaultZ = null;
@@ -104,7 +104,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     protected Length roamingRadius = new Length(0, LengthUnit.Millimeters);
 
     @Element(required = false)
-    protected Length cameraOffset=new Length(0, LengthUnit.Millimeters);
+    protected Length cameraOffset = new Length(0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Length cameraOffsetY = new Length(0, LengthUnit.Millimeters);
 
     protected Set<ListenerEntry> listeners = Collections.synchronizedSet(new HashSet<>());
 
@@ -180,9 +183,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Gets the relative Z distance above the physical camera of the specified z coordinate
-     * 
+     *
      * @param zCoordinate
-     * @return 
+     * @return
      */
     public Length getCameraRelativeZ(Length zCoordinate) {
         Location cameraLocation = getCameraPhysicalLocation();
@@ -191,9 +194,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Gets the absolute camera z coordinate from the given relative Z.
-     * 
+     *
      * @param cameraRelativeZ
-     * @return 
+     * @return
      */
     protected Length getCameraAbsoluteZ(Length cameraRelativeZ) {
         Location cameraLocation = getCameraPhysicalLocation();
@@ -202,16 +205,15 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Get the physical location of the camera i.e. do not take virtual axes into consideration.
-     * 
-     * @return 
+     *
+     * @return
      */
     public Location getCameraPhysicalLocation() {
         Location cameraLocation = getLocation();
         try {
             //Replace virtual axis coordinates, if any, with the head offset
             cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
-        }
-        catch (Exception e1) {
+        } catch (Exception e1) {
             e1.printStackTrace();
         }
         return cameraLocation;
@@ -274,7 +276,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             // Camera has an axis (virtual or physical), so it may set the viewing plane. Note, this automatically 
             // also excludes the bottom camera.
             Length viewingPlaneZ = getLocation().getLengthZ();
-            if (viewingPlaneZ.compareTo(getSafeZ()) < 0 ) {
+            if (viewingPlaneZ.compareTo(getSafeZ()) < 0) {
                 // Z is below Safe Z, so this is a purposefully set viewingPlaneZ.
                 return getUnitsPerPixel(viewingPlaneZ);
             }
@@ -285,9 +287,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Override
     public boolean isUnitsPerPixelAtZCalibrated() {
         return (enableUnitsPerPixel3D
-                && unitsPerPixelSecondary != null 
-                && unitsPerPixelSecondary.getX() != 0 
-                && unitsPerPixelSecondary.getY() != 0 
+                && unitsPerPixelSecondary != null
+                && unitsPerPixelSecondary.getX() != 0
+                && unitsPerPixelSecondary.getY() != 0
                 && cameraPrimaryZ != null
                 && cameraSecondaryZ != null
                 && defaultZ != null);
@@ -300,9 +302,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Gets the primary units per pixel (direct access getter)
-     * 
+     *
      * @return a location whose x and y coordinates are the measured pixels per unit for those axis
-     *         respectively and the z coordinate is the height at which the measurements were made.
+     * respectively and the z coordinate is the height at which the measurements were made.
      */
     public Location getUnitsPerPixelPrimary() {
         return unitsPerPixel;
@@ -310,10 +312,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Sets the primary units per pixel (direct access setter)
-     * 
+     *
      * @param unitsPerPixelPrimary - a location whose x and y coordinates are the measured pixels
-     * per unit for those axis respectively and the z coordinate is the height at which the measurements 
-     * were made.
+     *                             per unit for those axis respectively and the z coordinate is the height at which the measurements
+     *                             were made.
      */
     public void setUnitsPerPixelPrimary(Location unitsPerPixelPrimary) {
         this.unitsPerPixel = unitsPerPixelPrimary;
@@ -321,9 +323,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Gets the secondary units per pixel
-     * 
+     *
      * @return a location whose x and y coordinates are the measured pixels per unit for those axis
-     *         respectively and the z coordinate is the height at which the measurements were made.
+     * respectively and the z coordinate is the height at which the measurements were made.
      */
     public Location getUnitsPerPixelSecondary() {
         return unitsPerPixelSecondary;
@@ -331,10 +333,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     /**
      * Sets the secondary units per pixel
-     * 
+     *
      * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
-     * per unit for those axis respectively and the z coordinate is the height at which the 
-     * measurements were made.
+     *                               per unit for those axis respectively and the z coordinate is the height at which the
+     *                               measurements were made.
      */
     public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary) {
         this.unitsPerPixelSecondary = unitsPerPixelSecondary;
@@ -350,7 +352,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     /**
-     * @return Get the z coordinate of camera where the primary units per pixel measurement was made. 
+     * @return Get the z coordinate of camera where the primary units per pixel measurement was made.
      */
     public Length getCameraPrimaryZ() {
         return cameraPrimaryZ;
@@ -361,7 +363,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     /**
-     * @return Get the z coordinate of camera where the secondary units per pixel measurement was made. 
+     * @return Get the z coordinate of camera where the secondary units per pixel measurement was made.
      */
     public Length getCameraSecondaryZ() {
         return cameraSecondaryZ;
@@ -385,10 +387,20 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return cameraOffset;
     }
 
+    @Override
+    public Length getCameraOffsetY() {
+        return cameraOffsetY;
+    }
+
 
     public void setCameraOffset(Length cameraOffset) {
         this.cameraOffset = cameraOffset;
     }
+
+    public void setCameraOffsetY(Length cameraOffsetY) {
+        this.cameraOffsetY = cameraOffsetY;
+    }
+
 
     /**
      * Estimates the Z height of an object based upon the observed units per pixel for the
@@ -432,8 +444,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         double k;
         if (!Double.isFinite(uppY) || (uppX > uppY)) {
             k = (uppX - uppCal2.getX()) / (uppCal1.getX() - uppCal2.getX());
-        }
-        else {
+        } else {
             k = (uppY - uppCal2.getY()) / (uppCal1.getY() - uppCal2.getY());
         }
 
@@ -522,11 +533,11 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         // Make sure it is actuated in a machine task, but only if the machine is enabled.
         Configuration.get().getMachine().executeIfEnabled(() -> {
             // Only actuate a light when the current state is unknown or different. 
-            if (lightActuator.getLastActuationValue() == null 
+            if (lightActuator.getLastActuationValue() == null
                     || !lightActuator.getLastActuationValue().equals(light)) {
                 lightActuator.actuate(light);
             }
-            return null; 
+            return null;
         });
     }
 
@@ -536,10 +547,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
             if (camera != this
                     && (camera instanceof AbstractCamera)
-                    && ((AbstractCamera) camera).isAntiGlareLightOff() 
+                    && ((AbstractCamera) camera).isAntiGlareLightOff()
                     && camera.getLooking() != this.getLooking()) {
                 Actuator lightActuator = camera.getLightActuator();
-                if (lightActuator != null 
+                if (lightActuator != null
                         && (lightActuator.isActuated() == null || lightActuator.isActuated())) {
                     AbstractActuator.assertOnOffDefined(lightActuator);
                     actuateLight(lightActuator, lightActuator.getDefaultOffValue());
@@ -551,7 +562,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             Actuator lightActuator = getLightActuator();
             if (lightActuator != null) {
                 AbstractActuator.assertOnOffDefined(lightActuator);
-                actuateLight(lightActuator, 
+                actuateLight(lightActuator,
                         (light != null ? light : lightActuator.getDefaultOnValue()));
             }
         }
@@ -584,7 +595,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     public String toString() {
         return getName();
     }
-    
+
     protected class ListenerEntry {
         public CameraListener listener;
         public long lastFrameSent;

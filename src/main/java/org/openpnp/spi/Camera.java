@@ -264,6 +264,9 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     public Length getCameraOffset();
 
+    public Length getCameraOffsetY();
+
+
     public void setCameraOffset(Length cameraOffset);
 
 

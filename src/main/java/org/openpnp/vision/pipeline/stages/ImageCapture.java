@@ -113,7 +113,6 @@ public class ImageCapture extends CvStage {
 
                 // 根据需要执行相机的稳定和捕获操作，或者直接捕获图像
                 if (needSettle) {
-
                     bufferedImage = camera.settleAndCapture(settleOption);
                 } else {
                     bufferedImage = camera.capture();

@@ -293,6 +293,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         }
         addWrappedBinding(referenceCamera, "roamingRadius", roamingRadius, "text", lengthConverter);
         addWrappedBinding(referenceCamera, "cameraOffset", cameraOffset, "text", lengthConverter);
+        addWrappedBinding(referenceCamera, "cameraOffsetY", cameraOffsetY, "text", lengthConverter);
+
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
@@ -305,6 +307,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(roamingRadius);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cameraOffset);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(cameraOffsetY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

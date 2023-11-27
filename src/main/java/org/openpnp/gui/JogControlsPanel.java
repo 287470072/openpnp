@@ -804,7 +804,7 @@ public class JogControlsPanel extends JPanel {
         cameraOffsetText = new JTextField("0.00");
 
         panelCalibrateChild2.add(cameraOffsetText, "4, 2");
-        
+
         JLabel cameraOffsetLabY = new JLabel("Y");
         panelCalibrateChild2.add(cameraOffsetLabY, "6, 2, center, default");
 
@@ -825,10 +825,14 @@ public class JogControlsPanel extends JPanel {
                 Machine machine = configuration.getMachine();
                 machine.getCameras().forEach(c -> {
                     if (c.getLooking() == Camera.Looking.Up) {
-                        if (c instanceof OpenPnpCaptureCamera && !cameraOffsetText.getText().equals("")) {
+                        if (c instanceof OpenPnpCaptureCamera && !cameraOffsetText.getText().equals("") && !cameraOffsetYText.getText().equals("")) {
                             Length temp = new Length(0, LengthUnit.Millimeters);
                             temp.setValue(Double.parseDouble(cameraOffsetText.getText()));
                             c.setCameraOffset(temp);
+
+                            temp = new Length(0, LengthUnit.Millimeters);
+                            temp.setValue(Double.parseDouble(cameraOffsetYText.getText()));
+                            ((OpenPnpCaptureCamera) c).setCameraOffsetY(temp);
                             cameraOffsetApply.setEnabled(false);
                             cameraOffsetReset.setEnabled(false);
 
@@ -842,9 +846,46 @@ public class JogControlsPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cameraOffsetText.setText("0.00");
+                cameraOffsetYText.setText("0.00");
             }
         });
 
+        cameraOffsetYText.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                cameraOffsetReset.setEnabled(true);
+                cameraOffsetApply.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                cameraOffsetReset.setEnabled(true);
+                cameraOffsetApply.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
+
+        cameraOffsetText.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                cameraOffsetReset.setEnabled(true);
+                cameraOffsetApply.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                cameraOffsetReset.setEnabled(true);
+                cameraOffsetApply.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
 
 
         panelCalibrate.add(panelCalibrateChild1, "2,2");
@@ -1489,6 +1530,7 @@ public class JogControlsPanel extends JPanel {
                 if (c.getLooking() == Camera.Looking.Up) {
                     if (c instanceof OpenPnpCaptureCamera) {
                         MainFrame.get().getMachineControls().getJogControlsPanel().cameraOffsetText.setText(String.valueOf(c.getCameraOffset().getValue()));
+                        MainFrame.get().getMachineControls().getJogControlsPanel().cameraOffsetYText.setText(String.valueOf(c.getCameraOffsetY().getValue()));
 
                     }
                 }
