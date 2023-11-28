@@ -338,8 +338,6 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public List<PartAlignment> getPartAlignments();
 
-    public List<PartAlignmentMulti> getPartAlignmentMulti();
-
     public FiducialLocator getFiducialLocator();
 
     public Location getDiscardLocation();

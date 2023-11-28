@@ -179,9 +179,8 @@ public class ReferenceMachine extends AbstractMachine {
                     @Override
                     public void configurationLoaded(Configuration configuration)
                             throws Exception {
-                        if (partAlignments.isEmpty() | partAlignmentMultis.isEmpty()) {
+                        if (partAlignments.isEmpty()) {
                             partAlignments.add(new ReferenceBottomVision());
-                            partAlignmentMultis.add(new ReferenceBottomVision());
                         }
                         // Migrate the driver.
                         if (driver != null && driver instanceof AbstractDriver) {

@@ -68,8 +68,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @ElementList(required = false)
     protected IdentifiableList<PartAlignment> partAlignments = new IdentifiableList<>();
 
-    @ElementList(required = false)
-    protected IdentifiableList<PartAlignmentMulti> partAlignmentMultis = new IdentifiableList<>();
 
     @ElementList(required = false)
     protected IdentifiableList<Driver> drivers = new IdentifiableList<>();
@@ -243,11 +241,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<PartAlignment> getPartAlignments() {
         return Collections.unmodifiableList(partAlignments);
-    }
-
-    @Override
-    public List<PartAlignmentMulti> getPartAlignmentMulti() {
-        return Collections.unmodifiableList(partAlignmentMultis);
     }
 
     @Override

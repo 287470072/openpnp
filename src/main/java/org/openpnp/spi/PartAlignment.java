@@ -55,6 +55,7 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
      */
     PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception;
 
+    List<PnpJobPlanner.PlannedPlacement> findOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps) throws Exception;
 
 
     /**

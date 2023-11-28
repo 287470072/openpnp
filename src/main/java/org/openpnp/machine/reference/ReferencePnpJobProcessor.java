@@ -828,15 +828,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         private void alignMulti(List<PlannedPlacement> pps) throws JobProcessorException {
-            final PartAlignmentMulti partAlignmentMulti = AbstractPartAlignment.getPartAlignmentMulti();
+            //final PartAlignmentMulti partAlignmentMulti = AbstractPartAlignment.getPartAlignmentMulti();
+            final PartAlignment partAlignment = AbstractPartAlignment.getPartAlignmentMulti();
+
             Exception lastException;
             try {
-                List<PlannedPlacement> test = VisionUtils.findPartAlignmentOffsetsMulti(pps, partAlignmentMulti);
+                List<PlannedPlacement> test = VisionUtils.findPartAlignmentOffsetsMulti(pps, partAlignment);
                 return;
             } catch (Exception e) {
                 lastException = e;
             }
-            throw new JobProcessorException(partAlignmentMulti, lastException);
+            throw new JobProcessorException(partAlignment, lastException);
         }
 
 

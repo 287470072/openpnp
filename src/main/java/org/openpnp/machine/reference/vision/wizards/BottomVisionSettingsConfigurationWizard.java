@@ -562,7 +562,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             throws Exception {
         // perform the alignment
         Camera camera = VisionUtils.getBottomVisionCamera();
-        final PartAlignmentMulti partAlignmentMulti = AbstractPartAlignment.getPartAlignmentMulti();
 
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));

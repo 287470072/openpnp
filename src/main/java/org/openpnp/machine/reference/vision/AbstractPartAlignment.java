@@ -11,10 +11,9 @@ import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.PartSettingsRoot;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PartAlignmentMulti;
 import org.openpnp.util.VisionUtils;
 
-public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartSettingsRoot, PartAlignment, PartAlignmentMulti {
+public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartSettingsRoot, PartAlignment {
 
     @Override
     public PartSettingsHolder getParentHolder(PartSettingsHolder partSettingsHolder) {
@@ -56,7 +55,7 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
     }
 
     public static AbstractPartAlignment getPartAlignmentMulti() {
-        return (AbstractPartAlignment) Configuration.get().getMachine().getPartAlignmentMulti().get(0);
+        return (AbstractPartAlignment) Configuration.get().getMachine().getPartAlignments().get(0);
     }
 
     public static AbstractPartAlignment getPartAlignment(PartSettingsHolder partSettingsHolder, boolean allowDisabled) {

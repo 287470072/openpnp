@@ -301,7 +301,7 @@ public class VisionUtils {
         }
     }
 
-    public static List<PnpJobPlanner.PlannedPlacement> findPartAlignmentOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps, PartAlignmentMulti p) throws Exception {
+    public static List<PnpJobPlanner.PlannedPlacement> findPartAlignmentOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps, PartAlignment p) throws Exception {
         return p.findOffsetsMulti(pps);
     }
 
