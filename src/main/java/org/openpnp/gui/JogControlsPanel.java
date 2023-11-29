@@ -671,11 +671,11 @@ public class JogControlsPanel extends JPanel {
         });
 
 
-        JLabel lblFeed = new JLabel("1号位坐标");
+        JLabel lblFeed = new JLabel(Translations.getString("JogControlsPanel.lblFeed.Text"));
         panelXYZ.add(lblFeed, "2, 4, right, default");
 
 
-        JLabel lblPostPick = new JLabel("5号位坐标");
+        JLabel lblPostPick = new JLabel(Translations.getString("JogControlsPanel.lblPostPick.Text"));
         panelXYZ.add(lblPostPick, "2, 6, right, default");
 
 
@@ -697,7 +697,7 @@ public class JogControlsPanel extends JPanel {
         panelXYZ.add(panelActions, "10, 8");
 
 
-        tabbedPane_1.addTab("吸嘴更换设置", //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.tabbedPane_1.Text"), //$NON-NLS-1$
                 null, panelXYZ, null);
 
 
@@ -724,7 +724,7 @@ public class JogControlsPanel extends JPanel {
 
         JPanel panelCalibrateChild1 = new JPanel();
 
-        panelCalibrateChild1.setBorder(new TitledBorder(null, "校准设置", TitledBorder.LEADING,
+        panelCalibrateChild1.setBorder(new TitledBorder(null, Translations.getString("JogControlsPanel.panelCalibrate.Text"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelCalibrateChild1.setLayout(new FormLayout(new ColumnSpec[]{
@@ -741,6 +741,7 @@ public class JogControlsPanel extends JPanel {
                 new RowSpec[]{
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("30px"),  // 设置行的默认高度为30像素
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
@@ -761,15 +762,15 @@ public class JogControlsPanel extends JPanel {
 
         //吸嘴偏移量教校正
         JButton nozzleN2OffsetCalibrateBtn = new JButton(nozzleN2OffsetCalibrateAction);
-        panelCalibrateChild1.add(nozzleN2OffsetCalibrateBtn, "8, 2, left, default");
+        panelCalibrateChild1.add(nozzleN2OffsetCalibrateBtn, "2, 4, left, default");
 
         //底部相机校正
         JButton bottomCameraCalibrateBtn = new JButton(bottomCameraCalibrate);
-        panelCalibrateChild1.add(bottomCameraCalibrateBtn, "10, 2, left, default");
+        panelCalibrateChild1.add(bottomCameraCalibrateBtn, "4, 4, left, default");
 
         JPanel panelCalibrateChild2 = new JPanel();
 
-        panelCalibrateChild2.setBorder(new TitledBorder(null, "相机偏移", TitledBorder.LEADING,
+        panelCalibrateChild2.setBorder(new TitledBorder(null, Translations.getString("JogControlsPanel.panelCalibrateChild2.Text"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelCalibrateChild2.setLayout(new FormLayout(new ColumnSpec[]{
@@ -897,7 +898,7 @@ public class JogControlsPanel extends JPanel {
 */
 
 
-        tabbedPane_1.addTab("校准设置", //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.panelCalibrate.Text"), //$NON-NLS-1$
                 null, panelCalibrate, null);
 
 
@@ -1048,7 +1049,7 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    protected Action topCameraCalibrate = new AbstractAction("顶部相机校正") {
+    protected Action topCameraCalibrate = new AbstractAction(Translations.getString("JogControlsPanel.topCameraCalibrate.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {
@@ -1079,7 +1080,7 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    protected Action nozzleOffseAction = new AbstractAction("吸嘴偏移") {
+    protected Action nozzleOffseAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleOffseAction.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {
@@ -1119,7 +1120,7 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    protected Action nozzleN1OffsetCalibrateAction = new AbstractAction("N1吸嘴校正") {
+    protected Action nozzleN1OffsetCalibrateAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleN1OffsetCalibrateAction.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {
@@ -1144,7 +1145,7 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    protected Action nozzleN2OffsetCalibrateAction = new AbstractAction("N2吸嘴校正") {
+    protected Action nozzleN2OffsetCalibrateAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleN2OffsetCalibrateAction.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {
@@ -1170,7 +1171,7 @@ public class JogControlsPanel extends JPanel {
         }
     };
 
-    protected Action bottomCameraCalibrate = new AbstractAction("底部相机校正") {
+    protected Action bottomCameraCalibrate = new AbstractAction(Translations.getString("JogControlsPanel.bottomCameraCalibrate.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             UiUtils.messageBoxOnException(() -> {

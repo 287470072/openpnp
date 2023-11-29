@@ -502,13 +502,13 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorReady);
-                setText("准备就绪"); //$NON-NLS-1$
+                setText(Translations.getString("PartsPanel.StatusRenderer.Ready")); //$NON-NLS-1$
             }
             if (status == Status.MissingPart) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("未关联Package"); //$NON-NLS-1$
+                setText(Translations.getString("PartsPanel.StatusRenderer.Error")); //$NON-NLS-1$
             }
         }
 

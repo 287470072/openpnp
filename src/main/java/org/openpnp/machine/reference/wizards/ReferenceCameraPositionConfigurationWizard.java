@@ -223,7 +223,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelLocation.add(roamingRadius, "4, 6, fill, default");
         roamingRadius.setColumns(10);
 
-        lblCameraOffset = new JLabel("相机偏移量"); //$NON-NLS-1$
+        lblCameraOffset = new JLabel(Translations.getString("JogControlsPanel.panelCalibrateChild2.Text")); //$NON-NLS-1$
         lblCameraOffset.setToolTipText("通过该参数对两个相机间距进行微调"); //$NON-NLS-1$
         panelLocation.add(lblCameraOffset, "2, 8, right, default");
 
