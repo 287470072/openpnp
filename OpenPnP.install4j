@@ -72,6 +72,9 @@
         <nativeLibraryDirectories>
           <directory name="native/${compiler:native_path}" />
         </nativeLibraryDirectories>
+        <vmOptions>
+          <options version="8-17" line="-agentpath:libjarDecrypt" />
+        </vmOptions>
       </java>
       <infoPlist>
 &lt;key&gt;NSCameraUsageDescription&lt;/key&gt;

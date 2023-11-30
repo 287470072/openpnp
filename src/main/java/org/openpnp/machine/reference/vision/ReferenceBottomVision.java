@@ -512,6 +512,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // 获取零件的继承的视觉设置
                 Location shotLocationN1 = getShotLocation2(partN1, camera, n1, wantedLocationN1, locationN1);
                 n1.moveTo(shotLocationN1);
+
+                BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN1);
+
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     pipeline.release();
 
@@ -625,7 +628,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
 
 
+
                 n2.moveTo(shotLocationNew);
+                BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(partN2);
+
                 try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
                     pipeline.release();
 
