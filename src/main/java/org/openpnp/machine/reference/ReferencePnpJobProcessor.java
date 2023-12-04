@@ -1280,13 +1280,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 return result;
             } catch (JobProcessorException e) {
-                if (plannedPlacement.alignmentOffsets != null) {
+/*                if (plannedPlacement.alignmentOffsets != null) {
                     completed.add(plannedPlacement);
                     return this;
                 } else {
                     plannedPlacement.jobPlacement.setStatus(Status.Errored);
 
-                }
+                }*/
                 switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
                     case Alert:
                         throw e;

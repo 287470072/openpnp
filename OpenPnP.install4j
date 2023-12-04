@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="10.0.6" transformSequenceNumber="10">
   <directoryPresets config="./libjarDecrypt.dll" />
-  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
+  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="2023-12-04_06-03-07.800003c" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <languages>
       <principalLanguage id="zh_CN" />
     </languages>
     <variables>
-      <variable name="native_path" value=".\native\libjarDecrypt.dll" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
     <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" />
@@ -49,7 +48,6 @@
           <entry location="pnp-test/.DS_Store" />
         </exclude>
       </dirEntry>
-      <fileEntry mountPoint="22" file="./libjarDecrypt.dll" />
       <dirEntry mountPoint="295" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
         <exclude>
           <entry location=".DS_Store" />
@@ -73,7 +71,7 @@
           <directory name="native/${compiler:native_path}" />
         </nativeLibraryDirectories>
         <vmOptions>
-          <options version="8-17" line="-agentpath:libjarDecrypt" />
+          <options version="8-17" line="-agentpath:jarDecrypt" />
         </vmOptions>
       </java>
       <infoPlist>
@@ -87,7 +85,7 @@
       </iconImageFiles>
     </launcher>
   </launchers>
-  <installerGui autoUpdateDescriptorUrl="https://s3-us-west-2.amazonaws.com/openpnp/updates-${compiler:mediaFileVersion}.xml">
+  <installerGui autoUpdateDescriptorUrl="https://www.han-smt.com/openpnp/updates.xml">
     <autoUpdate>
       <commentFiles>
         <file location="CHANGES.md" languageId="en" />
