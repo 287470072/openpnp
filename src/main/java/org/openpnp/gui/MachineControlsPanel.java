@@ -48,6 +48,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.capture.CaptureDevice;
 import org.openpnp.capture.CaptureFormat;
+import org.openpnp.capture.library.OpenpnpCaptureLibrary;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.ActuatorItem;
@@ -324,7 +325,6 @@ public class MachineControlsPanel extends JPanel {
 
     public void changeCamera() {
         MainFrame.get().getCameraViews().cameraPanelBind();
-
     }
 
 

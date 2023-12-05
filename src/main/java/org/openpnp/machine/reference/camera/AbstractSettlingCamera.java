@@ -638,7 +638,6 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         Map<String, Object> globals = new HashMap<>();
         globals.put("camera", this);
         Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
-        Logger.trace("Camera.BeforeSettle时间:" + System.currentTimeMillis());
         try {
             // Make sure the camera (or its subject) stands still.
             waitForCompletion(CompletionType.WaitForStillstand);
@@ -658,7 +657,6 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 return autoSettleAndCapture(settleOption == SettleOption.SettleFullArea ? 0 : settleMaskCircle);
             }
         } finally {
-            Logger.trace("Camera.AfterSettle:" + System.currentTimeMillis());
             Configuration.get().getScripting().on("Camera.AfterSettle", globals);
         }
     }

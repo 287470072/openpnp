@@ -59,10 +59,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
+import org.openpnp.util.*;
 import org.openpnp.vision.pipeline.CvAbstractParameterStage;
 import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -217,8 +214,9 @@ public abstract class PipelineControls extends JPanel {
                     int cameraHeight = camera.getHeight();
                     int cameraWidth = camera.getWidth();
 
-                    if ((camera.isInRange(cameraWidth, 2550, 2570) && camera.isInRange(cameraHeight, 700, 750))
-                            || (camera.isInRange(cameraWidth, 1260, 1290) && camera.isInRange(cameraHeight, 460, 500))) {
+                    if (SerialUtil.checkSerialFile() &&
+                            ((camera.isInRange(cameraWidth, 2550, 2570) && camera.isInRange(cameraHeight, 700, 750))
+                                    || (camera.isInRange(cameraWidth, 1260, 1290) && camera.isInRange(cameraHeight, 460, 500)))) {
                         if (movable == n1 && camera.getLooking() == Camera.Looking.Up) {
                             //左半边
                             //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);

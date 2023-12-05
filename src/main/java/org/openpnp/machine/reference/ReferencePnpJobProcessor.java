@@ -786,7 +786,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
-/*
             if (plannedPlacement == null) {
                 return new Place(plannedPlacements);
             }
@@ -807,7 +806,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             align(plannedPlacement, partAlignment);
 
             checkPartOn(nozzle);
-*/
 
             return this;
         }
