@@ -27,11 +27,7 @@ import org.openpnp.model.Package;
 import org.openpnp.model.VisionCompositing.Composite;
 import org.openpnp.model.VisionCompositing.Shot;
 import org.openpnp.spi.*;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.UiUtils;
-import org.openpnp.util.Utils2D;
-import org.openpnp.util.VisionUtils;
+import org.openpnp.util.*;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
@@ -1198,7 +1194,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
                         Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-                        if (nozzles.size() == 2 &&
+                        Serial serial = Configuration.get().getSerial();
+                        if (serial != null && serial.isCertification() && nozzles.size() == 2 &&
                                 ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))
                                 && pkgNozzles.size() > 1) {
                             if (nozzle.equals(nozzles.get(0))) {
@@ -1264,7 +1261,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+            Serial serial = Configuration.get().getSerial();
+            if (serial != null && serial.isCertification() &&
+                    ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                            || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1378,7 +1378,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     pipeline.remove(stages.get(i));
                 }
             }
-            if (((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+            Serial serial = Configuration.get().getSerial();
+
+            if (serial != null && serial.isCertification() && ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1737,7 +1740,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (partSettings == null) {
                 return;
             }
-
             try {
                 Part part = configuration.getPart(partId);
                 if (part != null) {

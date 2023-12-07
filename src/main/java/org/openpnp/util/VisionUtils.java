@@ -14,19 +14,9 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.vision.AbstractPartAlignmentMulti;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
-import org.openpnp.model.Area;
-import org.openpnp.model.AreaUnit;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialVisionSettings;
-import org.openpnp.model.Footprint;
-import org.openpnp.model.Length;
-import org.openpnp.model.Location;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
-import org.openpnp.model.Point;
+import org.openpnp.model.*;
 import org.openpnp.model.Footprint.Pad;
+import org.openpnp.model.Package;
 import org.openpnp.spi.*;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -63,8 +53,12 @@ public class VisionUtils {
     public static Location getPixelCenterOffsets(Camera camera, double x, double y) {
         double imageWidth;
         double imageHeight;
-        if (camera.getLooking() == Camera.Looking.Up && ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
-                || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+        Serial serial = Configuration.get().getSerial();
+        if (serial != null && serial.isCertification() &&
+                camera.getLooking() == Camera.Looking.Up &&
+                ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                        || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))
+        ) {
             imageWidth = (double) camera.getWidth() / 2;
             imageHeight = camera.getHeight();
         } else {
@@ -171,7 +165,7 @@ public class VisionUtils {
         return locations;
     }
 
-    public static Camera getBottomVisionCamera()  {
+    public static Camera getBottomVisionCamera() {
         for (Camera camera : Configuration.get().getMachine().getCameras()) {
             if (camera.getLooking() == Camera.Looking.Up) {
                 return camera;

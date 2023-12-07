@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -107,12 +107,16 @@ public class Configuration extends AbstractModelObject {
     public enum TablesLinked {
         Unlinked,
         Linked
-    };
+    }
+
+    ;
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
     private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
+
+    private Serial serial;
     private LinkedHashMap<File, Panel> panels = new LinkedHashMap<>();
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -136,15 +140,17 @@ public class Configuration extends AbstractModelObject {
     /**
      * Initializes a new persistent Configuration singleton storing configuration files in
      * configurationDirectory.
+     *
      * @param configurationDirectory
      */
     public static synchronized void initialize(File configurationDirectory) {
         instance = new Configuration(configurationDirectory);
         instance.setLengthDisplayFormatWithUnits(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
     }
-    
+
     /**
      * Initializes a new temporary Configuration singleton storing configuration in memory only.
+     *
      * @param configurationDirectory
      */
     public static synchronized void initialize() {
@@ -162,7 +168,7 @@ public class Configuration extends AbstractModelObject {
         File scriptingDirectory = new File(configurationDirectory, "scripts");
         this.scripting = new Scripting(scriptingDirectory);
     }
-    
+
     private Configuration() {
         this.prefs = Preferences.userNodeForPackage(Configuration.class);
         this.scripting = new Scripting(null);
@@ -173,15 +179,15 @@ public class Configuration extends AbstractModelObject {
          */
         loaded = true;
     }
-    
+
     public void setMachine(Machine machine) {
         this.machine = machine;
     }
-    
+
     public Scripting getScripting() {
         return scripting;
     }
-    
+
     public EventBus getBus() {
         return bus;
     }
@@ -207,13 +213,21 @@ public class Configuration extends AbstractModelObject {
     }
 
     public Locale getLocale() {
-        return new Locale(prefs.get(PREF_LOCALE_LANG, PREF_LOCALE_LANG_DEF), 
+        return new Locale(prefs.get(PREF_LOCALE_LANG, PREF_LOCALE_LANG_DEF),
                 prefs.get(PREF_LOCALE_COUNTRY, PREF_LOCALE_COUNTRY_DEF));
     }
 
     public void setLocale(Locale locale) {
         prefs.put(PREF_LOCALE_LANG, locale.getLanguage());
         prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
+    }
+
+    public Serial getSerial() {
+        return serial;
+    }
+
+    public void setSerial(Serial serial) {
+        this.serial = serial;
     }
 
     public ThemeInfo getThemeInfo() {
@@ -328,7 +342,7 @@ public class Configuration extends AbstractModelObject {
     /**
      * Gets a File reference for the resources directory belonging to the given class. The directory
      * is guaranteed to exist.
-     * 
+     *
      * @param forClass
      * @return
      * @throws IOException
@@ -344,7 +358,7 @@ public class Configuration extends AbstractModelObject {
     /**
      * Gets a File reference for the named file within the configuration directory. forClass is used
      * to uniquely identify the file and keep it separate from other classes' files.
-     * 
+     *
      * @param forClass
      * @param name
      * @return
@@ -360,7 +374,7 @@ public class Configuration extends AbstractModelObject {
      * File.getName() on the returned file can be used to load the same file in the future by
      * calling getResourceFile(). This method uses NanosecondTime.get() so the files names
      * will be unique and ordered.
-     * 
+     *
      * @param forClass
      * @param suffix
      * @return
@@ -372,7 +386,7 @@ public class Configuration extends AbstractModelObject {
         if (!directory.exists()) {
             directory.mkdirs();
         }
-        File file = new File(directory, prefix+NanosecondTime.get()+suffix);
+        File file = new File(directory, prefix + NanosecondTime.get() + suffix);
         return file;
     }
 
@@ -382,8 +396,7 @@ public class Configuration extends AbstractModelObject {
             try {
                 listener.configurationLoaded(this);
                 listener.configurationComplete(this);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // TODO: Need to find a way to raise this to the GUI
                 throw new Error(e);
             }
@@ -407,8 +420,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadPackages(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -426,8 +438,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadParts(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -444,8 +455,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadBoards(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -462,8 +472,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadPanels(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -480,8 +489,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadVisionSettings(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -499,8 +507,7 @@ public class Configuration extends AbstractModelObject {
                 forceSave = true;
             }
             loadMachine(file);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
@@ -530,39 +537,33 @@ public class Configuration extends AbstractModelObject {
     public synchronized void save() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         try {
-           saveMachine(createBackedUpFile("machine.xml", now));
-        }
-        catch (Exception e) {
+            saveMachine(createBackedUpFile("machine.xml", now));
+        } catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
         }
         try {
             savePackages(createBackedUpFile("packages.xml", now));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
         }
         try {
             saveParts(createBackedUpFile("parts.xml", now));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
         try {
             saveBoards(createBackedUpFile("boards.xml", now));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Error while saving boards.xml (" + e.getMessage() + ")", e);
         }
         try {
             savePanels(createBackedUpFile("panels.xml", now));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Error while saving panels.xml (" + e.getMessage() + ")", e);
         }
         try {
             saveVisionSettings(createBackedUpFile("vision-settings.xml", now));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Error while saving vision-settings.xml (" + e.getMessage() + ")", e);
         }
     }
@@ -578,7 +579,7 @@ public class Configuration extends AbstractModelObject {
             File singleBackupDirectory = new File(backupsDirectory, DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(now));
             singleBackupDirectory.mkdirs();
             File backupFile = new File(singleBackupDirectory, fileName);
-            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()),
                     StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
         }
         return file;
@@ -685,6 +686,7 @@ public class Configuration extends AbstractModelObject {
 
     /**
      * Adds the specified Panel definition to the configuration
+     *
      * @param panel - the Panel definition to be added
      */
     public void addPanel(Panel panel) {
@@ -692,9 +694,10 @@ public class Configuration extends AbstractModelObject {
         panels.put(panel.getFile(), panel);
         firePropertyChange("panels", oldValue, panels);
     }
-    
+
     /**
      * Loads a Panel definition into the configuration if it is not already loaded
+     *
      * @param file - the file containing the Panel definition
      * @throws Exception if the specified file does not exist or does not contain a valid Panel
      */
@@ -708,11 +711,12 @@ public class Configuration extends AbstractModelObject {
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
     }
-    
+
     /**
-     * Removes the specified Panel definition from the configuration.  If the Panel definition has 
-     * been flagged as being modified, a dialog is presented to confirm if the operator desires to 
+     * Removes the specified Panel definition from the configuration.  If the Panel definition has
+     * been flagged as being modified, a dialog is presented to confirm if the operator desires to
      * save the Panel definition to the file system before it is removed.
+     *
      * @param panel - the Panel definition to remove
      */
     public void removePanel(Panel panel) {
@@ -722,13 +726,14 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("panels", oldValue, panels);
         panel.dispose();
     }
-    
+
     /**
-     * Returns the Panel definition contained in the specified file. If the Panel definition is 
-     * already loaded in the configuration, it is found and returned. If it is not already loaded 
+     * Returns the Panel definition contained in the specified file. If the Panel definition is
+     * already loaded in the configuration, it is found and returned. If it is not already loaded
      * into the configuration, the specified file is read and loaded into the configuration.  If the
-     * specified file does not exist, a new empty Panel definition is created and saved into the 
+     * specified file does not exist, a new empty Panel definition is created and saved into the
      * specified file and then is loaded into the configuration.
+     *
      * @param file - the file containing the Panel definition
      * @throws Exception if the specified file exists but does not contain a valid Panel
      */
@@ -749,9 +754,10 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("panels", oldValue, panels);
         return panel;
     }
-    
+
     /**
      * Adds the specified Board definition to the configuration
+     *
      * @param board - the Board definition to be added
      */
     public void addBoard(Board board) {
@@ -759,9 +765,10 @@ public class Configuration extends AbstractModelObject {
         boards.put(board.getFile(), board);
         firePropertyChange("boards", oldValue, boards);
     }
-    
+
     /**
      * Loads a Board definition into the configuration if it is not already loaded
+     *
      * @param file - the file containing the Board definition
      * @throws Exception if the specified file does not exist or does not contain a valid Board
      */
@@ -775,11 +782,12 @@ public class Configuration extends AbstractModelObject {
         boards.put(file, board);
         firePropertyChange("boards", oldValue, boards);
     }
-    
+
     /**
-     * Removes the specified Board definition from the configuration. If the Board definition has 
-     * been flagged as being modified, a dialog is presented to confirm if the operator desires to 
+     * Removes the specified Board definition from the configuration. If the Board definition has
+     * been flagged as being modified, a dialog is presented to confirm if the operator desires to
      * save the Board definition to the file system before it is removed.
+     *
      * @param board - the Board to remove
      */
     public void removeBoard(Board board) {
@@ -789,13 +797,14 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("boards", oldValue, boards);
         board.dispose();
     }
-    
+
     /**
-     * Returns the Board definition contained in the specified file. If the Board definition is 
-     * already loaded in the configuration, it is found and returned. If it is not already loaded, 
+     * Returns the Board definition contained in the specified file. If the Board definition is
+     * already loaded in the configuration, it is found and returned. If it is not already loaded,
      * the specified file is read and loaded into the configuration.  If the specified file does not
      * exist, a new empty Board definition is created and saved into the specified file and then is
      * loaded into the configuration.
+     *
      * @param file - the file containing the Board definition
      * @return the Board definition
      * @throws Exception if the specified file exists but does not contain a valid Board definition
@@ -817,7 +826,7 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("boards", oldValue, boards);
         return board;
     }
-    
+
     private static void serializeObject(Object o, File file) throws Exception {
         Serializer serializer = createSerializer();
         // This write forces any errors that will appear to happen before we start writing to
@@ -873,6 +882,7 @@ public class Configuration extends AbstractModelObject {
     /**
      * Loads the Boards listed in the specified file into the configuration.  Any Boards listed that
      * can't be loaded are skipped and an error message is logged.
+     *
      * @param file - the file containing the list of boards
      * @throws Exception - if the specified file can't be read successfully
      */
@@ -882,11 +892,9 @@ public class Configuration extends AbstractModelObject {
         for (File boardFile : holder.boards) {
             try {
                 addBoard(boardFile);
-            }
-            catch(FileNotFoundException e) {
+            } catch (FileNotFoundException e) {
                 Logger.error("Could not load board " + boardFile.getCanonicalPath() + ", file is missing.");
-            }
-            catch(Exception e) {
+            } catch (Exception e) {
                 Logger.error("Could not load board " + boardFile.getCanonicalPath() + ", file may be corrupt.");
                 e.printStackTrace();
             }
@@ -895,6 +903,7 @@ public class Configuration extends AbstractModelObject {
 
     /**
      * Saves the Boards that are currently loaded in the configuration to the specified file
+     *
      * @param file - the file in which to save the Boards
      * @throws Exception if the file can't be written successfully
      */
@@ -902,7 +911,7 @@ public class Configuration extends AbstractModelObject {
         BoardsConfigurationHolder holder = new BoardsConfigurationHolder();
         holder.boards = new ArrayList<>(boards.keySet());
         serializeObject(holder, file);
-        
+
         for (Board board : getBoards()) {
             confirmSaveOfModified(board);
         }
@@ -911,6 +920,7 @@ public class Configuration extends AbstractModelObject {
     /**
      * Loads the Panels listed in the specified file into the configuration.  Any Panels listed that
      * can't be loaded are skipped and an error message is logged.
+     *
      * @param file - the file containing the list of panels
      * @throws Exception - if the specified file can't be read successfully
      */
@@ -920,11 +930,9 @@ public class Configuration extends AbstractModelObject {
         for (File panelFile : holder.panels) {
             try {
                 addPanel(panelFile);
-            }
-            catch(FileNotFoundException e) {
+            } catch (FileNotFoundException e) {
                 Logger.error("Could not load panel " + panelFile.getCanonicalPath() + ", file is missing.");
-            }
-            catch(Exception e) {
+            } catch (Exception e) {
                 Logger.error("Could not load panel " + panelFile.getCanonicalPath() + ", file may be corrupt.");
                 e.printStackTrace();
             }
@@ -933,6 +941,7 @@ public class Configuration extends AbstractModelObject {
 
     /**
      * Saves the Panels that are currently loaded in the configuration to the specified file
+     *
      * @param file - the file in which to save the Panels
      * @throws Exception if the file can't be written successfully
      */
@@ -940,7 +949,7 @@ public class Configuration extends AbstractModelObject {
         PanelsConfigurationHolder holder = new PanelsConfigurationHolder();
         holder.panels = new ArrayList<>(panels.keySet());
         serializeObject(holder, file);
-        
+
         for (Panel panel : getPanels()) {
             confirmSaveOfModified(panel);
         }
@@ -957,22 +966,19 @@ public class Configuration extends AbstractModelObject {
                 try {
                     if (placementsHolder instanceof Board) {
                         saveBoard((Board) placementsHolder);
-                    }
-                    else if (placementsHolder instanceof Panel) {
-                        savePanel((Panel)placementsHolder);
-                    }
-                    else {
+                    } else if (placementsHolder instanceof Panel) {
+                        savePanel((Panel) placementsHolder);
+                    } else {
                         throw new UnsupportedOperationException("Instance type " + placementsHolder.getClass() + " not supported.");
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     MessageBoxes.errorBox(MainFrame.get(), "Save Error", //$NON-NLS-1$
                             e.getMessage());
                 }
             }
         }
     }
-    
+
     private void loadVisionSettings(File file) throws Exception {
         Serializer serializer = createSerializer();
         VisionSettingsConfigurationHolder holder =
@@ -989,7 +995,8 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Returns the Job contained within the specified file 
+     * Returns the Job contained within the specified file
+     *
      * @param file - the file containing the Job
      * @return the Job
      * @throws Exception - if the file can't be read successfully
@@ -999,29 +1006,30 @@ public class Configuration extends AbstractModelObject {
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
         convertLegacyJob(job);
-        
+
         job.rootPanelLocation.setPlacementsHolder(job.rootPanel);
-        
+
         resolvePanel(job, job.getRootPanelLocation());
         restoreJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
-        
+
         Logger.trace("Dump of the jobRootPanelLocation");
         job.getRootPanelLocation().dump("");
-        
+
         job.setDirty(job.getVersion() == null);
-        
+
         return job;
     }
 
     /**
      * Converts jobs with deprecated lists of panels and/or boards to the newer format. If a legacy
-     * panel is found, it is converted to a stand-alone panel and then is added to the job's new 
+     * panel is found, it is converted to a stand-alone panel and then is added to the job's new
      * root panel. If a legacy panel is not found, any boards found in the job's deprecated list of
-     * boards are moved to the job's new root panel. Note, it would be tempting to do all this in 
+     * boards are moved to the job's new root panel. Note, it would be tempting to do all this in
      * the job's Commit method but that doesn't work because at the time it runs, the job's filename
      * has not yet been set.
+     *
      * @param job - the job to convert
-     * @throws Exception 
+     * @throws Exception
      */
     private static void convertLegacyJob(Job job) throws Exception {
         if (job.panels != null && !job.panels.isEmpty()) {
@@ -1029,41 +1037,40 @@ public class Configuration extends AbstractModelObject {
             backupLegacyJob(job);
             //Convert deprecated list of Panels to list of PanelLocations - note that the legacy 
             //panelization only ever allowed one panel so we only need to handle that case here.
-            
+
             //We need to create a new panel, populate it with the boards in the job, add the new 
             //panel to the configuration, and then add a panelLocation to the job's rootPanel that 
             //references it.
-            
+
             //First we need the root board location for the panel, this is the one that originally 
             //set the origin of the legacy panel
             BoardLocation rootBoardLocation = job.boardLocations.get(0);
-            
+
             //We need to resolve the board so we can get its dimensions
             Configuration configuration = Configuration.get();
             try {
                 configuration.resolveBoard(job, rootBoardLocation);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+
             //Now create a file for the new panel, we'll just use the job's file name except 
             //change it to end with ".panel.xml"
             String jobFileName = job.getFile().getCanonicalPath();
             String panelFileName = jobFileName.substring(0, jobFileName.indexOf(".job.xml")) + ".panel.xml";
             Logger.info("A new file is being created to hold the panel definition: " + panelFileName);
             File panelFile = new File(panelFileName);
-            
+
             Panel panel = job.panels.get(0);
             panel.setFile(panelFile);
             panel.setName(panelFile.getName());
             panel.setDefinition(panel);
             panel.setDimensions(Location.origin);
-            
+
             Location rootDims = rootBoardLocation.getBoard().getDimensions().
                     convertToUnits(configuration.getSystemUnits());
-            
+
             //We don't know the actual dimensions of the panel so we'll just set it to the bounding
             //box of the array of boards
             panel.setDimensions(Location.origin.deriveLengths(
@@ -1082,10 +1089,10 @@ public class Configuration extends AbstractModelObject {
                     fiducial.setSide(Side.Bottom);
                 }
             }
-            
+
             double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
             double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
-            
+
             for (int j = 0; j < panel.rows; j++) {
                 for (int i = 0; i < panel.columns; i++) {
                     // deep copy the existing root board
@@ -1094,24 +1101,24 @@ public class Configuration extends AbstractModelObject {
                     newPcb.setDefinition(newPcb);
                     newPcb.setGlobalSide(Side.Top);
                     newPcb.getPlaced().clear();
-                    
+
                     // Offset the sub PCB
                     newPcb.setLocation(new Location(configuration.getSystemUnits(),
-                                    pcbStepX * i,
-                                    pcbStepY * j, 0, 0));
-                    
+                            pcbStepX * i,
+                            pcbStepY * j, 0, 0));
+
                     panel.addChild(newPcb);
-                    
-                    String brdId = String.format("%s[%d,%d]", BoardLocation.ID_PREFIX, j+1, i+1);
+
+                    String brdId = String.format("%s[%d,%d]", BoardLocation.ID_PREFIX, j + 1, i + 1);
                     newPcb.setId(brdId);
-                    
-                    int boardNum = j*panel.columns + (rootBoardLocation.getGlobalSide() == Side.Top ? i : panel.columns - 1 - i);
+
+                    int boardNum = j * panel.columns + (rootBoardLocation.getGlobalSide() == Side.Top ? i : panel.columns - 1 - i);
                     BoardLocation subBoard = job.boardLocations.get(boardNum);
-                    
+
                     newPcb.setLocallyEnabled(subBoard.isLocallyEnabled());
-                    
-                    String keyRoot = PanelLocation.ID_PREFIX + "1" + 
-                            PlacementsHolderLocation.ID_DELIMITTER + newPcb.getUniqueId() + 
+
+                    String keyRoot = PanelLocation.ID_PREFIX + "1" +
+                            PlacementsHolderLocation.ID_DELIMITTER + newPcb.getUniqueId() +
                             PlacementsHolderLocation.ID_DELIMITTER;
                     Map<String, Boolean> subBoardPlaced = subBoard.getPlaced();
                     for (String key : subBoardPlaced.keySet()) {
@@ -1120,10 +1127,10 @@ public class Configuration extends AbstractModelObject {
                 }
             }
             boolean savedCheckFids = panel.isCheckFiducials();
-            
+
             configuration.savePanel(panel);
             configuration.addPanel(panel);
-            
+
             PanelLocation panelLocation = new PanelLocation();
             panelLocation.setFileName(panelFileName);
             panelLocation.setGlobalLocation(rootBoardLocation.getGlobalLocation());
@@ -1134,15 +1141,14 @@ public class Configuration extends AbstractModelObject {
             job.dirty = true;
             job.panels = null;
             job.boardLocations = null;
-        }
-        else if (job.boardLocations != null){
+        } else if (job.boardLocations != null) {
             Logger.info("A legacy job file has been detected, it is being updated to the new format.");
             backupLegacyJob(job);
             //Add board locations to the root panel
             for (BoardLocation boardLocation : job.boardLocations) {
                 boardLocation.setParent(job.rootPanelLocation);
                 job.rootPanel.addChild(boardLocation);
-                
+
                 //Move the deprecated placement status from the boardLocation to the job
                 Map<String, Boolean> temp = boardLocation.getPlaced();
                 if (temp != null) {
@@ -1156,9 +1162,10 @@ public class Configuration extends AbstractModelObject {
             job.boardLocations = null;
         }
     }
-    
+
     /**
      * Creates a backup copy of the existing job.xml file with a .legacy.job.xml extension
+     *
      * @param job - the job to backup
      * @throws Exception
      */
@@ -1167,18 +1174,19 @@ public class Configuration extends AbstractModelObject {
         String fileName = file.getName();
         String backupFileName = fileName.substring(0, fileName.indexOf(".job.xml")) + ".legacy.job.xml";
         File backupFile = new File(file.getParentFile(), backupFileName);
-        Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+        Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()),
                 StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
         Logger.info("A backup of the legacy job file has been copied to: " + backupFile.getCanonicalPath());
     }
-    
+
     /**
      * Attempts to find the Board definition associated with the given BoardLocation, create a copy
      * of it, and then assign the copy to the given BoardLocation
-     * @param job - the Job
+     *
+     * @param job           - the Job
      * @param boardLocation - the BoardLocation
-     * @throws Exception if the Board definition associated with the BoardLocation can't be loaded 
-     * successfully
+     * @throws Exception if the Board definition associated with the BoardLocation can't be loaded
+     *                   successfully
      */
     public void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
         String boardFilename = boardLocation.getBoardFile();
@@ -1199,7 +1207,7 @@ public class Configuration extends AbstractModelObject {
         if (!boardFile.exists()) {
             throw new Exception("Board file not found: " + boardFilename);
         }
-        
+
         Board boardDefinition = getBoard(boardFile);
         Board board = boardLocation.getBoard();
         if (board == null || board.getDefinition() != boardDefinition) {
@@ -1207,7 +1215,7 @@ public class Configuration extends AbstractModelObject {
             board = new Board(boardDefinition);
             boardLocation.setBoard(board);
         }
-        
+
         if (job != null) {
             boardLocation.addPropertyChangeListener(job);
             board.addPropertyChangeListener(job);
@@ -1217,7 +1225,8 @@ public class Configuration extends AbstractModelObject {
     /**
      * Attempts to find the Panel definition associated with the given PanelLocation, create a copy
      * of it, and assign the copy to the PanelLocation. Recursively resolves the Panel's children.
-     * @param job - the Job
+     *
+     * @param job           - the Job
      * @param panelLocation - the PanelLocation
      * @throws Exception if the Panel and all of its descendants can't be loaded successfully
      */
@@ -1228,8 +1237,7 @@ public class Configuration extends AbstractModelObject {
         Panel panel = panelLocation.getPanel();
         if (job != null && panelLocation == job.getRootPanelLocation()) {
             panel.setFile(job.getFile());
-        }
-        else {
+        } else {
             String panelFileName = panelLocation.getFileName();
             File panelFile = new File(panelFileName);
             if (!panelFile.exists() && panelLocation.getParent() != null) {
@@ -1244,7 +1252,7 @@ public class Configuration extends AbstractModelObject {
             if (!panelFile.exists()) {
                 throw new Exception("Panel file not found: " + panelFileName);
             }
-            
+
             Panel panelDefinition = getPanel(panelFile);
             if (panel == null || panel.getDefinition() != panelDefinition) {
                 //Create a deep copy of the Panel definition and assign it to the PanelLocation
@@ -1252,7 +1260,7 @@ public class Configuration extends AbstractModelObject {
                 panelLocation.setPanel(panel);
             }
         }
-        
+
         if (job != null) {
             panelLocation.addPropertyChangeListener(job);
             panel.addPropertyChangeListener(job);
@@ -1264,23 +1272,22 @@ public class Configuration extends AbstractModelObject {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
                 resolvePanel(job, childPanelLocation);
-            }
-            else if (child instanceof BoardLocation) {
+            } else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
                 resolveBoard(job, boardLocation);
-            }
-            else {
+            } else {
                 throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
             }
         }
-        
+
         panel.setDirty(false);
     }
-    
+
     /**
-     * Checks to see if the specified PlacementsHolder is used by the current job or any of the 
+     * Checks to see if the specified PlacementsHolder is used by the current job or any of the
      * currently loaded panels
+     *
      * @param placementsHolder - the PlacementsHolder to check
      * @return true if the PlacementsHolder is in use
      */
@@ -1289,20 +1296,21 @@ public class Configuration extends AbstractModelObject {
             return true;
         }
         for (Panel panel : getPanels()) {
-            if (panel.getDefinition() != placementsHolder.getDefinition() && 
+            if (panel.getDefinition() != placementsHolder.getDefinition() &&
                     panel.getInstanceCount(placementsHolder) > 0) {
                 return true;
             }
         }
         return false;
     }
-    
+
     /**
-     * Recursively checks the enabled and error handling settings of all the boards, panels, and 
-     * placements of a job to see if they match that of the defining boards and panels. If not, 
-     * those that are different than their definition, are saved into the job so that when the 
+     * Recursively checks the enabled and error handling settings of all the boards, panels, and
+     * placements of a job to see if they match that of the defining boards and panels. If not,
+     * those that are different than their definition, are saved into the job so that when the
      * job is reloaded, their settings can be restored.
-     * @param job - the job to check
+     *
+     * @param job           - the job to check
      * @param panelLocation - the PanelLocation where the checking should begin
      */
     private static void saveJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
@@ -1334,19 +1342,19 @@ public class Configuration extends AbstractModelObject {
                         if (child instanceof PanelLocation) {
                             saveJobEnabledAndErrorHandlingSettings(job, (PanelLocation) child);
                         }
-                    }
-                    else {
+                    } else {
                         throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
                     }
                 }
             }
         }
     }
-    
+
     /**
-     * Recursively restores the enabled and error handling settings of all the boards, panels, and 
+     * Recursively restores the enabled and error handling settings of all the boards, panels, and
      * placements of a job.
-     * @param job - the job to restore
+     *
+     * @param job           - the job to restore
      * @param panelLocation - the PanelLocation where the restoration should begin
      */
     private static void restoreJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
@@ -1366,18 +1374,18 @@ public class Configuration extends AbstractModelObject {
                         if (child instanceof PanelLocation) {
                             restoreJobEnabledAndErrorHandlingSettings(job, (PanelLocation) child);
                         }
-                    }
-                    else {
+                    } else {
                         throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
                     }
                 }
             }
         }
     }
-    
+
     /**
      * Serializes the specified job and writes it to the specified file
-     * @param job - the job to save
+     *
+     * @param job  - the job to save
      * @param file - the file into which the job is to be saved
      * @throws Exception if the file can't be written successfully
      */
@@ -1389,13 +1397,14 @@ public class Configuration extends AbstractModelObject {
         job.setFile(file);
         job.setDirty(false);
     }
-    
+
     public String getImgurClientId() {
         return imgurClientId;
     }
 
     /**
      * Saves the specified Panel into its file
+     *
      * @param panel - the Panel to save
      * @throws Exception if the file can't be written successfully
      */
@@ -1409,10 +1418,11 @@ public class Configuration extends AbstractModelObject {
     /**
      * Returns the Panel definition contained in the specified file.  Recursively loads the Panel's
      * descendants.
+     *
      * @param file - the file containing the Panel definition
      * @return the Panel definition
      * @throws Exception if the specified file can't be read successfully or if any of the
-     * descendants of the panel can't be found
+     *                   descendants of the panel can't be found
      */
     private Panel loadPanel(File file) throws Exception {
         Serializer serializer = createSerializer();
@@ -1426,16 +1436,13 @@ public class Configuration extends AbstractModelObject {
             if (childFile.exists()) {
                 if (child instanceof BoardLocation) {
                     child.setPlacementsHolder(new Board(getBoard(childFile)));
-                }
-                else if (child instanceof PanelLocation) {
+                } else if (child instanceof PanelLocation) {
                     child.setPlacementsHolder(new Panel(getPanel(childFile)));
                     PanelLocation.setParentsOfAllDescendants((PanelLocation) child);
-                }
-                else {
+                } else {
                     throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
                 }
-            }
-            else {
+            } else {
                 throw new Exception(String.format("Unable to find child %s of panel %s", childFile.getCanonicalPath(), file.getCanonicalPath()));
             }
         }
@@ -1445,9 +1452,10 @@ public class Configuration extends AbstractModelObject {
         panel.setDirty(false);
         return panel;
     }
-    
+
     /**
      * Saves the specified Board into its file
+     *
      * @param panel - the Board to save
      * @throws Exception if the file can't be written successfully
      */
@@ -1460,6 +1468,7 @@ public class Configuration extends AbstractModelObject {
 
     /**
      * Creates and returns a Board based on the contents of the specified file
+     *
      * @param file - the file to read
      * @return the Board
      * @throws Exception if the specified file can't be read successfully

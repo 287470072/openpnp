@@ -1,6 +1,7 @@
 package org.openpnp.util;
 
 
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Serial;
 import org.pmw.tinylog.Logger;
 
@@ -54,15 +55,12 @@ public class SerialUtil {
 
     }
 
-    public static boolean checkSerialFile() {
+    public static void checkSerialFile() {
         String currentDirectory = System.getProperty("user.dir");
         String filePath = "keys.txt";
         String fullPath = currentDirectory + File.separator + filePath;
-        String publicKey = "";
+        String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGTVyfTm7MQJulXRg0Ddgt9qbUrj3qg2QwXG7Sdys2h1PPzG65i8Z408oUDeK4cUKUltLLKRTnnnFqGHl3ocF6Fn6YQh4ulX8oO0b4hLAB9RQ+YqDT1XjW+PYZpURACx9rYTAlJVvhKNayrW5WueTGPcAdeekgYZ+TbkVlE3ioZwIDAQAB";
         String serial = "";
-
-        Logger.trace(fullPath);
-
         // 判断文件是否存在
         if (Files.exists(Path.of(fullPath))) {
             try {
@@ -72,21 +70,11 @@ public class SerialUtil {
                 Pattern keyValuePattern = Pattern.compile("(.*?)=(.*)");
                 // 解析 Ini 文件内容
                 while ((iniContent = in.readLine()) != null) {
-                    Matcher keyValueMatcher = keyValuePattern.matcher(iniContent);
-
-                    if (keyValueMatcher.matches()) {
-                        String key = keyValueMatcher.group(1);
-                        String value = keyValueMatcher.group(2);
-
-                        if (key.equals("publicKey")) {
-                            publicKey = value;
-                        } else if (key.equals("serial")) {
-                            serial = value;
-                        }
-                    }
+                    serial = iniContent;
                 }
                 if (!publicKey.equals("") && !serial.equals("")) {
                     Serial serialtemp = new Serial(publicKey, serial);
+
                     explainSerialNumber(serialtemp);
                     /*获取MAC地址*/
                     String mac = serialtemp.getMac();
@@ -98,18 +86,18 @@ public class SerialUtil {
                     long time = new Timestamp(System.currentTimeMillis()).getTime();
                     /*判断有效结束时间是否大于当前时间*/
                     if (mac.equals(localMac) && Long.parseLong(effectiveEndTime) > time) {
-                        return true;
+                        serialtemp.setCertification(true);
                     } else {
-                        return false;
+                        serialtemp.setCertification(false);
                     }
-                } else {
-                    return false;
+                    Configuration.get().setSerial(serialtemp);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            return false;
         }
+
     }
+
+
 }

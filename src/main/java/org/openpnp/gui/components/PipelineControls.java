@@ -55,6 +55,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Serial;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
@@ -214,9 +215,9 @@ public abstract class PipelineControls extends JPanel {
                     int cameraHeight = camera.getHeight();
                     int cameraWidth = camera.getWidth();
 
-                    if (SerialUtil.checkSerialFile() &&
-                            ((camera.isInRange(cameraWidth, 2550, 2570) && camera.isInRange(cameraHeight, 700, 750))
-                                    || (camera.isInRange(cameraWidth, 1260, 1290) && camera.isInRange(cameraHeight, 460, 500)))) {
+                    Serial serial = Configuration.get().getSerial();
+                    if (serial != null && serial.isCertification() && ((camera.isInRange(cameraWidth, 2550, 2570) && camera.isInRange(cameraHeight, 700, 750))
+                            || (camera.isInRange(cameraWidth, 1260, 1290) && camera.isInRange(cameraHeight, 460, 500)))) {
                         if (movable == n1 && camera.getLooking() == Camera.Looking.Up) {
                             //左半边
                             //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);

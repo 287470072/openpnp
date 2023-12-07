@@ -32,6 +32,7 @@ import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.logging.ConsoleWriter;
 import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.SerialUtil;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
@@ -128,6 +129,7 @@ public class Main {
     public static void main(String[] args) {
         monkeyPatchBeansBinding();
 
+
         for (String s : args) {
             if (s.equals("--version")) {
                 System.out.println(getVersion());
@@ -152,6 +154,7 @@ public class Main {
 
         configurationDirectory.mkdirs();
 
+
         configureLogging(configurationDirectory);
 
         Configuration.initialize(configurationDirectory);
@@ -162,7 +165,7 @@ public class Main {
         new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
 
-
+        SerialUtil.checkSerialFile();
 
         EventQueue.invokeLater(new Runnable() {
             public void run() {
