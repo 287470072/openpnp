@@ -1191,38 +1191,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
-
-                        Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
-                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-                        Serial serial = Configuration.get().getSerial();
-                        if (serial != null && serial.isCertification() && nozzles.size() == 2 &&
-                                ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750)) || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))
-                                && pkgNozzles.size() > 1) {
-                            if (nozzle.equals(nozzles.get(0))) {
-                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                // 喷嘴还不在相机漫游半径内。以安全的Z轴移
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                                //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
-                            } else {
-                                //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
-                                Location n2Offest = nozzles.get(1).getHeadOffsets();
-                                Location n1Offset = nozzles.get(0).getHeadOffsets();
-                                Location shotLocationNew = shotLocation;
-                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
-                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
-                                nozzle.moveTo(shotLocationNew);
-                            }
-                        } else {
-                            if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
-                                // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                                // 喷嘴还不在相机漫游半径内。以安全的Z轴移
-                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                            } else {
-                                nozzle.moveTo(shotLocation);
-                            }
-
+                        if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                                .compareTo(camera.getRoamingRadius()) > 0) {
+                            // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                            MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                         }
-
+                        else {
+                            nozzle.moveTo(shotLocation);
+                        }
                         super.apply();
                     });
                 }
