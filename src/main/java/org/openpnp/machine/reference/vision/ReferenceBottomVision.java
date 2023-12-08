@@ -522,7 +522,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     for (int pass = 0; ; ) {
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN1, n1, wantedLocationN1, locationN1, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN1.getId(), rect);
@@ -640,7 +640,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
 
                         // 处理管道并获取结果的旋转矩形
-                        RotatedRect rect = processPipelineAndGetResult(pipeline, camera, partN2, n2, wantedLocationN2, locationN2, bottomVisionSettings);
+                        RotatedRect rect = processPipelineAndGetResultMulti(pipeline, camera, partN2, n2, wantedLocationN2, locationN2, bottomVisionSettings);
 
                         // 记录调试信息，包括底部视觉部件的ID和识别的矩形信息
                         Logger.debug("Bottom vision part {} result rect {}", partN2.getId(), rect);
