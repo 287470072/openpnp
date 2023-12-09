@@ -34,7 +34,7 @@ public class Serial {
     private String mac;
 
 
-    private boolean isCertification = false;
+    private boolean isCertification = true;
 
     public boolean isCertification() {
         return isCertification;

@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -1262,15 +1263,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .findFirst()
                     .orElse(null);
             try {
-                if (this instanceof Align) {
+                List<Camera> cameras = Configuration.get().getMachine().getCameras();
+                Camera camera = cameras.get(0);
+                for (Camera c : cameras) {
+                    if (c instanceof OpenPnpCaptureCamera && c.getLooking() == Camera.Looking.Up) {
+                        camera = c;
+                    }
+                }
+                Serial serial = Configuration.get().getSerial();
+                if (this instanceof Align && ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+                        || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                     result = multiAlign(plannedPlacements);
-                    if(plannedPlacement != null){
-                    if ( plannedPlacement.alignmentOffsets != null && plannedPlacement.alignmentOffsets.getLocation().getX() != 0) {
-                        completed.add(plannedPlacement);
-                    } else {
-                        plannedPlacement.jobPlacement.setError(new Exception("有部分元件识别失败！"));
+                    if (plannedPlacement != null) {
+                        if (plannedPlacement.alignmentOffsets != null && plannedPlacement.alignmentOffsets.getLocation().getX() != 0) {
+                            completed.add(plannedPlacement);
+                        } else {
+                            plannedPlacement.jobPlacement.setError(new Exception("有部分元件识别失败！"));
 
-                    }}
+                        }
+                    }
 
                 } else {
                     result = stepImpl(plannedPlacement);
