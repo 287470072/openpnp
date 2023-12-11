@@ -33,6 +33,45 @@ public class Serial {
     /*MAC地址*/
     private String mac;
 
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getEffectiveEndTime() {
+        return effectiveEndTime;
+    }
+
+    public void setEffectiveEndTime(String effectiveEndTime) {
+        this.effectiveEndTime = effectiveEndTime;
+    }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public void setMac(String mac) {
+        this.mac = mac;
+    }
 
     private boolean isCertification = true;
 
