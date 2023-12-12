@@ -165,7 +165,7 @@ public class Main {
         new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
 
-        SerialUtil.checkSerialFile();
+        //SerialUtil.checkSerialFile();
 
         EventQueue.invokeLater(new Runnable() {
             public void run() {

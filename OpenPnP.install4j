@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="10.0.6" transformSequenceNumber="10">
   <directoryPresets config="./libjarDecrypt.dll" />
-  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="2023-12-04_06-03-07.800003c" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
+  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="2023-12-12_08-57-15.b1d5d6c" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <languages>
       <principalLanguage id="zh_CN" />
     </languages>

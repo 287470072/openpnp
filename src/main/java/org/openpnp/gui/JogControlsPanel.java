@@ -608,7 +608,7 @@ public class JogControlsPanel extends JPanel {
         m1ZValue.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent documentEvent) {
-                s5ZValue.setText(String.valueOf(Double.parseDouble(m1ZValue.getText())));
+                s5ZValue.setText(String.valueOf(Double.parseDouble(m1ZValue.getText()) - 7.8));
             }
 
             @Override
@@ -616,7 +616,7 @@ public class JogControlsPanel extends JPanel {
                 if (m1ZValue.getText().equals("")) {
                     s5ZValue.setText("");
                 } else {
-                    s5ZValue.setText(String.valueOf(Double.parseDouble(m1ZValue.getText())));
+                    s5ZValue.setText(String.valueOf(Double.parseDouble(m1ZValue.getText()) - 7.8));
                 }
 
             }
@@ -643,7 +643,7 @@ public class JogControlsPanel extends JPanel {
         m2XValue.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent documentEvent) {
-                s1XValue.setText(String.valueOf(Double.parseDouble(m2XValue.getText()) - 8));
+                s1XValue.setText(String.valueOf(Double.parseDouble(m2XValue.getText()) - 9));
             }
 
             @Override
@@ -651,7 +651,7 @@ public class JogControlsPanel extends JPanel {
                 if (m2XValue.getText().equals("")) {
                     s1XValue.setText("");
                 } else {
-                    s1XValue.setText(String.valueOf(Double.parseDouble(m2XValue.getText()) - 8));
+                    s1XValue.setText(String.valueOf(Double.parseDouble(m2XValue.getText()) - 9));
                 }
 
             }
@@ -687,7 +687,7 @@ public class JogControlsPanel extends JPanel {
         m2ZValue.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent documentEvent) {
-                s1ZValue.setText(String.valueOf(Double.parseDouble(m2ZValue.getText())));
+                s1ZValue.setText(String.valueOf(Double.parseDouble(m2ZValue.getText()) - 7.8));
             }
 
             @Override
@@ -695,7 +695,7 @@ public class JogControlsPanel extends JPanel {
                 if (m2ZValue.getText().equals("")) {
                     s1ZValue.setText("");
                 } else {
-                    s1ZValue.setText(String.valueOf(Double.parseDouble(m2ZValue.getText())));
+                    s1ZValue.setText(String.valueOf(Double.parseDouble(m2ZValue.getText()) - 7.8));
                 }
 
             }

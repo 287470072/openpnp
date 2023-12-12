@@ -99,7 +99,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (p.nozzle.isAligningRotationMode()) {
                 double rotOff = p.nozzle.getRotationModeOffset() != null ? p.nozzle.getRotationModeOffset() : 0;
                 p.nozzle.setRotationModeOffset(rotOff + p.alignmentOffsets.getLocation().getRotation());
-
+                Location newOffsets = p.alignmentOffsets.getLocation().derive(null, null, null, 0.);
+                p.alignmentOffsets = new PartAlignmentOffset(newOffsets, p.alignmentOffsets.getPreRotated());
             }
         });
         return offsets;
