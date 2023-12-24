@@ -1069,10 +1069,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             }else if (nozzle.equals(nozzles.get(1))) {
                                 Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
-                                Location shotLocationNew = shotLocation;
-                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
-                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
-                                nozzle.moveTo(shotLocationNew);
+                                shotLocation.setX(shotLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocation.setY(shotLocation.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocation);
 
                             }
                         } else {
@@ -1200,13 +1199,46 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 @Override
                 public void apply() {
                     UiUtils.messageBoxOnException(() -> {
-                        if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                .compareTo(camera.getRoamingRadius()) > 0) {
-                            // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                            MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                        }
-                        else {
-                            nozzle.moveTo(shotLocation);
+                        Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
+                        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+                        if (nozzles.size() == 2 && camera.getWidth() > 2000 && pkgNozzles.size() > 1) {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+
+                                } else {
+                                    //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            }else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                shotLocation.setX(shotLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocation.setY(shotLocation.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocation);
+
+                            }
+                        } else {
+                            if (nozzle.equals(nozzles.get(0))) {
+                                if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
+                                    // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                                    // 喷嘴还不在相机漫游半径内。以安全的Z轴移
+                                    MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                } else {
+                                    nozzle.moveTo(shotLocation);
+                                }
+                            } else if (nozzle.equals(nozzles.get(1))) {
+                                Location n2Offest = nozzles.get(1).getHeadOffsets();
+                                Location n1Offset = nozzles.get(0).getHeadOffsets();
+                                Location shotLocationNew = shotLocation;
+                                shotLocationNew.setX(shotLocationNew.getX() + n2Offest.getX() - n1Offset.getX());
+                                shotLocationNew.setY(shotLocationNew.getY() + n2Offest.getY() - n1Offset.getY());
+                                nozzle.moveTo(shotLocationNew);
+
+                            }
                         }
                         super.apply();
                     });
@@ -1235,9 +1267,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
             //这部分主要为了视觉融合的时候移动吸嘴
-   /*         if (pipeline.getPipelineShots().size() > 1) {
+            if (pipeline.getPipelineShots().size() > 1) {
                 pipelineShot.apply();
-            }*/
+            }
             Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
             AffineWarp affineWarp = new AffineWarp();
             List<CvStage> stages = pipeline.getStages();
