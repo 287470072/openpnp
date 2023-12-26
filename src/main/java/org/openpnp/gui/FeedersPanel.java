@@ -34,6 +34,7 @@ import org.openpnp.model.Package;
 import org.openpnp.spi.*;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -103,13 +104,19 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JButton btnDeleteFeeder = new JButton(deleteFeederAction);
         btnDeleteFeeder.setHideActionText(true);
         toolBar.add(btnDeleteFeeder);
+        
+        JButton btnDiscord = new JButton(discardAction);
+        btnDiscord.setHideActionText(false);
+       
+
 
         toolBar.addSeparator();
         toolBar.add(pickFeederAction);
         toolBar.add(feedFeederAction);
         toolBar.add(moveCameraToPickLocation);
         toolBar.add(moveToolToPickLocation);
-
+        toolBar.add(btnDiscord);
+        
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
@@ -526,6 +533,20 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     tableModel.refresh();
                 }
             }
+        }
+    };
+    
+    public final Action discardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.Discard);
+            putValue(NAME, Translations.getString("PartsPanel.Action.Discard")); //$NON-NLS-1$
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Cycles.discard(nozzle);
+            });
         }
     };
 

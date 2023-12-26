@@ -11,6 +11,7 @@ public class Icons {
     public static Icon copy = getIcon("/icons/copy.svg");
     public static Icon paste = getIcon("/icons/paste.svg");
     public static Icon export = getIcon("/icons/export.svg");
+    public static Icon Discard = getIcon("/icons/discord.svg");
     public static Icon importt = getIcon("/icons/import.svg");
     
     public static Icon nozzleAdd = getIcon("/icons/nozzle-add.svg");

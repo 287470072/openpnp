@@ -63,7 +63,9 @@ import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Package;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -172,8 +174,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 
 
-
-
         JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
                 new VisionSettingsComboBoxModel(BottomVisionSettings.class));
         bottomVisionCombo.setMaximumRowCount(20);
@@ -214,6 +214,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
         btnNewButton_1.setHideActionText(true);
         toolBar.add(btnNewButton_1);
+
+        JButton btnDiscord = new JButton(discardAction);
+        btnDiscord.setHideActionText(false);
+        toolBar.add(btnDiscord);
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -424,6 +428,20 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         }
     };
+
+    public final Action discardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.Discard);
+            putValue(NAME, Translations.getString("PartsPanel.Action.Discard")); //$NON-NLS-1$
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Cycles.discard(nozzle);
+            });
+        }
+    };
     private int selectedTab;
 
     public void firePartSelectionChanged() {
@@ -497,7 +515,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             if (value == null) {
                 return;
             }
-            Status status=(Status) value;
+            Status status = (Status) value;
             if (status == Status.Ready) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
