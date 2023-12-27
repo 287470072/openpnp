@@ -1066,7 +1066,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
                                     nozzle.moveTo(shotLocation);
                                 }
-                            }else if (nozzle.equals(nozzles.get(1))) {
+                            } else if (nozzle.equals(nozzles.get(1))) {
                                 Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
                                 shotLocation.setX(shotLocation.getX() + n2Offest.getX() - n1Offset.getX());
@@ -1213,7 +1213,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                     //nozzle.moveToTogether(shotLocation, shotLocation.getRotation(), shotLocation.getRotation());
                                     nozzle.moveTo(shotLocation);
                                 }
-                            }else if (nozzle.equals(nozzles.get(1))) {
+                            } else if (nozzle.equals(nozzles.get(1))) {
                                 Location n2Offest = nozzles.get(1).getHeadOffsets();
                                 Location n1Offset = nozzles.get(0).getHeadOffsets();
                                 shotLocation.setX(shotLocation.getX() + n2Offest.getX() - n1Offset.getX());
@@ -1279,7 +1279,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
             }
             Serial serial = Configuration.get().getSerial();
-            if (
+            if (serial.isCertification() &&
                     ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
                             || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
@@ -1397,7 +1397,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
             Serial serial = Configuration.get().getSerial();
 
-            if ( ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
+            if (serial.isCertification() && ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
                     || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边

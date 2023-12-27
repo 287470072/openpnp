@@ -165,7 +165,8 @@ public class Main {
         new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
 
-        //SerialUtil.checkSerialFile();
+
+
 
         EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -174,6 +175,11 @@ public class Main {
                     frame.setVisible(true);
                     Logger.info(String.format("Bienvenue, Bienvenido, Willkommen, Hello, Namaskar, Welkom, Bonjour to OpenPnP version %s.", Main.getVersion()));
                     configuration.getScripting().on("Startup", null);
+                    try {
+                        SerialUtil.checkSerialFile();
+                    } catch (Exception e) {
+                        Logger.trace(e.getMessage());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

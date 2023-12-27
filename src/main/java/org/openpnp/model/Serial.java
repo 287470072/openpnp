@@ -10,10 +10,7 @@ import lombok.Data;
 @Data
 public class Serial {
     /*生成序列号时使用*/
-    public Serial(String privateKey, String mac, String effectiveEndTime) {
-        this.privateKey = privateKey;
-        this.effectiveEndTime = effectiveEndTime;
-        this.mac = mac;
+    public Serial() {
     }
 
     /*序列号解密时使用*/

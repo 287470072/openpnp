@@ -1,8 +1,10 @@
 package org.openpnp.util;
 
 
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Serial;
+import org.openpnp.spi.Driver;
 import org.pmw.tinylog.Logger;
 
 import java.io.BufferedReader;
@@ -55,48 +57,31 @@ public class SerialUtil {
 
     }
 
-    public static void checkSerialFile() {
-        String currentDirectory = System.getProperty("user.dir");
-        String filePath = "keys.txt";
-        String fullPath = currentDirectory + File.separator + filePath;
-        String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGTVyfTm7MQJulXRg0Ddgt9qbUrj3qg2QwXG7Sdys2h1PPzG65i8Z408oUDeK4cUKUltLLKRTnnnFqGHl3ocF6Fn6YQh4ulX8oO0b4hLAB9RQ+YqDT1XjW+PYZpURACx9rYTAlJVvhKNayrW5WueTGPcAdeekgYZ+TbkVlE3ioZwIDAQAB";
-        String serial = "";
-        // 判断文件是否存在
-        if (Files.exists(Path.of(fullPath))) {
-            try {
-                FileReader reader = new FileReader(fullPath);
-                BufferedReader in = new BufferedReader(reader);
-                String iniContent;
-                Pattern keyValuePattern = Pattern.compile("(.*?)=(.*)");
-                // 解析 Ini 文件内容
-                while ((iniContent = in.readLine()) != null) {
-                    serial = iniContent;
+    public static void checkSerialFile() throws Exception {
+        List<Driver> drivers = Configuration.get().getMachine().getDrivers();
+        for (Driver driver : drivers) {
+            if (driver instanceof GcodeDriver) {
+                ((GcodeDriver) driver).connect();
+                ((GcodeDriver) driver).sendCommand("M701 E1 T");
+                String deviceId = ((GcodeDriver) driver).receiveSingleResponse(".*ok.*");
+                deviceId = deviceId.replace("ok!", "");
+                Logger.trace("ID:" + deviceId);
+                ((GcodeDriver) driver).sendCommand("M701 F1 T");
+                String deviceRes = ((GcodeDriver) driver).receiveSingleResponse(".*ok.*");
+                deviceRes = deviceRes.replace("ok!", "");
+                Logger.trace("Encrypt:" + deviceRes);
+                String privateKey = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAIZNXJ9ObsxAm6VdGDQN2C32ptSuPeqDZDBcbtJ3KzaHU8/MbrmLxnjTyhQN4rhxQpSW0sspFOeecWoYeXehwXoWfphCHi6Vfyg7RviEsAH1FD5ioNPVeNb49hmlREALH2thMCUlW+Eo1rKtbla55MY9wB156SBhn5NuRWUTeKhnAgMBAAECgYBqk+n04iE7JepeiEo0xOfRUfOCw+OOv0Y6up+XlcpNM4dnWCxmQm32ZNvwnjRVekwD7szJPIjCZhJKx7FdJpiKRAZDxDFQWPW0s3jijz4pX17PBP53pLTEAO8uMKZEIHA2aQ3bF6scdhtoI5fDO4ep8BtTvtXzw8NvI6BarJ90wQJBAOos7dbqDs4ivCz2wH3+fsgM8uXRnOKmrJVicarODPZFHQQnr3PByZFM6461gr2758SXgSn47AIMAHwsLx8xMD0CQQCS0ZuPmpCWTg94m6NzQaydQaltEgRpA4DgJ6Uk2bma4EIIHKP5yqo7UHOGNZXKQLSdcJNc2Jqhihvem8xlKsFzAkBkkEbTNFCHVYNaC90+PjxTzLvC1fF5o/oZbN1DbJlEaQm87w35uA7HxzChaHFs6XTuh+GAFNXFS0IqEQ9rZcRBAkEAgxTBXqUREiD/jx7l/7FS+9P0AH1lkpyeI4NB3nTFUZGHYtavUAWxluNtQRX2dmzu1OH9r5dz92XnHAjdpDVYIQJBAIh4v014nIaHQ+myKZd8p4b2DxJydpGg8HN4pyG6fBG90IJfeJvTzNrDU8S9ifOzO8lIRi5xjfQ7l6PvfioCweU=";
+                String md5 = MD5Utils.mD5(deviceId + privateKey).substring(8, 24);
+                Serial serial = new Serial();
+                if (md5.equals(deviceRes)) {
+                    serial.setCertification(true);
+                } else {
+                    serial.setCertification(false);
                 }
-                if (!publicKey.equals("") && !serial.equals("")) {
-                    Serial serialtemp = new Serial(publicKey, serial);
+                Configuration.get().setSerial(serial);
 
-                    explainSerialNumber(serialtemp);
-                    /*获取MAC地址*/
-                    String mac = serialtemp.getMac();
-                    /*获取有效结束时间*/
-                    String effectiveEndTime = serialtemp.getEffectiveEndTime();
-                    /*获取本机MAC地址*/
-                    String localMac = MachineCodeUtil.getThisMachineCodeMd5();
-                    /*获取当前时间戳*/
-                    long time = new Timestamp(System.currentTimeMillis()).getTime();
-                    /*判断有效结束时间是否大于当前时间*/
-                    if (mac.equals(localMac) && Long.parseLong(effectiveEndTime) > time) {
-                        serialtemp.setCertification(true);
-                    } else {
-                        serialtemp.setCertification(false);
-                    }
-                    Configuration.get().setSerial(serialtemp);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
-
     }
 
 
