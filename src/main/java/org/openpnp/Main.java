@@ -32,6 +32,7 @@ import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.logging.ConsoleWriter;
 import org.openpnp.logging.SystemLogger;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Serial;
 import org.openpnp.util.SerialUtil;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
