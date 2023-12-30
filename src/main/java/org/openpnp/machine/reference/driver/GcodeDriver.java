@@ -1083,7 +1083,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     public void sendCommand(String command, long timeout) throws Exception {
         // An error may have popped up in the meantime. Check and bail on it, before sending the next command. 
-        bailOnError();
+        //bailOnError();
         if (command == null) {
             return;
         }
@@ -1144,7 +1144,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public List<Line> receiveResponses() throws Exception {
-        bailOnError();
+        //bailOnError();
         List<Line> responses = new ArrayList<>();
         // Read any responses that might be queued up.
         responseQueue.drainTo(responses);
