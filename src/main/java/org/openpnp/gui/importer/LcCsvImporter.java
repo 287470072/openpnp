@@ -33,16 +33,18 @@ import org.openpnp.model.Package;
 import org.openpnp.model.*;
 import org.pmw.tinylog.Logger;
 
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
+import java.util.*;
 import java.util.regex.Pattern;
+
+import org.openpnp.model.Similary;
+import org.xm.Similarity;
 
 @SuppressWarnings("serial")
 public abstract class LcCsvImporter {
@@ -367,17 +369,26 @@ public abstract class LcCsvImporter {
                     if (part == null) {
                         part = new Part(partId);
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
-                        part.setHeight(l);
+
                         //判断封装是否存在，如果没有就创建封装
-                        Package pkg = cfg.getPackage(filtPackage(filtration(as[packageIndex])));
+                        Similary result = filtPackage(filtration(partId));
+                        Package pkg = null;
+                        if (result.getSimilar() >= 0.35) {
+                            pkg = cfg.getPackage(result.getaPackage().getId());
+                        }
+
                         //如果存在封装，就进行关联，没有就留空，并修改status状态
                         if (pkg != null) {
                             //pkg = new Package(as[packageIndex]);
                             //cfg.addPackage(pkg);
                             part.setPackage(pkg);
+                            if (pkg.getDescription() != null && !pkg.equals("")) {
+                                l.setValue(Double.parseDouble(pkg.getDescription()));
+                            }
+
                         }
 
-
+                        part.setHeight(l);
                         cfg.addPart(part);
                     }
 
@@ -419,11 +430,10 @@ public abstract class LcCsvImporter {
      * @return
      */
     private String filtration(String str) {
-        String regEx = "[`~!@#$%^&*()+=|{}:;\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
+        String regEx = "[`_~!@#$%^&*()+=|{}:;\\\\[\\\\]<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
         str = Pattern.compile(regEx).matcher(str).replaceAll("").trim();
         return str;
     }
-
 
 
     /**
@@ -432,15 +442,22 @@ public abstract class LcCsvImporter {
      * @param str
      * @return
      */
-    private String filtPackage(String str) {
-        String regEx = "(0201|0402|0603|0805|1206|^[a-zA-Z0-9]{1,7}-[a-zA-Z0-9]{1,3})";
-        Pattern pattern = Pattern.compile(regEx);
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.find())
-        {
-            str=matcher.group(0);
+    private Similary filtPackage(String str) {
+        List<Package> pakages = Configuration.get().getPackages();
+        ArrayList<Double> list = new ArrayList<>();
+        for (int i = 0; i < pakages.size(); i++) {
+            double charBasedSimilarityResult = Similarity.charBasedSimilarity(str, pakages.get(i).getId());
+            list.add(charBasedSimilarityResult);
+
         }
-        return str;
+        double resultMax = Collections.max(list);
+
+       /* Map<Package, Double> result = new HashMap<>();
+        result.put(pakages.get(list.indexOf(resultMax)), resultMax);*/
+        Similary result = new Similary();
+        result.setaPackage(pakages.get(list.indexOf(resultMax)));
+        result.setSimilar(resultMax);
+        return result;
     }
 
 

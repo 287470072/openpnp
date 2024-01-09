@@ -43,8 +43,10 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.*;
@@ -59,6 +61,8 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.pmw.tinylog.Logger;
+
+import org.openpnp.util.MyUntils;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left, X + / -, Y + / -, Z
@@ -1317,20 +1321,23 @@ public class JogControlsPanel extends JPanel {
                 //MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
                 //MovableUtils.fireTargetedUserAction(topCamera);
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-                Solutions solutions = machine.getSolutions();
-                List<Solutions.Issue> pendingIssues = new ArrayList<>();
-                solutions.setPendingIssues(pendingIssues);
-                machine.findIssues(solutions);
-                for (Solutions.Issue issue : pendingIssues) {
-                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
-                        if (issue.getIssue().equals("Primary calibration fiducial position and initial camera calibration.")) {
-                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
-                            visionIssue.setFeatureDiameter(18);
-                            visionIssue.setStateCall(Solutions.State.Solved);
-                        }
-                    }
 
+                //具体处理逻辑
+                MyUntils myUntils = new MyUntils();
+                double featureDiameter = 18;
+                List<Camera> cameras = configuration.getMachine().getCameras();
+                Head head = configuration.getMachine().getDefaultHead();
+                for (Camera camera : machine.getCameras()) {
+                    if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
+                        Length fiducialDiameter = myUntils.autoCalibrateCamera((ReferenceCamera) camera, camera, featureDiameter, "Primary Fiducial & Camera Calibration", false);
+                        Location fiducialLocation = myUntils.centerInOnSubjectLocation((ReferenceCamera) camera, camera, fiducialDiameter, "Primary Fiducial & Camera Calibration", false);
+                        // Store it.
+                        ((ReferenceHead) head).setCalibrationPrimaryFiducialLocation(fiducialLocation);
+                        ((ReferenceHead) head).setCalibrationPrimaryFiducialDiameter(fiducialDiameter);
+                    }
                 }
+
+
             });
         }
     };

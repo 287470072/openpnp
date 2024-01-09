@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,15 +56,9 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.model.Board;
+import org.openpnp.model.*;
 import org.openpnp.model.Abstract2DLocatable.Side;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.Package;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
 import org.pmw.tinylog.Logger;
 
 import com.Ostermiller.util.CSVParser;
@@ -71,6 +66,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.xm.Similarity;
 
 @SuppressWarnings("serial")
 public abstract class CsvImporter {
@@ -364,15 +360,25 @@ public abstract class CsvImporter {
                     if (part == null) {
                         part = new Part(partId);
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
-                        part.setHeight(l);
-                        Package pkg = cfg.getPackage(filtPackage(filtration(as[packageIndex])));
+                        //判断封装是否存在，如果没有就创建封装
+                        Similary result = filtPackage(filtration(partId));
+                        Package pkg = null;
+                        if (result.getSimilar() >= 0.35) {
+                            pkg = cfg.getPackage(result.getaPackage().getId());
+                        }
+
                         //如果存在封装，就进行关联，没有就留空，并修改status状态
                         if (pkg != null) {
                             //pkg = new Package(as[packageIndex]);
                             //cfg.addPackage(pkg);
                             part.setPackage(pkg);
+                            if (pkg.getDescription() != null && !pkg.equals("")) {
+                                l.setValue(Double.parseDouble(pkg.getDescription()));
+                            }
+
                         }
 
+                        part.setHeight(l);
                         cfg.addPart(part);
                     }
 
@@ -426,15 +432,22 @@ public abstract class CsvImporter {
      * @param str
      * @return
      */
-    private String filtPackage(String str) {
-        String regEx = "(0201|0402|0603|0805|1206)";
-        Pattern pattern = Pattern.compile(regEx);
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.find())
-        {
-            str=matcher.group(0);
+    private Similary filtPackage(String str) {
+        List<Package> pakages = Configuration.get().getPackages();
+        ArrayList<Double> list = new ArrayList<>();
+        for (int i = 0; i < pakages.size(); i++) {
+            double charBasedSimilarityResult = Similarity.charBasedSimilarity(str, pakages.get(i).getId());
+            list.add(charBasedSimilarityResult);
+
         }
-        return str;
+        double resultMax = Collections.max(list);
+
+       /* Map<Package, Double> result = new HashMap<>();
+        result.put(pakages.get(list.indexOf(resultMax)), resultMax);*/
+        Similary result = new Similary();
+        result.setaPackage(pakages.get(list.indexOf(resultMax)));
+        result.setSimilar(resultMax);
+        return result;
     }
 
     class Dlg extends JDialog {

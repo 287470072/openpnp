@@ -1290,8 +1290,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
             Serial serial = Configuration.get().getSerial();
             if (serial.isCertification() &&
-                    ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
-                            || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+                    camera.isTwoCamera()
+            ) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1407,8 +1407,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
             Serial serial = Configuration.get().getSerial();
 
-            if (serial.isCertification() && ((camera.isInRange(camera.getWidth(), 2550, 2570) && camera.isInRange(camera.getHeight(), 700, 750))
-                    || (camera.isInRange(camera.getWidth(), 1260, 1290) && camera.isInRange(camera.getHeight(), 460, 500)))) {
+            if (serial.isCertification() && camera.isTwoCamera()) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);

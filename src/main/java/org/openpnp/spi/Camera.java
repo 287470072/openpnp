@@ -35,6 +35,10 @@ public interface Camera extends HeadMountable, WizardConfigurable,
         Down, Up
     }
 
+    public enum Speeding {
+        High, Medium, Low
+    }
+
 
     /**
      * Get the location of the camera including the calibrated offset for the given tool.
@@ -58,8 +62,15 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     public void setLooking(Looking looking);
 
+
     public default boolean isInRange(int number, int lowerBound, int upperBound) {
         return number >= lowerBound && number <= upperBound;
+    }
+
+    public default boolean isTwoCamera() {
+        int result;
+        result = this.getWidth() / this.getHeight();
+        return result > 2;
     }
 
     /**

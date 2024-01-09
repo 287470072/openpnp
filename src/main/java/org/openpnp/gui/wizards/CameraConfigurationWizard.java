@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -40,6 +40,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.Translations;
+import org.openpnp.capture.CaptureFormat;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -93,7 +94,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     public CameraConfigurationWizard(AbstractBroadcastingCamera camera) {
         AbstractMachine machine = (AbstractMachine) Configuration.get()
-                                                                 .getMachine();
+                .getMachine();
         this.camera = camera;
 
         panel = new JPanel();
@@ -101,7 +102,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "CameraConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(new ColumnSpec[] {
+        panel.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -110,17 +111,17 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panel.add(lblName, "2, 2, right, default");
@@ -131,6 +132,23 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         lblLooking = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.LookingLabel.text")); //$NON-NLS-1$
         panel.add(lblLooking, "2, 4, right, default");
+
+        lblCameraSpeed = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.CameraSpeedLabel.text")); //$NON-NLS-1$
+        panel.add(lblCameraSpeed, "6, 2, right, default");
+
+        cameraSpeedCb = new JComboBox(Camera.Speeding.values());
+
+        cameraSpeedCb.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+               if (cameraSpeedCb.getSelectedItem().equals(Camera.Speeding.High)){
+
+               }
+                Logger.trace("cameraSpeedCb内容更改！");
+                //adaptDialog();
+            }
+        });
+
+        panel.add(cameraSpeedCb, "8, 2");
 
         lookingCb = new JComboBox(Camera.Looking.values());
         lookingCb.addItemListener(new ItemListener() {
@@ -166,20 +184,20 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         autoVisible = new JCheckBox("");
         panel.add(autoVisible, "4, 8");
-        
+
         lblShowMultiview = new JLabel(Translations.getString(
                 "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text")); //$NON-NLS-1$
         lblShowMultiview.setToolTipText(Translations.getString(
                 "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblShowMultiview, "6, 8, right, default");
-        
+
         shownInMultiCameraView = new JCheckBox("");
         panel.add(shownInMultiCameraView, "8, 8");
-        
+
         lblFocusSensing = new JLabel(Translations.getString(
                 "CameraConfigurationWizard.PropertiesPanel.FocusSensingLabel.text")); //$NON-NLS-1$
         panel.add(lblFocusSensing, "2, 10, right, default");
-        
+
         focusSensingMethod = new JComboBox(FocusSensingMethod.values());
         focusSensingMethod.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -190,15 +208,15 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelLight = new JPanel();
         panelLight.setBorder(new TitledBorder(null, Translations.getString(
                 "CameraConfigurationWizard.LightPanel.Border.title"), //$NON-NLS-1$
-                TitledBorder.LEADING, TitledBorder.TOP,null, null));
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLight);
         panelLight.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
+                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
                         ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
                         FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -275,7 +293,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.setBorder(new TitledBorder(null, Translations.getString(
                 "CameraConfigurationWizard.UnitsPerPixelPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
-        panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
+        panelUpp.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -291,22 +309,22 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.UNRELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.UNRELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,}));
 
         lbldCalibration = new JLabel(Translations.getString(
                 "CameraConfigurationWizard.UnitsPerPixelPanel.3DCalibrationLabel.text")); //$NON-NLS-1$
@@ -319,7 +337,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             }
         });
         panelUpp.add(enableUnitsPerPixel3D, "4, 2");
-        
+
         advancedCalWarning = new JLabel(Translations.getString(
                 "CameraConfigurationWizard.UnitsPerPixelPanel.AdvancedCalibrationActiveLabel.text")); //$NON-NLS-1$
         advancedCalWarning.setForeground(Color.RED);
@@ -435,7 +453,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                         "CameraConfigurationWizard.CalibrateInstructionsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelUpp.add(panelCal, "2, 14, 13, 1, fill, fill");
-        panelCal.setLayout(new FormLayout(new ColumnSpec[] {
+        panelCal.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -451,10 +469,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_ROWSPEC,}));
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,}));
         cancelMeasure1Action.setEnabled(false);
 
         lblUppInstructions = new JLabel(upLookingCalibrationInstructions);
@@ -466,11 +484,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             lightActuator.setModel(new ActuatorsComboBoxModel(machine));
             allowMachineActuators.setVisible(false);
             lblAllowMachineActuators.setVisible(false);
-        }
-        else if (allowMachineActuators.isSelected()) {
+        } else if (allowMachineActuators.isSelected()) {
             lightActuator.setModel(new ActuatorsComboBoxModel(machine, camera.getHead()));
-        }
-        else {
+        } else {
             lightActuator.setModel(new ActuatorsComboBoxModel(camera.getHead()));
         }
     }
@@ -481,7 +497,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblDefaultWorkingPlane.setVisible(enable3D && lookingDown);
         textFieldDefaultZ.setVisible(enable3D && lookingDown);
         btnCaptureToolZ.setVisible(enable3D && lookingDown);
-        lblUppInstructions.setText(enable3D ? 
+        lblUppInstructions.setText(enable3D ?
                 (lookingDown ? downLookingCalibrationInstructions
                         : upLookingCalibrationInstructions)
                 : basicCalibrationInstructions);
@@ -494,7 +510,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         btnMeasure2.setVisible(enable3D);
         btnCancelMeasure2.setVisible(enable3D);
         lblZ.setVisible(enable3D);
-        
+
         boolean cameraZ = enable3D && lookingDown
                 && !(camera.getAxisZ() == null || camera.getAxisZ() instanceof ReferenceVirtualAxis);
         lblCameraZ.setVisible(cameraZ);
@@ -503,7 +519,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         lblFocusSensing.setVisible(camera.getHead() == null);
         focusSensingMethod.setVisible(camera.getHead() == null);
-    };
+    }
+
+    ;
 
     public boolean isOverriddenClassicTransforms() {
         return enableUnitsPerPixel3D.isEnabled();
@@ -523,9 +541,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     @Override
     public void createBindings() {
         if (camera instanceof ReferenceCamera) {
-            addWrappedBinding(((ReferenceCamera) camera).getAdvancedCalibration(), 
-                    "overridingOldTransformsAndDistortionCorrectionSettings", 
-                this, "overriddenClassicTransforms");
+            addWrappedBinding(((ReferenceCamera) camera).getAdvancedCalibration(),
+                    "overridingOldTransformsAndDistortionCorrectionSettings",
+                    this, "overriddenClassicTransforms");
         }
 
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
@@ -623,9 +641,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
                 Location l = MainFrame.get()
-                                      .getMachineControls()
-                                      .getSelectedTool()
-                                      .getLocation();
+                        .getMachineControls()
+                        .getSelectedTool()
+                        .getLocation();
                 Helpers.copyLocationIntoTextFields(l, null, null, textFieldDefaultZ, null);
             });
         }
@@ -640,8 +658,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             measure2Action.setEnabled(false);
             try {
                 measure(1);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", e);
                 cancelMeasure1Action.actionPerformed(null);
             }
@@ -667,8 +684,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             cancelMeasure1Action.setEnabled(false);
             measure2Action.setEnabled(true);
             CameraView cameraView = MainFrame.get()
-                                             .getCameraViews()
-                                             .getCameraView(camera);
+                    .getCameraViews()
+                    .getCameraView(camera);
             cameraView.setSelectionEnabled(false);
         }
     };
@@ -682,8 +699,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             measure1Action.setEnabled(false);
             try {
                 measure(2);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", e);
                 cancelMeasure2Action.actionPerformed(null);
             }
@@ -710,8 +726,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             cancelMeasure2Action.setEnabled(false);
             measure1Action.setEnabled(true);
             CameraView cameraView = MainFrame.get()
-                                             .getCameraViews()
-                                             .getCameraView(camera);
+                    .getCameraViews()
+                    .getCameraView(camera);
             cameraView.setSelectionEnabled(false);
         }
     };
@@ -734,9 +750,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 .getMachineControls()
                 .getSelectedNozzle();
         if (!enableUnitsPerPixel3D.isSelected()) {
-            measurementLocation = null; 
-        }
-        else if (lookingCb.getSelectedItem() == Camera.Looking.Up) {
+            measurementLocation = null;
+        } else if (lookingCb.getSelectedItem() == Camera.Looking.Up) {
             Location cameraLocation = camera.getLocation()
                     .convertToUnits(units);
             Location nozzleLocation = nozzle.getLocation()
@@ -746,27 +761,26 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             if (measurement == 1) {
                 desiredNozzleLocation =
                         cameraLocation.add(new Location(units, 0, 0, thickness, 0));
-            }
-            else {
+            } else {
                 desiredNozzleLocation = cameraLocation.derive(null, null, nozzleLocation.getZ(),
                         nozzleLocation.getRotation());
-                
+
             }
             measurementLocation =
                     desiredNozzleLocation.subtract(new Location(units, 0, 0, thickness, 0))
-                    .convertToUnits(units);
-            if (measurement == 2 
-                    && Math.abs(measurementLocation.getZ() - Double.parseDouble(textFieldPrimaryUppZ.getText())) 
+                            .convertToUnits(units);
+            if (measurement == 2
+                    && Math.abs(measurementLocation.getZ() - Double.parseDouble(textFieldPrimaryUppZ.getText()))
                     < new Length(1, LengthUnit.Millimeters).convertToUnits(units).getValue()) {
                 throw new Exception("Secondary measurement must be at sufficiently different Z. Please move the nozzle with object up/down in Z first.");
             }
             if (!nozzleLocation.equals(desiredNozzleLocation)) {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html>This will position the nozzle "+nozzle.getName()+" over the camera "+camera.getName()+". <br/><br/>"
+                        "<html>This will position the nozzle " + nozzle.getName() + " over the camera " + camera.getName() + ". <br/><br/>"
                                 + "<span style=\"color:red;\">CAUTION:</span> Nozzle head offset, nozzle Safe Z, camera <br/>"
                                 + "location, basic motion etc. must already be set up.<br/><br/>"
                                 + "Are you sure?</html>",
-                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.NO_OPTION) {
                     throw new Exception("Measurement aborted.");
                 }
@@ -775,16 +789,15 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                     MovableUtils.fireTargetedUserAction(nozzle);
                 });
             }
-        }
-        else {
+        } else {
             measurementLocation = nozzle.getLocation()
                     .convertToUnits(units);
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "<html>This will move camera "+camera.getName()+" over to the position of the nozzle "+nozzle.getName()+". <br/><br/>"
+                    "<html>This will move camera " + camera.getName() + " over to the position of the nozzle " + nozzle.getName() + ". <br/><br/>"
                             + "<span style=\"color:red;\">CAUTION:</span> Nozzle head offset, nozzle Safe Z, basic <br/>"
                             + "motion etc. must already be set up.<br/><br/>"
                             + "Are you sure?</html>",
-                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.NO_OPTION) {
                 throw new Exception("Measurement aborted.");
             }
@@ -803,7 +816,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     protected void confirmMeasure(int measurement) throws NumberFormatException {
         LengthUnit units = Configuration.get()
-                                        .getSystemUnits();
+                .getSystemUnits();
         LengthConverter uppLengthConverter = new LengthConverter(uppFormat);
         LengthConverter lengthConverter = new LengthConverter();
         CameraView cameraView = MainFrame.get()
@@ -829,8 +842,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                             lengthConverter.convertForward(measurementLocation.getLengthZ()));
                 }
             }
-        }
-        else {
+        } else {
             textFieldSecondaryUppX.setText(uppLengthConverter.convertForward(
                     new Length(width / Math.abs(selection.width), units)));
             textFieldSecondaryUppY.setText(uppLengthConverter.convertForward(
@@ -865,7 +877,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JPanel panel;
     private JLabel lblName;
     private JLabel lblLooking;
+    private JLabel lblCameraSpeed;
     private JComboBox lookingCb;
+
+    private JComboBox cameraSpeedCb;
     private JTextField nameTf;
     private JLabel lblPreviewFps;
     private JTextField previewFps;
