@@ -1311,7 +1311,7 @@ public class JogControlsPanel extends JPanel {
     protected Action topCameraCalibrate = new AbstractAction(Translations.getString("JogControlsPanel.topCameraCalibrate.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 Camera topCamera = VisionUtils.getTopVisionCamera();
                 //移动相机到校准点上方
                 Location offsetLocation = new Location();
@@ -1323,11 +1323,10 @@ public class JogControlsPanel extends JPanel {
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
 
                 //具体处理逻辑
-                MyUntils myUntils = new MyUntils();
+                VisionSolutions myUntils = new VisionSolutions();
                 double featureDiameter = 18;
-                List<Camera> cameras = configuration.getMachine().getCameras();
                 Head head = configuration.getMachine().getDefaultHead();
-                for (Camera camera : machine.getCameras()) {
+                for (Camera camera : head.getCameras()) {
                     if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
                         Length fiducialDiameter = myUntils.autoCalibrateCamera((ReferenceCamera) camera, camera, featureDiameter, "Primary Fiducial & Camera Calibration", false);
                         Location fiducialLocation = myUntils.centerInOnSubjectLocation((ReferenceCamera) camera, camera, fiducialDiameter, "Primary Fiducial & Camera Calibration", false);
