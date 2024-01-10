@@ -539,8 +539,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         Location location = bottomVision.getCameraLocationAtPartHeight(part,
                 camera,
                 nozzle, angle);
-        bottomVision.preparePipelineMulti(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt,
-                location, location, visionSettings);
+        if (camera.isTwoCamera()){
+            bottomVision.preparePipelineMulti(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt,
+                    location, location, visionSettings);
+        }else {
+            bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt,
+                    location, location, visionSettings);
+        }
+
         if (edit) {
 
             pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline,
