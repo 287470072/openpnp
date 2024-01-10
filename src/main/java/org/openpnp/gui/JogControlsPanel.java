@@ -19,16 +19,12 @@
 
 package org.openpnp.gui;
 
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.FocusTraversalPolicy;
-import java.awt.Font;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeListener;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -60,6 +56,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 
 import org.openpnp.util.MyUntils;
@@ -1311,8 +1308,37 @@ public class JogControlsPanel extends JPanel {
     protected Action topCameraCalibrate = new AbstractAction(Translations.getString("JogControlsPanel.topCameraCalibrate.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.submitUiMachineTask(() -> {
-                Camera topCamera = VisionUtils.getTopVisionCamera();
+
+
+            JFrame newFrame = new JFrame(Translations.getString("JogControlsPanel.topCameraCalibrate.Text"));
+            newFrame.setSize(400, 300);
+            newFrame.setResizable(false);
+            newFrame.setAlwaysOnTop(true);
+
+/*
+            ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
+            Image image = icon.getImage();
+            Image newImage = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
+            JLabel gifLabel = new JLabel(icon);
+*/
+
+            // 将JLabel添加到新窗口
+            //newFrame.add(gifLabel);
+            newFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            Dimension frameSize = newFrame.getSize();
+            if (frameSize.height > screenSize.height)
+                frameSize.height = screenSize.height;
+            if (frameSize.width > screenSize.width)
+                frameSize.width = screenSize.width;
+
+            newFrame.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
+
+
+            // 显示新窗口
+            newFrame.setVisible(true);
+/*            UiUtils.submitUiMachineTask(() -> {
+
                 //移动相机到校准点上方
                 Location offsetLocation = new Location();
                 offsetLocation = topCamera.getLocation();
@@ -1323,7 +1349,7 @@ public class JogControlsPanel extends JPanel {
                 ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
 
                 //具体处理逻辑
-                VisionSolutions myUntils = new VisionSolutions();
+
                 double featureDiameter = 18;
                 Head head = configuration.getMachine().getDefaultHead();
                 for (Camera camera : head.getCameras()) {
@@ -1337,9 +1363,10 @@ public class JogControlsPanel extends JPanel {
                 }
 
 
-            });
+            });*/
         }
     };
+
 
     protected Action nozzleOffseAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleOffseAction.Text")) {
         @Override
