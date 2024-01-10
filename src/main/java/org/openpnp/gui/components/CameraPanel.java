@@ -47,6 +47,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
+import org.xm.Similarity;
 
 /**
  * Shows a square grid of cameras or a blown up image from a single camera.
@@ -321,7 +322,11 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
     public void cameraPanelBind() {
         //摄像头自动匹配
         OpenPnpCaptureCamera openPnpCaptureCamera = new OpenPnpCaptureCamera();
+
+        //硬件中所有的相机
         List<CaptureDevice> captureDevices = openPnpCaptureCamera.getCaptureDevices();
+
+        //配置中所有的相机
         List<Camera> cameras = Configuration.get().getMachine().getAllCameras();
 
 
@@ -331,38 +336,28 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                 OpenPnpCaptureCamera.CapturePropertyHolder gamma = openPnpCaptureCamera1.getGamma();
                 gamma.setValue(100);
                 String openPnpCaptureCamera1Name = openPnpCaptureCamera1.getName();
-                int startIndex = openPnpCaptureCamera1Name.indexOf('[');
-                if (startIndex != -1) {
-                    openPnpCaptureCamera1Name = openPnpCaptureCamera1Name.substring(0, startIndex);
-                }
+
+                List<Double> scores = new ArrayList<>();
+
                 for (CaptureDevice captureDevice : captureDevices) {
                     String captureDeviceName = captureDevice.getName();
+                    double charBasedSimilarityResult = Similarity.charBasedSimilarity(openPnpCaptureCamera1Name, captureDeviceName);
+                    scores.add(charBasedSimilarityResult);
+                    Logger.trace(openPnpCaptureCamera1Name + "|" + captureDeviceName + "|" + charBasedSimilarityResult);
                     if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
-                        ((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
-
-                        //设置分辨率
-                        List<CaptureFormat> formats = captureDevice.getFormats();
-                        if (camera1.getLooking() == Camera.Looking.Up) {
-                            String cameraName = camera1.getName();
-                            startIndex = cameraName.indexOf('[');
-                            int endIndex = cameraName.indexOf(']', startIndex);
-                            if (startIndex != -1 && endIndex != -1) {
-                                String pixelNubmer = cameraName.substring(startIndex + 1, endIndex);
-                                int cameraIndex = Integer.parseInt(pixelNubmer) - 1;
-                                if (cameraIndex < 0) {
-                                    cameraIndex = 0;
-                                }
-                                ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(cameraIndex));
-                            }
-
-                        } else {
-                            ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
-
-                        }
-
-                        addCamera2(camera1);
+                        //((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
+                        //addCamera2(camera1);
                     }
                 }
+
+                int maxIndex = scores.indexOf(Collections.max(scores));
+                List<CaptureFormat> formats = captureDevices.get(maxIndex).getFormats();
+
+                ((OpenPnpCaptureCamera) camera1).setDevice(captureDevices.get(maxIndex));
+                ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
+
+                addCamera2(camera1);
+
             }
         }
 
