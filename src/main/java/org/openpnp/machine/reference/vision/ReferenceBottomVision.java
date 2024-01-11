@@ -1202,7 +1202,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
                         Serial serial = Configuration.get().getSerial();
-                        if (serial.isCertification() && nozzles.size() == 2 && ((camera.getWidth() / camera.getHeight()) > 2) && pkgNozzles.size() > 1) {
+                        if (serial.isCertification() && nozzles.size() == 2 && camera.isTwoCamera() && pkgNozzles.size() > 1) {
                             if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.

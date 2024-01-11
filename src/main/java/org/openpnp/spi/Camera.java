@@ -70,7 +70,7 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public default boolean isTwoCamera() {
         int result;
         result = this.getWidth() / this.getHeight();
-        return result > 2;
+        return result >= 2;
     }
 
     /**
