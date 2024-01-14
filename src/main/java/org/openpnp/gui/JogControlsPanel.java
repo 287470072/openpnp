@@ -1099,6 +1099,10 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
 
+            Others test = configuration.getOthers();
+            test.setPositionm1XValue(11.11);
+
+
 
             List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
             if (nozzles.size() < 5) {
@@ -1327,10 +1331,12 @@ public class JogControlsPanel extends JPanel {
             newFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension frameSize = newFrame.getSize();
-            if (frameSize.height > screenSize.height)
-            {frameSize.height = screenSize.height;}
-            if (frameSize.width > screenSize.width)
-            { frameSize.width = screenSize.width;}
+            if (frameSize.height > screenSize.height) {
+                frameSize.height = screenSize.height;
+            }
+            if (frameSize.width > screenSize.width) {
+                frameSize.width = screenSize.width;
+            }
 
             newFrame.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
 
@@ -1668,6 +1674,7 @@ public class JogControlsPanel extends JPanel {
                 location = location.derive(null, null, null, parkAngle);
                 hm.moveTo(location);
                 MovableUtils.fireTargetedUserAction(hm, true);
+
             });
         }
     };

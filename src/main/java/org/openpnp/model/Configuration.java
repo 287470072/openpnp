@@ -116,6 +116,8 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
 
+    private Others others;
+
     private Serial serial;
     private LinkedHashMap<File, Panel> panels = new LinkedHashMap<>();
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
@@ -182,6 +184,10 @@ public class Configuration extends AbstractModelObject {
 
     public void setMachine(Machine machine) {
         this.machine = machine;
+    }
+
+    public void serOthers(Others others) {
+        this.others = others;
     }
 
     public Scripting getScripting() {
@@ -412,6 +418,24 @@ public class Configuration extends AbstractModelObject {
         boolean overrideUserConfig = Boolean.getBoolean("overrideUserConfig");
 
         try {
+            File file = new File(configurationDirectory, "others.xml");
+            if (overrideUserConfig || !file.exists()) {
+                Logger.info("No others.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("others", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/others.xml"), file);
+                forceSave = true;
+            }
+            loadOthers(file);
+        } catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading others.xml (" + message + ")", e);
+        }
+
+
+        try {
             File file = new File(configurationDirectory, "packages.xml");
             if (overrideUserConfig || !file.exists()) {
                 Logger.info("No packages.xml found in configuration directory, loading defaults.");
@@ -540,6 +564,11 @@ public class Configuration extends AbstractModelObject {
             saveMachine(createBackedUpFile("machine.xml", now));
         } catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
+        }
+        try {
+            saveOthers(createBackedUpFile("others.xml", now));
+        } catch (Exception e) {
+            throw new Exception("Error while saving others.xml (" + e.getMessage() + ")", e);
         }
         try {
             savePackages(createBackedUpFile("packages.xml", now));
@@ -682,6 +711,10 @@ public class Configuration extends AbstractModelObject {
 
     public Machine getMachine() {
         return machine;
+    }
+
+    public Others getOthers() {
+        return others;
     }
 
     /**
@@ -847,6 +880,18 @@ public class Configuration extends AbstractModelObject {
     private void saveMachine(File file) throws Exception {
         MachineConfigurationHolder holder = new MachineConfigurationHolder();
         holder.machine = machine;
+        serializeObject(holder, file);
+    }
+
+    private void loadOthers(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        OthersConfigurationHolder holder = serializer.read(OthersConfigurationHolder.class, file);
+        others = holder.others;
+    }
+
+    private void saveOthers(File file) throws Exception {
+        OthersConfigurationHolder holder = new OthersConfigurationHolder();
+        holder.others = others;
         serializeObject(holder, file);
     }
 
@@ -1501,6 +1546,12 @@ public class Configuration extends AbstractModelObject {
     public static class MachineConfigurationHolder {
         @Element
         private Machine machine;
+    }
+
+    @Root(name = "openpnp-others")
+    public static class OthersConfigurationHolder {
+        @Element
+        private Others others;
     }
 
     /**
