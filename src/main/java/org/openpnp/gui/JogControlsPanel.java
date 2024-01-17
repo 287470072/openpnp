@@ -33,10 +33,13 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import lombok.extern.flogger.Flogger;
+import org.jdesktop.beansbinding.BeanProperty;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -133,8 +136,8 @@ public class JogControlsPanel extends JPanel {
         this.configuration = configuration;
 
         createUi();
-
         configuration.addListener(configurationListener);
+
     }
 
     @Override
@@ -1099,10 +1102,12 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
 
-            Others test = configuration.getOthers();
-            test.setPositionm1XValue(11.11);
 
-
+            //参数保存
+            Others nozzleChangeSave = configuration.getOthers();
+            if (!m1XValue.getText().isEmpty()) {
+                nozzleChangeSave.setPositionm1XValue(Double.parseDouble(m1XValue.getText()));
+            }
 
             List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
             if (nozzles.size() < 5) {
@@ -1895,5 +1900,10 @@ public class JogControlsPanel extends JPanel {
     private Map<Actuator, JButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
 
+    protected void initDataBindings() {
+        Others nozzleChangeRead = Configuration.get().getOthers();
+        double test = nozzleChangeRead.getPositionm1XValue();
+        Logger.trace("1111");
+    }
 
 }

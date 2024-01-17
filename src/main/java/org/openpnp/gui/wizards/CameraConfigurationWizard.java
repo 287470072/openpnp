@@ -134,7 +134,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panel.add(lblLooking, "2, 4, right, default");
 
         lblCameraSpeed = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.CameraSpeedLabel.text")); //$NON-NLS-1$
-        panel.add(lblCameraSpeed, "6, 2, right, default");
+        //panel.add(lblCameraSpeed, "6, 2, right, default");
 
         cameraSpeedCb = new JComboBox(Camera.Speeding.values());
 
@@ -148,7 +148,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             }
         });
 
-        panel.add(cameraSpeedCb, "8, 2");
+        //panel.add(cameraSpeedCb, "8, 2");
 
         lookingCb = new JComboBox(Camera.Looking.values());
         lookingCb.addItemListener(new ItemListener() {
