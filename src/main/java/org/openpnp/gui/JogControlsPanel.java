@@ -126,6 +126,10 @@ public class JogControlsPanel extends JPanel {
 
     private boolean nozzleChangeStatus;
 
+    private static IniAppConfig config;
+
+    private JComboBox cameraSpeedText;
+
 
     /**
      * Create the panel.
@@ -138,6 +142,29 @@ public class JogControlsPanel extends JPanel {
         createUi();
         configuration.addListener(configurationListener);
 
+        loadIniSetting();
+    }
+
+    public void loadIniSetting() {
+        config = new IniAppConfig();
+        m1XValue.setText(config.getProperty("NozzleChange", "m1XValue"));
+        m1YValue.setText(config.getProperty("NozzleChange", "m1YValue"));
+        m1ZValue.setText(config.getProperty("NozzleChange", "m1ZValue"));
+
+        m2XValue.setText(config.getProperty("NozzleChange", "m2XValue"));
+        m2YValue.setText(config.getProperty("NozzleChange", "m2YValue"));
+        m2ZValue.setText(config.getProperty("NozzleChange", "m2ZValue"));
+
+        cameraOffsetText.setText(config.getProperty("Calibration", "cameraOffsetX"));
+        cameraOffsetYText.setText(config.getProperty("Calibration", "cameraOffsetY"));
+
+        String speed = config.getProperty("Calibration", "cameraSpeed");
+        for (int i = 0; i < cameraSpeedText.getItemCount(); i++) {
+            if (cameraSpeedText.getItemAt(i).toString().equals(speed)) {
+                cameraSpeedText.setSelectedIndex(i);
+                break;
+            }
+        }
     }
 
     @Override
@@ -1000,13 +1027,24 @@ public class JogControlsPanel extends JPanel {
 
         cameraOffsetYText = new JTextField("0.00");
 
+        JLabel cameraSpeedLab = new JLabel("相机速度");
+
+
         panelCalibrateChild2.add(cameraOffsetYText, "8, 2");
 
+        panelCalibrateChild2.add(cameraSpeedLab, "10, 2");
+
+        cameraSpeedText = new JComboBox(Camera.Speeding.values());
+
+
+        panelCalibrateChild2.add(cameraSpeedText, "12, 2");
+
+
         JButton cameraOffsetApply = new JButton("Apply");
-        panelCalibrateChild2.add(cameraOffsetApply, "10, 2");
+        panelCalibrateChild2.add(cameraOffsetApply, "14, 2");
 
         JButton cameraOffsetReset = new JButton("Reset");
-        panelCalibrateChild2.add(cameraOffsetReset, "12, 2");
+        panelCalibrateChild2.add(cameraOffsetReset, "16, 2");
 
 
         cameraOffsetApply.addActionListener(new ActionListener() {
@@ -1025,6 +1063,12 @@ public class JogControlsPanel extends JPanel {
                             ((OpenPnpCaptureCamera) c).setCameraOffsetY(temp);
                             cameraOffsetApply.setEnabled(false);
                             cameraOffsetReset.setEnabled(false);
+
+                            config = new IniAppConfig();
+                            config.setProperty("Calibration", "cameraOffsetX", cameraOffsetText.getText());
+                            config.setProperty("Calibration", "cameraOffsetY", cameraOffsetYText.getText());
+                            config.setProperty("Calibration", "cameraSpeed", cameraSpeedText.getSelectedItem().toString());
+
 
                         }
                     }
@@ -1101,13 +1145,15 @@ public class JogControlsPanel extends JPanel {
             "AbstractConfigurationWizard.Action.Apply")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            config = new IniAppConfig();
+            config.setProperty("NozzleChange", "m1XValue", m1XValue.getText());
+            config.setProperty("NozzleChange", "m1YValue", m1YValue.getText());
+            config.setProperty("NozzleChange", "m1ZValue", m1ZValue.getText());
 
+            config.setProperty("NozzleChange", "m2XValue", m2XValue.getText());
+            config.setProperty("NozzleChange", "m2YValue", m2YValue.getText());
+            config.setProperty("NozzleChange", "m2ZValue", m2ZValue.getText());
 
-            //参数保存
-            Others nozzleChangeSave = configuration.getOthers();
-            if (!m1XValue.getText().isEmpty()) {
-                nozzleChangeSave.setPositionm1XValue(Double.parseDouble(m1XValue.getText()));
-            }
 
             List<NozzleTip> nozzles = configuration.getMachine().getNozzleTips();
             if (nozzles.size() < 5) {
@@ -1501,6 +1547,8 @@ public class JogControlsPanel extends JPanel {
             "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            config = new IniAppConfig();
+            String test = config.getProperty("JogControllPanel", "test");
             s1XValue.setText("");
             s1YValue.setText("");
             s1ZValue.setText("");
@@ -1899,11 +1947,5 @@ public class JogControlsPanel extends JPanel {
 
     private Map<Actuator, JButton> actuatorButtons = new HashMap<>();
     private JSlider speedSlider;
-
-    protected void initDataBindings() {
-        Others nozzleChangeRead = Configuration.get().getOthers();
-        double test = nozzleChangeRead.getPositionm1XValue();
-        Logger.trace("1111");
-    }
 
 }

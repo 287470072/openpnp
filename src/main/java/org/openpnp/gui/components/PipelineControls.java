@@ -216,7 +216,7 @@ public abstract class PipelineControls extends JPanel {
                     int cameraWidth = camera.getWidth();
 
                     Serial serial = Configuration.get().getSerial();
-                    if (serial.isCertification() && camera.isTwoCamera()) {
+                    if (serial != null & serial.isCertification() && camera.isTwoCamera()) {
                         if (movable == n1 && camera.getLooking() == Camera.Looking.Up) {
                             //左半边
                             //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
