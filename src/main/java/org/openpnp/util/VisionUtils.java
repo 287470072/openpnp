@@ -69,6 +69,7 @@ public class VisionUtils {
         // center of the match.
         double offsetX = x - (imageWidth / 2);
         double offsetY = y - (imageHeight / 2);
+        //Logger.trace("imageWidth:" + imageWidth + "|imageHeight:" + imageHeight + "|x:" + x + "|y:" + y + "|offsetX:" + offsetX + "|offsetY:" + offsetY);
 
         return getPixelOffsets(camera, offsetX, offsetY);
     }

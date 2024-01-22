@@ -1540,13 +1540,24 @@ public class VisionCompositing extends AbstractModelObject{
                     detectedScale.y*Math.max(-bottomEdges.first(), topEdges.last())*2);
             // For pipeline result compatibility, make the RotatedRect in OpenCv pixel coordinates. 
             double angle = VisionUtils.getPixelAngle(camera, detectedAngle);
-            org.opencv.core.Point center = new org.opencv.core.Point(
-                    camera.getWidth()*0.5*0.5 + detectedCenter.x/upp.getX(),
-                    camera.getHeight()*0.5 - detectedCenter.y/upp.getY());
-            org.opencv.core.Size size = new org.opencv.core.Size(
-                    detectedSize.x/upp.getX(), 
-                    detectedSize.y/upp.getY());
-            detectedRotatedRect = new RotatedRect(center, size, angle);
+            if (camera.isTwoCamera()){
+                org.opencv.core.Point center = new org.opencv.core.Point(
+                        camera.getWidth()*0.5*0.5 + detectedCenter.x/upp.getX(),
+                        camera.getHeight()*0.5 - detectedCenter.y/upp.getY());
+                org.opencv.core.Size size = new org.opencv.core.Size(
+                        detectedSize.x/upp.getX(),
+                        detectedSize.y/upp.getY());
+                detectedRotatedRect = new RotatedRect(center, size, angle);
+            }else {
+                org.opencv.core.Point center = new org.opencv.core.Point(
+                        camera.getWidth()*0.5 + detectedCenter.x/upp.getX(),
+                        camera.getHeight()*0.5 - detectedCenter.y/upp.getY());
+                org.opencv.core.Size size = new org.opencv.core.Size(
+                        detectedSize.x/upp.getX(),
+                        detectedSize.y/upp.getY());
+                detectedRotatedRect = new RotatedRect(center, size, angle);
+            }
+
         }
     }
 }
