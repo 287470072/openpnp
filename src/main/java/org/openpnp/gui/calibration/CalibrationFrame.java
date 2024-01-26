@@ -84,7 +84,7 @@ public class CalibrationFrame extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 // 当数值发生变化时触发此方法
-                featureDiameter = (double) spinner.getValue();
+                featureDiameter = Double.parseDouble(spinner.getValue().toString()) ;
                 System.out.println("当前值：" + featureDiameter);
                 UiUtils.submitUiMachineTask(() -> {
                     try {
