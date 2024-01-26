@@ -3,12 +3,9 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.zxing.DecodeHintType;
 import org.apache.commons.io.IOUtils;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.vision.AbstractPartAlignmentMulti;
@@ -31,6 +28,13 @@ import org.pmw.tinylog.Logger;
 public class VisionUtils {
     final public static String PIPELINE_RESULTS_NAME = "results";
     final public static String PIPELINE_CONTROL_PROPERTY_NAME = "propertyName";
+
+    private static final EnumMap<DecodeHintType, Object> hints = new EnumMap<DecodeHintType, Object>(DecodeHintType.class);
+
+    static {
+        //设置解析二维码后信息的字符集
+        hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
+    }
 
     /**
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
@@ -273,13 +277,15 @@ public class VisionUtils {
         return scanBarcode(camera);
     }
 
+    /*    */
+
     /**
      * Using the given camera, try to find any supported barcode and return it's text.
      *
      * @param camera
      * @return
      * @throws Exception
-     */
+     *//*
     public static String scanBarcode(Camera camera) throws Exception {
         BufferedImage image = camera.lightSettleAndCapture();
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
@@ -290,6 +296,25 @@ public class VisionUtils {
         } catch (Exception e) {
             return null;
         }
+    }*/
+    public static String scanBarcode(Camera camera) {
+        try {
+            //将读取二维码图片的流转为图片对象
+            BufferedImage image = camera.lightSettleAndCapture();
+            BufferedImageLuminanceSource source = new BufferedImageLuminanceSource(image);
+            HybridBinarizer binarizer = new HybridBinarizer(source);
+            BinaryBitmap binaryBitmap = new BinaryBitmap(binarizer);
+            MultiFormatReader reader = new MultiFormatReader();
+            Result result = reader.decode(binaryBitmap, hints);
+            //返回二维码中的文本内容
+            String content = result.getText();
+            System.out.println("二维码解析成功");
+            return content;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     public static List<PnpJobPlanner.PlannedPlacement> findPartAlignmentOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps, PartAlignment p) throws Exception {
