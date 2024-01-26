@@ -1271,7 +1271,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                 }
                 Serial serial = Configuration.get().getSerial();
-                if (serial.isCertification() && this instanceof Align &&
+                if (serial != null & serial.isCertification() && this instanceof Align &&
                         camera.isTwoCamera()) {
                     result = multiAlign(plannedPlacements);
                     if (plannedPlacement != null) {

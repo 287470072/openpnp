@@ -1202,7 +1202,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Set<NozzleTip> pkgNozzles = pkg.getCompatibleNozzleTips();
                         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
                         Serial serial = Configuration.get().getSerial();
-                        if (serial.isCertification() && nozzles.size() == 2 && camera.isTwoCamera() && pkgNozzles.size() > 1) {
+                        if (serial != null & serial.isCertification() && nozzles.size() == 2 && camera.isTwoCamera() && pkgNozzles.size() > 1) {
                             if (nozzle.equals(nozzles.get(0))) {
                                 if (nozzle.getLocation().getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) > 0) {
                                     // Nozzle is not yet in camera roaming radius. Move at safe Z.
@@ -1289,9 +1289,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
             }
             Serial serial = Configuration.get().getSerial();
-            if (serial.isCertification() &&
-                    camera.isTwoCamera()
-            ) {
+            if (serial != null & serial.isCertification() && camera.isTwoCamera()) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
@@ -1407,7 +1405,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
             Serial serial = Configuration.get().getSerial();
 
-            if (serial.isCertification() && camera.isTwoCamera()) {
+            if (serial != null & serial.isCertification() && camera.isTwoCamera()) {
                 if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
                     //左半边
                     //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);

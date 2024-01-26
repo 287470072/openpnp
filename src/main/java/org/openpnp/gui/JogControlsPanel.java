@@ -33,20 +33,15 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import lombok.extern.flogger.Flogger;
-import org.jdesktop.beansbinding.BeanProperty;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
-import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.calibration.CalibrationFrame;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
-import org.openpnp.machine.reference.camera.ReferenceCamera;
-import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.*;
 import org.openpnp.model.Motion.MotionOption;
@@ -59,10 +54,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
-
-import org.openpnp.util.MyUntils;
 
 /**
  * Contains controls, DROs and status for the machine. Controls: C right / left, X + / -, Y + / -, Z
@@ -1364,21 +1356,25 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
 
+            // 创建并显示新窗口
+            new CalibrationFrame().setVisible(true);
 
-            JFrame newFrame = new JFrame(Translations.getString("JogControlsPanel.topCameraCalibrate.Text"));
+
+/*            JFrame newFrame = new JFrame(Translations.getString("JogControlsPanel.topCameraCalibrate.Text"));
             newFrame.setSize(400, 300);
             newFrame.setResizable(false);
             newFrame.setAlwaysOnTop(true);
+            CalibrationFrame calibrationPanel=new CalibrationFrame();
 
-/*
+*//*
             ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
             Image image = icon.getImage();
             Image newImage = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             JLabel gifLabel = new JLabel(icon);
-*/
+*//*
 
             // 将JLabel添加到新窗口
-            //newFrame.add(gifLabel);
+            newFrame.add(calibrationPanel);
             newFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension frameSize = newFrame.getSize();
@@ -1393,7 +1389,7 @@ public class JogControlsPanel extends JPanel {
 
 
             // 显示新窗口
-            newFrame.setVisible(true);
+            newFrame.setVisible(true);*/
 /*            UiUtils.submitUiMachineTask(() -> {
 
                 //移动相机到校准点上方

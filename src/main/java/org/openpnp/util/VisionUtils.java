@@ -54,10 +54,7 @@ public class VisionUtils {
         double imageWidth;
         double imageHeight;
         Serial serial = Configuration.get().getSerial();
-        if (serial != null & serial.isCertification() &&
-                camera.getLooking() == Camera.Looking.Up &&
-                camera.isTwoCamera()
-        ) {
+        if (serial != null & serial.isCertification() && camera.getLooking() == Camera.Looking.Up && camera.isTwoCamera()) {
             imageWidth = (double) camera.getWidth() / 2;
             imageHeight = camera.getHeight();
         } else {
