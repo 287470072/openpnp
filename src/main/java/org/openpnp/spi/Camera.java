@@ -36,7 +36,11 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     }
 
     public enum Speeding {
-        High, Medium, Low
+        High, Low
+    }
+
+    enum CameraNub {
+        Single, Multi
     }
 
 

@@ -331,7 +331,9 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
 
         //配置中所有的相机
         List<Camera> cameras = Configuration.get().getMachine().getAllCameras();
-
+        config = new IniAppConfig();
+        String cameraNum = config.getProperty("Calibration", "cameraNum");
+        String cameraSpeed = config.getProperty("Calibration", "cameraSpeed");
 
         for (Camera camera1 : cameras) {
             if (camera1 instanceof OpenPnpCaptureCamera) {
@@ -354,8 +356,9 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
 
                 ((OpenPnpCaptureCamera) camera1).setDevice(captureDevices.get(maxIndex));
 
-                config = new IniAppConfig();
-                String cameraSpeed = config.getProperty("Calibration", "cameraSpeed");
+                //1单目低速（1280*750），2单目高速（640*480），3双目低速（2560*720），4双目高速(1280*480)
+                //TODO 根据配置文件的内容来设置对应的相机分辨率
+
 
 
                 ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));

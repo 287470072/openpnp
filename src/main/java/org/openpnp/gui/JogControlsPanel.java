@@ -123,6 +123,8 @@ public class JogControlsPanel extends JPanel {
 
     private JComboBox cameraSpeedText;
 
+    private JComboBox cameraOneTwo;
+
 
     /**
      * Create the panel.
@@ -155,6 +157,14 @@ public class JogControlsPanel extends JPanel {
         for (int i = 0; i < cameraSpeedText.getItemCount(); i++) {
             if (cameraSpeedText.getItemAt(i).toString().equals(speed)) {
                 cameraSpeedText.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        String cameraNum = config.getProperty("Calibration", "cameraNum");
+        for (int i = 0; i < cameraOneTwo.getItemCount(); i++) {
+            if (cameraOneTwo.getItemAt(i).toString().equals(cameraNum)) {
+                cameraOneTwo.setSelectedIndex(i);
                 break;
             }
         }
@@ -986,11 +996,15 @@ public class JogControlsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(70dlu;default)"),
+                ColumnSpec.decode("max(30dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(70dlu;default)"),
+                ColumnSpec.decode("max(30dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -1029,15 +1043,18 @@ public class JogControlsPanel extends JPanel {
 
         cameraSpeedText = new JComboBox(Camera.Speeding.values());
 
+        cameraOneTwo = new JComboBox(Camera.CameraNub.values());
 
-        panelCalibrateChild2.add(cameraSpeedText, "12, 2");
+        panelCalibrateChild2.add(cameraOneTwo, "12, 2");
+
+        panelCalibrateChild2.add(cameraSpeedText, "14, 2");
 
 
         JButton cameraOffsetApply = new JButton("Apply");
-        panelCalibrateChild2.add(cameraOffsetApply, "14, 2");
+        panelCalibrateChild2.add(cameraOffsetApply, "16, 2");
 
         JButton cameraOffsetReset = new JButton("Reset");
-        panelCalibrateChild2.add(cameraOffsetReset, "16, 2");
+        panelCalibrateChild2.add(cameraOffsetReset, "18, 2");
 
 
         cameraOffsetApply.addActionListener(new ActionListener() {
@@ -1047,6 +1064,7 @@ public class JogControlsPanel extends JPanel {
                 config = new IniAppConfig();
                 config.setProperty("Calibration", "cameraOffsetX", cameraOffsetText.getText());
                 config.setProperty("Calibration", "cameraOffsetY", cameraOffsetYText.getText());
+                config.setProperty("Calibration", "cameraNum", cameraOneTwo.getSelectedItem().toString());
                 config.setProperty("Calibration", "cameraSpeed", cameraSpeedText.getSelectedItem().toString());
                 machine.getCameras().forEach(c -> {
                     if (c.getLooking() == Camera.Looking.Up) {
