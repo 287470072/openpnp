@@ -45,6 +45,7 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.IniAppConfig;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 import org.xm.Similarity;
@@ -66,6 +67,8 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
     private JPanel camerasPanel;
 
     private CameraView selectedCameraView;
+
+    private static IniAppConfig config;
 
 
     private static final String PREF_SELECTED_CAMERA_VIEW = "JobPanel.dividerPosition";
@@ -344,16 +347,17 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                     double charBasedSimilarityResult = Similarity.charBasedSimilarity(openPnpCaptureCamera1Name, captureDeviceName);
                     scores.add(charBasedSimilarityResult);
                     Logger.trace(openPnpCaptureCamera1Name + "|" + captureDeviceName + "|" + charBasedSimilarityResult);
-                    if (openPnpCaptureCamera1Name.equals(captureDeviceName)) {
-                        //((OpenPnpCaptureCamera) camera1).setDevice(captureDevice);
-                        //addCamera2(camera1);
-                    }
                 }
 
                 int maxIndex = scores.indexOf(Collections.max(scores));
                 List<CaptureFormat> formats = captureDevices.get(maxIndex).getFormats();
 
                 ((OpenPnpCaptureCamera) camera1).setDevice(captureDevices.get(maxIndex));
+
+                config = new IniAppConfig();
+                String cameraSpeed = config.getProperty("Calibration", "cameraSpeed");
+
+
                 ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
 
                 addCamera2(camera1);

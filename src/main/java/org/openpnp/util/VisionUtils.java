@@ -2,10 +2,12 @@ package org.openpnp.util;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import com.google.zxing.DecodeHintType;
+import com.google.zxing.*;
+import com.google.zxing.qrcode.QRCodeReader;
 import org.apache.commons.io.IOUtils;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.vision.AbstractPartAlignmentMulti;
@@ -18,12 +20,11 @@ import org.openpnp.spi.*;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.vision.pipeline.CvPipeline;
 
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import org.pmw.tinylog.Logger;
+
+import javax.imageio.ImageIO;
 
 public class VisionUtils {
     final public static String PIPELINE_RESULTS_NAME = "results";
@@ -34,6 +35,8 @@ public class VisionUtils {
     static {
         //设置解析二维码后信息的字符集
         hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
+
+
     }
 
     /**
@@ -297,14 +300,30 @@ public class VisionUtils {
             return null;
         }
     }*/
-    public static String scanBarcode(Camera camera) {
+    public static String scanBarcode(Camera camera) throws Exception {
+
+
         try {
+
+
             //将读取二维码图片的流转为图片对象
             BufferedImage image = camera.lightSettleAndCapture();
+            File file = new File("3.png");
+            image = ImageIO.read(file);
+/*            // 将图像转换为黑白
+            image = convertToGrayscale(image);
+            image = smoothImage(image);
+            image = medianFilter(image);
+            image = binarizeImage(image);
+
+            File outputFile = new File("22.png");
+
+            ImageIO.write(image, "png", outputFile); // 或者 "png" for PNG format*/
+
             BufferedImageLuminanceSource source = new BufferedImageLuminanceSource(image);
-            HybridBinarizer binarizer = new HybridBinarizer(source);
+            Binarizer binarizer = new HybridBinarizer(source);
             BinaryBitmap binaryBitmap = new BinaryBitmap(binarizer);
-            MultiFormatReader reader = new MultiFormatReader();
+            QRCodeReader reader = new QRCodeReader();
             Result result = reader.decode(binaryBitmap, hints);
             //返回二维码中的文本内容
             String content = result.getText();
@@ -315,6 +334,95 @@ public class VisionUtils {
             return null;
         }
 
+    }
+
+    private static BufferedImage convertToGrayscale(BufferedImage image) {
+        BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                Color color = new Color(image.getRGB(x, y));
+                int grayValue = (int) (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue());
+                int newRGB = new Color(grayValue, grayValue, grayValue).getRGB();
+                result.setRGB(x, y, newRGB);
+            }
+        }
+
+        return result;
+    }
+
+    private static BufferedImage smoothImage(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage smoothedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                // 进行平均滤波
+                int sum = 0;
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        sum += new Color(image.getRGB(x + i, y + j)).getRed();
+                    }
+                }
+                int average = sum / 9;
+                int newRGB = new Color(average, average, average).getRGB();
+                smoothedImage.setRGB(x, y, newRGB);
+            }
+        }
+
+        return smoothedImage;
+    }
+
+    private static BufferedImage medianFilter(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage denoisedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                // 获取3x3邻域内的像素值
+                int[] values = new int[9];
+                int index = 0;
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        values[index++] = new Color(image.getRGB(x + i, y + j)).getRed();
+                    }
+                }
+
+                // 对邻域内的像素值进行排序
+                java.util.Arrays.sort(values);
+
+                // 取中值作为新的像素值
+                int medianValue = values[4];
+                int newRGB = new Color(medianValue, medianValue, medianValue).getRGB();
+                denoisedImage.setRGB(x, y, newRGB);
+            }
+        }
+
+        return denoisedImage;
+    }
+
+    private static BufferedImage binarizeImage(BufferedImage image) {
+        // 阈值设置，根据具体情况调整
+        int threshold = 128;
+
+        BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                Color color = new Color(image.getRGB(x, y));
+                int grayValue = color.getRed();
+
+                // 根据阈值进行二值化
+                int newRGB = (grayValue < threshold) ? Color.BLACK.getRGB() : Color.WHITE.getRGB();
+                result.setRGB(x, y, newRGB);
+            }
+        }
+
+        return result;
     }
 
     public static List<PnpJobPlanner.PlannedPlacement> findPartAlignmentOffsetsMulti(List<PnpJobPlanner.PlannedPlacement> pps, PartAlignment p) throws Exception {

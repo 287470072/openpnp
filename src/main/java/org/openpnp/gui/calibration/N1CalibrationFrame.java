@@ -1,10 +1,14 @@
 package org.openpnp.gui.calibration;
 
-import com.jgoodies.forms.layout.*;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.Translations;
-import org.openpnp.logging.Logger;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
+import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -21,17 +25,23 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class CalibrationFrame extends JFrame {
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+
+
+public class N1CalibrationFrame extends JFrame {
 
     private double featureDiameter;
 
-    public CalibrationFrame() {
+    private Location oldNozzleOffsets = null;
+
+
+    public N1CalibrationFrame() {
 
         createUi();
     }
 
     public void createUi() {
-        setTitle(Translations.getString("JogControlsPanel.topCameraCalibrate.Text"));
+        setTitle(Translations.getString("JogControlsPanel.nozzleN1OffsetCalibrateAction.Text"));
 
         setResizable(false);
         setAlwaysOnTop(true);
@@ -55,7 +65,7 @@ public class CalibrationFrame extends JFrame {
 
         ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
         Image image = icon.getImage();
-        Image newImage = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
+        Image newImage = image.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
         JLabel gifLabel = new JLabel(icon);
         gifLabel.setPreferredSize(new Dimension(100, 100)); // 设置你想要的大小
 
@@ -84,7 +94,7 @@ public class CalibrationFrame extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 // 当数值发生变化时触发此方法
-                featureDiameter = Double.parseDouble(spinner.getValue().toString()) ;
+                featureDiameter = Double.parseDouble(spinner.getValue().toString());
                 System.out.println("当前值：" + featureDiameter);
                 UiUtils.submitUiMachineTask(() -> {
                     try {
@@ -119,14 +129,14 @@ public class CalibrationFrame extends JFrame {
                     try {
                         Head head = Configuration.get().getMachine().getDefaultHead();
                         VisionSolutions myUntils = new VisionSolutions();
-
+                        CalibrationSolutions calibrationSolutions=new CalibrationSolutions();
                         for (Camera camera : head.getCameras()) {
-                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                                Length fiducialDiameter = myUntils.autoCalibrateCamera((ReferenceCamera) camera, camera, featureDiameter, "Primary Fiducial & Camera Calibration", false);
-                                Location fiducialLocation = myUntils.centerInOnSubjectLocation((ReferenceCamera) camera, camera, fiducialDiameter, "Primary Fiducial & Camera Calibration", false);
-                                // Store it.
-                                ((ReferenceHead) head).setCalibrationPrimaryFiducialLocation(fiducialLocation);
-                                ((ReferenceHead) head).setCalibrationPrimaryFiducialDiameter(fiducialDiameter);
+                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Up) {
+                                Circle testObject = myUntils
+                                        .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
+                                ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
+                                oldNozzleOffsets = head.getDefaultNozzle().getHeadOffsets();
+                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead)head, (ReferenceCamera) camera, (ReferenceNozzle) head.getDefaultNozzle());
                             }
                         }
                     } catch (Exception ee) {

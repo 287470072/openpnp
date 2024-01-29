@@ -37,7 +37,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
-import org.openpnp.gui.calibration.CalibrationFrame;
+import org.openpnp.gui.calibration.N1CalibrationFrame;
+import org.openpnp.gui.calibration.TopCameraCalibrationFrame;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -1043,6 +1044,10 @@ public class JogControlsPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Machine machine = configuration.getMachine();
+                config = new IniAppConfig();
+                config.setProperty("Calibration", "cameraOffsetX", cameraOffsetText.getText());
+                config.setProperty("Calibration", "cameraOffsetY", cameraOffsetYText.getText());
+                config.setProperty("Calibration", "cameraSpeed", cameraSpeedText.getSelectedItem().toString());
                 machine.getCameras().forEach(c -> {
                     if (c.getLooking() == Camera.Looking.Up) {
                         if (c instanceof OpenPnpCaptureCamera && !cameraOffsetText.getText().equals("") && !cameraOffsetYText.getText().equals("")) {
@@ -1055,13 +1060,6 @@ public class JogControlsPanel extends JPanel {
                             ((OpenPnpCaptureCamera) c).setCameraOffsetY(temp);
                             cameraOffsetApply.setEnabled(false);
                             cameraOffsetReset.setEnabled(false);
-
-                            config = new IniAppConfig();
-                            config.setProperty("Calibration", "cameraOffsetX", cameraOffsetText.getText());
-                            config.setProperty("Calibration", "cameraOffsetY", cameraOffsetYText.getText());
-                            config.setProperty("Calibration", "cameraSpeed", cameraSpeedText.getSelectedItem().toString());
-
-
                         }
                     }
                 });
@@ -1357,66 +1355,9 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent actionEvent) {
 
             // 创建并显示新窗口
-            new CalibrationFrame().setVisible(true);
+            new TopCameraCalibrationFrame().setVisible(true);
 
 
-/*            JFrame newFrame = new JFrame(Translations.getString("JogControlsPanel.topCameraCalibrate.Text"));
-            newFrame.setSize(400, 300);
-            newFrame.setResizable(false);
-            newFrame.setAlwaysOnTop(true);
-            CalibrationFrame calibrationPanel=new CalibrationFrame();
-
-*//*
-            ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
-            Image image = icon.getImage();
-            Image newImage = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
-            JLabel gifLabel = new JLabel(icon);
-*//*
-
-            // 将JLabel添加到新窗口
-            newFrame.add(calibrationPanel);
-            newFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Dimension frameSize = newFrame.getSize();
-            if (frameSize.height > screenSize.height) {
-                frameSize.height = screenSize.height;
-            }
-            if (frameSize.width > screenSize.width) {
-                frameSize.width = screenSize.width;
-            }
-
-            newFrame.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
-
-
-            // 显示新窗口
-            newFrame.setVisible(true);*/
-/*            UiUtils.submitUiMachineTask(() -> {
-
-                //移动相机到校准点上方
-                Location offsetLocation = new Location();
-                offsetLocation = topCamera.getLocation();
-                offsetLocation.setX(-44.3);
-                offsetLocation.setY(27);
-                //MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
-                //MovableUtils.fireTargetedUserAction(topCamera);
-                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-
-                //具体处理逻辑
-
-                double featureDiameter = 18;
-                Head head = configuration.getMachine().getDefaultHead();
-                for (Camera camera : head.getCameras()) {
-                    if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                        Length fiducialDiameter = myUntils.autoCalibrateCamera((ReferenceCamera) camera, camera, featureDiameter, "Primary Fiducial & Camera Calibration", false);
-                        Location fiducialLocation = myUntils.centerInOnSubjectLocation((ReferenceCamera) camera, camera, fiducialDiameter, "Primary Fiducial & Camera Calibration", false);
-                        // Store it.
-                        ((ReferenceHead) head).setCalibrationPrimaryFiducialLocation(fiducialLocation);
-                        ((ReferenceHead) head).setCalibrationPrimaryFiducialDiameter(fiducialDiameter);
-                    }
-                }
-
-
-            });*/
         }
     };
 
@@ -1464,25 +1405,8 @@ public class JogControlsPanel extends JPanel {
     protected Action nozzleN1OffsetCalibrateAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleN1OffsetCalibrateAction.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
-
-                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-
-                Solutions solutions = machine.getSolutions();
-                List<Solutions.Issue> pendingIssues = new ArrayList<>();
-                solutions.setPendingIssues(pendingIssues);
-
-                machine.findIssues(solutions);
-
-                for (Solutions.Issue issue : pendingIssues) {
-                    if (issue.getIssue().equals("Calibrate precise camera ↔ nozzle N1 offsets.")) {
-                        VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
-                        visionIssue.setFeatureDiameter(67);
-                        visionIssue.setStateCall(Solutions.State.Solved);
-                    }
-
-                }
-            });
+            // 创建并显示新窗口
+            new N1CalibrationFrame().setVisible(true);
         }
     };
 

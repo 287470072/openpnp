@@ -1087,7 +1087,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         return newLocation;
     }
 
-    private void calibrateNozzleOffsets(ReferenceHead head, ReferenceCamera defaultCamera, ReferenceNozzle nozzle)
+    public void calibrateNozzleOffsets(ReferenceHead head, ReferenceCamera defaultCamera, ReferenceNozzle nozzle)
             throws Exception {
         try {
             // Create a pseudo part, package and feeder to enable pick and place.
