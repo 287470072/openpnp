@@ -362,20 +362,15 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                     if (cameraNum.equals("Single")) {
                         if (cameraSpeed.equals("Low")) {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
-
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(12));
-
                         }
-
                     }
-                    {
+                    else {
                         if (cameraSpeed.equals("Low")) {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
-
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(14));
-
                         }
                     }
 

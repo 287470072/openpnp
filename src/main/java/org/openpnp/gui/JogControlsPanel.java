@@ -38,6 +38,7 @@ import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.calibration.N1CalibrationFrame;
+import org.openpnp.gui.calibration.N2CalibrationFrame;
 import org.openpnp.gui.calibration.TopCameraCalibrationFrame;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
@@ -1431,26 +1432,8 @@ public class JogControlsPanel extends JPanel {
     protected Action nozzleN2OffsetCalibrateAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleN2OffsetCalibrateAction.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
+            new N2CalibrationFrame().setVisible(true);
 
-                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-
-                Solutions solutions = machine.getSolutions();
-                List<Solutions.Issue> pendingIssues = new ArrayList<>();
-                solutions.setPendingIssues(pendingIssues);
-
-                machine.findIssues(solutions);
-
-                for (Solutions.Issue issue : pendingIssues) {
-                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
-                        if (issue.getIssue().equals("Nozzle N1 offsets for the primary fiducial.")) {
-                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
-                            visionIssue.setFeatureDiameter(67);
-                            issue.setStateCall(Solutions.State.Solved);
-                        }
-                    }
-                }
-            });
         }
     };
 

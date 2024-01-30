@@ -12,13 +12,12 @@ import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -27,23 +26,21 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 
-
-public class N1CalibrationFrame extends JFrame {
+public class N2CalibrationFrame extends JFrame {
 
     private double featureDiameter;
 
     private Location oldNozzleOffsets = null;
 
 
-    public N1CalibrationFrame() {
+    public N2CalibrationFrame() {
 
         createUi();
     }
 
     public void createUi() {
-        setTitle(Translations.getString("JogControlsPanel.nozzleN1OffsetCalibrateAction.Text"));
+        setTitle(Translations.getString("JogControlsPanel.nozzleN2OffsetCalibrateAction.Text"));
 
         setResizable(false);
         setAlwaysOnTop(true);
@@ -107,7 +104,7 @@ public class N1CalibrationFrame extends JFrame {
 
                         for (Camera camera : head.getCameras()) {
                             if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                                myUntils.getSubjectPixelLocation((ReferenceCamera) camera, null, new CvStage.Result.Circle(0, 0, featureDiameter), 0.05,
+                                myUntils.getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0.05,
                                         "Diameter " + (int) featureDiameter + " px - Score {score} ", null, true);
 
                             }
@@ -137,9 +134,9 @@ public class N1CalibrationFrame extends JFrame {
                                 Circle testObject = myUntils
                                         .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
                                 ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
-                                Nozzle N1 = head.getNozzles().get(0);
-                                oldNozzleOffsets = N1.getHeadOffsets();
-                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) N1);
+                                Nozzle N2 = head.getNozzles().get(1);
+                                oldNozzleOffsets = N2.getHeadOffsets();
+                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) N2);
                             }
                         }
                     } catch (Exception ee) {
