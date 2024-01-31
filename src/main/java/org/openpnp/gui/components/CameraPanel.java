@@ -345,7 +345,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                 List<Double> scores = new ArrayList<>();
 
                 for (CaptureDevice captureDevice : captureDevices) {
-                    String captureDeviceName = captureDevice.getName().replaceAll("vision", "");
+                    String captureDeviceName = captureDevice.getName().replaceAll("vision", "").replaceAll("Vision", "");
                     double charBasedSimilarityResult = Similarity.charBasedSimilarity(openPnpCaptureCamera1Name, captureDeviceName);
                     scores.add(charBasedSimilarityResult);
                     Logger.trace(openPnpCaptureCamera1Name + "|" + captureDeviceName + "|" + charBasedSimilarityResult);
@@ -357,16 +357,14 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
                 ((OpenPnpCaptureCamera) camera1).setDevice(captureDevices.get(maxIndex));
 
                 //1单目低速（1280*750），2单目高速（640*480），3双目低速（2560*720），4双目高速(1280*480)
-                //TODO 根据配置文件的内容来设置对应的相机分辨率
-                if (camera1.getLooking() == Camera.Looking.Up) {
+                if (camera1.getLooking() == Camera.Looking.Up && cameraNum != null && cameraSpeed != null) {
                     if (cameraNum.equals("Single")) {
                         if (cameraSpeed.equals("Low")) {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(3));
                         } else {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(12));
                         }
-                    }
-                    else {
+                    } else {
                         if (cameraSpeed.equals("Low")) {
                             ((OpenPnpCaptureCamera) camera1).setFormat(formats.get(0));
                         } else {

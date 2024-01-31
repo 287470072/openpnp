@@ -67,7 +67,7 @@ public class TopCameraCalibrationFrame extends JFrame {
         panel.add(label, "3, 1, fill, default");
 
         // 右边是一个编辑框
-        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 99, 1);
+        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 999, 1);
 
         JSpinner spinner = new JSpinner(spinnerModel);
 

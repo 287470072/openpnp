@@ -80,7 +80,7 @@ public class N1CalibrationFrame extends JFrame {
         panel.add(label, "3, 1, fill, default");
 
         // 右边是一个编辑框
-        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 99, 1);
+        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 999, 1);
 
         JSpinner spinner = new JSpinner(spinnerModel);
 
@@ -137,9 +137,9 @@ public class N1CalibrationFrame extends JFrame {
                                 Circle testObject = myUntils
                                         .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
                                 ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
-                                Nozzle N1 = head.getNozzles().get(0);
-                                oldNozzleOffsets = N1.getHeadOffsets();
-                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) N1);
+                                Nozzle n1 = head.getNozzles().get(0);
+                                oldNozzleOffsets = n1.getHeadOffsets();
+                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) n1);
                             }
                         }
                     } catch (Exception ee) {

@@ -37,6 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.calibration.BottomCameraCalibrationFrame;
 import org.openpnp.gui.calibration.N1CalibrationFrame;
 import org.openpnp.gui.calibration.N2CalibrationFrame;
 import org.openpnp.gui.calibration.TopCameraCalibrationFrame;
@@ -1058,6 +1059,8 @@ public class JogControlsPanel extends JPanel {
         panelCalibrateChild2.add(cameraOffsetReset, "18, 2");
 
 
+
+
         cameraOffsetApply.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1440,26 +1443,8 @@ public class JogControlsPanel extends JPanel {
     protected Action bottomCameraCalibrate = new AbstractAction(Translations.getString("JogControlsPanel.bottomCameraCalibrate.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
+            new BottomCameraCalibrationFrame().setVisible(true);
 
-                ReferenceMachine machine = (ReferenceMachine) configuration.getMachine();
-
-                Solutions solutions = machine.getSolutions();
-                List<Solutions.Issue> pendingIssues = new ArrayList<>();
-                solutions.setPendingIssues(pendingIssues);
-
-                machine.findIssues(solutions);
-
-                for (Solutions.Issue issue : pendingIssues) {
-                    if (issue instanceof VisionSolutions.VisionFeatureIssue) {
-                        if (issue.getIssue().equals("Determine the up-looking camera Bottom Vision position and initial calibration.")) {
-                            VisionSolutions.VisionFeatureIssue visionIssue = (VisionSolutions.VisionFeatureIssue) issue;
-                            visionIssue.setFeatureDiameter(43);
-                            issue.setStateCall(Solutions.State.Solved);
-                        }
-                    }
-                }
-            });
         }
     };
 

@@ -6,18 +6,18 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.Translations;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceMachine;
-import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
-import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+import org.openpnp.vision.pipeline.CvStage;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -26,21 +26,21 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-
-public class N2CalibrationFrame extends JFrame {
+public class BottomCameraCalibrationFrame extends JFrame {
 
     private double featureDiameter;
 
-    private Location oldNozzleOffsets = null;
+    private ReferenceNozzleTip referenceNozzleTip = null;
 
+    private Length oldVisionDiameter = null;
 
-    public N2CalibrationFrame() {
+    public BottomCameraCalibrationFrame() {
 
         createUi();
     }
 
     public void createUi() {
-        setTitle(Translations.getString("JogControlsPanel.nozzleN2OffsetCalibrateAction.Text"));
+        setTitle(Translations.getString("JogControlsPanel.bottomCameraCalibrate.Text"));
 
         setResizable(false);
         setAlwaysOnTop(true);
@@ -100,11 +100,9 @@ public class N2CalibrationFrame extends JFrame {
                         VisionSolutions myUntils = new VisionSolutions();
                         // This show a diagnostic detection image in the camera view.
 
-                        Head head = Configuration.get().getMachine().getDefaultHead();
-
-                        for (Camera camera : head.getCameras()) {
-                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                                myUntils.getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0.05,
+                        for (Camera camera : Configuration.get().getMachine().getCameras()) {
+                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Up) {
+                                myUntils.getSubjectPixelLocation((ReferenceCamera) camera, null, new CvStage.Result.Circle(0, 0, featureDiameter), 0.05,
                                         "Diameter " + (int) featureDiameter + " px - Score {score} ", null, true);
 
                             }
@@ -116,6 +114,7 @@ public class N2CalibrationFrame extends JFrame {
             }
         });
 
+
         // 第二行布局
         JButton calibrateButton = new JButton("开始校准");
         panel.add(calibrateButton, "3, 3, fill, default");
@@ -123,33 +122,43 @@ public class N2CalibrationFrame extends JFrame {
         calibrateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    try {
-                        Head head = Configuration.get().getMachine().getDefaultHead();
-                        VisionSolutions myUntils = new VisionSolutions();
-                        CalibrationSolutions calibrationSolutions = new CalibrationSolutions();
-                        calibrationSolutions.setMachine((ReferenceMachine) Configuration.get().getMachine());
-                        for (Camera camera : head.getCameras()) {
-                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                                Circle testObject = myUntils
-                                        .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
-                                ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
-                                Nozzle n2 = head.getNozzles().get(1);
-                                oldNozzleOffsets = n2.getHeadOffsets();
-                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) n2);
+                UiUtils.submitUiMachineTask(
+                        () -> {
+                            Head head = Configuration.get().getMachine().getDefaultHead();
+                            Nozzle n1 = head.getNozzles().get(0);
+                            referenceNozzleTip = (n1.getNozzleTip() instanceof ReferenceNozzleTip) ?
+                                    (ReferenceNozzleTip) n1.getNozzleTip() : null;
+                            if (referenceNozzleTip == null) {
+                                throw new Exception("The nozzle " + n1.getName() + " has no nozzle tip loaded.");
                             }
-                        }
-                    } catch (Exception ee) {
-                        Toolkit.getDefaultToolkit().beep();
-                    }
-                });
+                            oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
+                            VisionSolutions myUntils = new VisionSolutions();
+                            for (Camera camera : Configuration.get().getMachine().getCameras()) {
+                                if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Up) {
+
+                                    final Location oldCameraOffsets = ((ReferenceCamera) camera).getHeadOffsets();
+
+                                    // Perform preliminary camera calibration.
+                                    Length visionDiameter = myUntils.autoCalibrateCamera((ReferenceCamera) camera, n1, Double.valueOf(featureDiameter), "Camera Positional Calibration", false);
+                                    // Get the nozzle location.
+                                    Location nozzleLocation = myUntils.centerInOnSubjectLocation((ReferenceCamera) camera, n1, visionDiameter, "Camera Positional Calibration", false);
+                                    // Determine the camera offsets, the nozzle now shows the true offset.
+                                    Location headOffsets = nozzleLocation;
+                                    ((ReferenceCamera) camera).setHeadOffsets(nozzleLocation);
+                                    Logger.info("Set camera " + camera.getName() + " offsets to " + headOffsets
+                                            + " (previously " + oldCameraOffsets + ")");
+                                    referenceNozzleTip.getCalibration().setCalibrationTipDiameter(visionDiameter);
+                                    Logger.info("Set nozzle tip " + referenceNozzleTip.getName() + " vision diameter to " + visionDiameter + " (previously " + oldVisionDiameter + ")");
+
+                                }
+                            }
+                        });
             }
+
         });
 
         setSize(278, 174);
         setLocationRelativeTo(null); // 居中显示，相对于主窗口
-
-
         getContentPane().add(panel);
 
 
