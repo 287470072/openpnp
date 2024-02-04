@@ -346,7 +346,7 @@ public class CameraPanel extends JPanel implements WebcamDiscoveryListener {
 
                 for (CaptureDevice captureDevice : captureDevices) {
                     String captureDeviceName = captureDevice.getName().replaceAll("vision", "").replaceAll("Vision", "");
-                    double charBasedSimilarityResult = Similarity.charBasedSimilarity(openPnpCaptureCamera1Name, captureDeviceName);
+                    double charBasedSimilarityResult = Similarity.morphoSimilarity(openPnpCaptureCamera1Name, captureDeviceName);
                     scores.add(charBasedSimilarityResult);
                     Logger.trace(openPnpCaptureCamera1Name + "|" + captureDeviceName + "|" + charBasedSimilarityResult);
                 }
