@@ -1229,7 +1229,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                                 // Nozzle is not yet in camera roaming radius. Move at safe Z.
                                 MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                             } else {
-                                nozzle.moveTo(shotLocation);
+                                MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                                //nozzle.moveTo(shotLocation);
                             }
 
 /*                            if (nozzle.equals(nozzles.get(0))) {

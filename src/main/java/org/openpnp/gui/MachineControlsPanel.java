@@ -59,6 +59,7 @@ import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.model.Configuration;
@@ -66,16 +67,14 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.*;
-import org.openpnp.util.BeanUtils;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
+import org.openpnp.util.*;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.xm.Similarity;
 
 public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
@@ -310,6 +309,12 @@ public class MachineControlsPanel extends JPanel {
                 bindSerial();
                 //绑定相机
                 changeCamera();
+                //获取激活码
+                try {
+                    SerialUtil.checkSerialFile();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 // Not an emergency stop. Run as regular machine task.  
                 UiUtils.submitUiMachineTask(() -> {
                             task.run();
@@ -328,22 +333,35 @@ public class MachineControlsPanel extends JPanel {
     }
 
 
-
-
     //根据COM口名称自动绑定GcodeDriver
     public void bindSerial() {
         List<Driver> drivers = configuration.getMachine().getDrivers();
+
         Map<String, String> portNames = SerialPortCommunications.getPortDescribe();
         for (Driver driver : drivers) {
-            String driverName = driver.getName();
-            portNames.forEach((key, value) -> {
-                Logger.trace("key:" + key.replaceAll("\\s\\(.*?\\)", "") + "| value:" + value);
-                if (driverName.equals(key.replaceAll("\\s\\(.*?\\)", ""))) {
-                    AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
-                    referenceDriver.setPortName(value);
-
+            if (driver instanceof GcodeDriver) {
+                String driverName = driver.getName();
+                int baud = ((GcodeDriver) driver).getSerial().getBaud();
+                if (baud == 9600) {
+                    portNames.forEach((key, value) -> {
+                        Logger.trace("key:" + key.replaceAll("\\s\\(.*?\\)", "") + "| value:" + value);
+                        if (key.replaceAll("\\s\\(.*?\\)", "").contains("CH341A")) {
+                            AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
+                            referenceDriver.setPortName(value);
+                        }
+                    });
                 }
-            });
+                if (baud == 250000) {
+                    portNames.forEach((key, value) -> {
+                        Logger.trace("key:" + key.replaceAll("\\s\\(.*?\\)", "") + "| value:" + value);
+                        if (key.replaceAll("\\s\\(.*?\\)", "").contains("STM")|
+                                key.replaceAll("\\s\\(.*?\\)", "").contains("RepRap")) {
+                            AbstractReferenceDriver referenceDriver = (AbstractReferenceDriver) driver;
+                            referenceDriver.setPortName(value);
+                        }
+                    });
+                }
+            }
         }
     }
 
