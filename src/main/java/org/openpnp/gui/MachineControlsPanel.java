@@ -311,7 +311,7 @@ public class MachineControlsPanel extends JPanel {
                 changeCamera();
                 //获取激活码
                 try {
-                    SerialUtil.checkSerialFile();
+                    //SerialUtil.checkSerialFile();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
