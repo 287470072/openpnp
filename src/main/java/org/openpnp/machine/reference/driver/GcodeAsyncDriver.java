@@ -305,7 +305,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             // If the caller did not get them, clear them now.
             responseQueue.clear();
         }
-        //bailOnError();
+        bailOnError();
         if (command == null) {
             return;
         }
