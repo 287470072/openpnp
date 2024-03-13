@@ -44,7 +44,7 @@ public class TopCameraCalibrationFrame extends JFrame {
                         FormSpecs.RELATED_GAP_COLSPEC,
                         FormSpecs.PREF_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.PREF_COLSPEC
+                        FormSpecs.PREF_COLSPEC,
                 },
                 new RowSpec[]{
                         FormSpecs.PREF_ROWSPEC,
@@ -62,15 +62,15 @@ public class TopCameraCalibrationFrame extends JFrame {
 
         panel.add(gifLabel, "1, 1, fill, default");
 
-        JLabel descriypt = new JLabel("<html><body>1>:移动十字光标对准校准板的标记点<br/>" +
-                "2>:点击数字的加减键修改数字使绿色框套住标记点<br/>" +
+        JLabel descriypt = new JLabel("<html><body>1>:移动十字光标对准校准板<br/>的标记点<br/><br/>" +
+                "2>:点击数字的加减键修改<br/>数字使绿色框套住标记点<br/><br/>" +
                 "3>:点击校准<br/></body></html>");
-        panel.add(descriypt, "1, 3, fill, default");
+        panel.add(descriypt, "3, 1, fill, default");
 
 
         // 中间是一个标签
         JLabel label = new JLabel("Feature diameter");
-        panel.add(label, "3, 1, fill, default");
+        panel.add(label, "1, 3, center, default");
 
         // 右边是一个编辑框
         SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 999, 1);
@@ -84,7 +84,7 @@ public class TopCameraCalibrationFrame extends JFrame {
         jftf.setColumns(2);
 
 
-        panel.add(spinner, "5, 1");
+        panel.add(spinner, "3, 3");
         spinner.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -114,7 +114,7 @@ public class TopCameraCalibrationFrame extends JFrame {
 
         // 第二行布局
         JButton calibrateButton = new JButton("开始校准");
-        panel.add(calibrateButton, "3, 3, fill, default");
+        panel.add(calibrateButton, "5, 3, fill, default");
 
         calibrateButton.addActionListener(new ActionListener() {
             @Override
@@ -141,7 +141,7 @@ public class TopCameraCalibrationFrame extends JFrame {
             }
         });
 
-        setSize(400, 400);
+        setSize(450, 290);
         setLocationRelativeTo(null); // 居中显示，相对于主窗口
 
 
