@@ -10,6 +10,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.util.SwingUtil;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvStage;
 
@@ -52,14 +53,19 @@ public class TopCameraCalibrationFrame extends JFrame {
                 });
         panel.setLayout(layout);
 
-        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/topcameracalibreation.gif"));
         Image image = icon.getImage();
-        Image newImage = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
-        JLabel gifLabel = new JLabel(icon);
-        gifLabel.setPreferredSize(new Dimension(100, 100)); // 设置你想要的大小
+        JLabel gifLabel = new JLabel();
+        gifLabel.setIcon(SwingUtil.createAutoAdjustIcon(image, true));
+        gifLabel.setPreferredSize(new Dimension(360 / 2, 422 / 2)); // 设置你想要的大小
 
 
         panel.add(gifLabel, "1, 1, fill, default");
+
+        JLabel descriypt = new JLabel("<html><body>1>:移动十字光标对准校准板的标记点<br/>" +
+                "2>:点击数字的加减键修改数字使绿色框套住标记点<br/>" +
+                "3>:点击校准<br/></body></html>");
+        panel.add(descriypt, "1, 3, fill, default");
 
 
         // 中间是一个标签
@@ -83,7 +89,7 @@ public class TopCameraCalibrationFrame extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 // 当数值发生变化时触发此方法
-                featureDiameter = Double.parseDouble(spinner.getValue().toString()) ;
+                featureDiameter = Double.parseDouble(spinner.getValue().toString());
                 System.out.println("当前值：" + featureDiameter);
                 UiUtils.submitUiMachineTask(() -> {
                     try {
@@ -135,7 +141,7 @@ public class TopCameraCalibrationFrame extends JFrame {
             }
         });
 
-        setSize(278, 174);
+        setSize(400, 400);
         setLocationRelativeTo(null); // 居中显示，相对于主窗口
 
 

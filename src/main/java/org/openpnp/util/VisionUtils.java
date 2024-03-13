@@ -260,9 +260,24 @@ public class VisionUtils {
         // get the units per pixel scale 
         Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         // convert inputs to the same units, center on camera and scale
+        IniAppConfig config = new IniAppConfig();
+        String cameraNum = config.getProperty("Calibration", "cameraNum");
+        Location cameraLocation = camera.getLocation(tool);
+        if (cameraNum.equals("Multi") && location.getX() > 30) {
+            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+            Nozzle n1 = nozzles.get(0);
+            Nozzle n2 = nozzles.get(1);
+
+            Location n2Offest = n2.getHeadOffsets();
+            Location n1Offset = n1.getHeadOffsets();
+            cameraLocation.setX(cameraLocation.getX() + n2Offest.getX() - n1Offset.getX());
+            cameraLocation.setY(cameraLocation.getY() + n2Offest.getY() - n1Offset.getY());
+
+        }
+
         location = location.convertToUnits(unitsPerPixel.getUnits())
-                .subtract(camera.getLocation(tool))
-                .multiply(1. / unitsPerPixel.getX(), -1. / unitsPerPixel.getY(), 0., 0.);
+                        .subtract(cameraLocation)
+                        .multiply(1. / unitsPerPixel.getX(), -1. / unitsPerPixel.getY(), 0., 0.);
         // relative center of camera in pixels
         return new Point(location.getX(), location.getY());
     }

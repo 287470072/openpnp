@@ -29,11 +29,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.NanosecondTime;
-import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.Utils2D;
-import org.openpnp.util.VisionUtils;
+import org.openpnp.util.*;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
@@ -46,6 +42,9 @@ import org.simpleframework.xml.core.Commit;
 
 @Root
 public class ReferenceNozzleTipCalibration extends AbstractModelObject {
+
+    private static IniAppConfig config;
+
     public static interface RunoutCompensation {
 
         Location getOffset(double angle);
@@ -64,6 +63,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         public TableBasedRunoutCompensation() {
         }
+
         public TableBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
             //store data for later usage
             this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
@@ -80,7 +80,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             Location offsetB = offsets.get(1).convertToUnits(offsetA.getUnits());    // could this conversion be omitted?
 
             double ratio = 1.0;     // TODO Better solution than the workaround seems to be recommended.
-            if ( (offsetB.getRotation() - offsetA.getRotation()) != 0 ) {
+            if ((offsetB.getRotation() - offsetA.getRotation()) != 0) {
                 ratio = (angle - offsetA.getRotation()) / (offsetB.getRotation() - offsetA.getRotation());
             }
             double deltaX = offsetB.getX() - offsetA.getX();
@@ -129,7 +129,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         @Override
         public String toString() {
-            return String.format(Locale.US, "%d°-offset x=%f, y=%f", (int)nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
+            return String.format(Locale.US, "%d°-offset x=%f, y=%f", (int) nozzleTipMeasuredLocations.get(0).getRotation(), nozzleTipMeasuredLocations.get(0).getX(), nozzleTipMeasuredLocations.get(0).getY());
         }
 
         @Override
@@ -159,11 +159,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         public ModelBasedRunoutCompensation() {
         }
+
         public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations) {
             //store data for possible later usage
             this.nozzleTipMeasuredLocations = nozzleTipMeasuredLocations;
             // save the units as the model is persisted without the locations 
-            this.units = nozzleTipMeasuredLocations.size() > 0 ? 
+            this.units = nozzleTipMeasuredLocations.size() > 0 ?
                     nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
 
             // first calculate the circle fit and store the values to centerXY and radius
@@ -172,7 +173,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // afterwards calc the phaseShift angle mapping
             this.calcPhaseShift(nozzleTipMeasuredLocations);
-            
+
             estimateModelError(nozzleTipMeasuredLocations);
 
             Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
@@ -180,34 +181,35 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         /**
          * Constructor that uses an affine transform to initialize the model
+         *
          * @param nozzleTipMeasuredLocations - list of measured nozzle tip locations
          * @param nozzleTipExpectedLocations - list of expected nozzle tip locations
          */
         public ModelBasedRunoutCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             // save the units as the model is persisted without the locations 
-            this.units = nozzleTipMeasuredLocations.size() > 0 ? 
+            this.units = nozzleTipMeasuredLocations.size() > 0 ?
                     nozzleTipMeasuredLocations.get(0).getUnits() : LengthUnit.Millimeters;
 
             //Compute the best fit affine transform that takes the expected locations to the measured locations
             AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipExpectedLocations, nozzleTipMeasuredLocations);
             Utils2D.AffineInfo ai = Utils2D.affineInfo(at);
             Logger.trace("[nozzleTipCalibration]nozzle tip affine transform = " + ai);
-            
+
             //The expected locations were generated with a deliberate 1 mm runout so the affine scale is a direct 
             //measure of the true runout in millimeters.  However, since the affine transform gives both an x and y
             //scaling, their geometric mean is used to compute the radius.  Note that if measurement noise
             //dominates the actual runout, it is possible for the scale factors to become negative.  In
             //that case, the radius will be set to zero.
-            this.radius = new Length( Math.sqrt(Math.max(0, ai.xScale) * Math.max(0, ai.yScale)),
+            this.radius = new Length(Math.sqrt(Math.max(0, ai.xScale) * Math.max(0, ai.yScale)),
                     LengthUnit.Millimeters).convertToUnits(this.units).getValue();
-            
+
             //The phase shift is just the rotation of the affine transform (negated because of the subtraction in getRunout)
             this.phaseShift = -ai.rotationAngleDeg;
-            
+
             //The center is just the translation part of the affine transform
-            this.centerX = new Length( ai.xTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
-            this.centerY = new Length( ai.yTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
-            
+            this.centerX = new Length(ai.xTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
+            this.centerY = new Length(ai.yTranslation, LengthUnit.Millimeters).convertToUnits(this.units).getValue();
+
             estimateModelError(nozzleTipMeasuredLocations);
 
             Logger.debug("[nozzleTipCalibration]calculated nozzleEccentricity: {}", this.toString());
@@ -216,6 +218,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         /**
          * Estimates the model error based on the distance between the nozzle
          * tip measured locations and the locations computed by the model
+         *
          * @param nozzleTipMeasuredLocations - list of measured nozzle tip locations
          */
         private void estimateModelError(List<Location> nozzleTipMeasuredLocations) {
@@ -227,16 +230,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Location m = getRunout(l.getRotation()).add(new Location(this.units, this.centerX, this.centerY, 0, 0));
                 Logger.trace("[nozzleTipCalibration]compare measured = {}, modeled = {}", l, m);
                 double error = l.convertToUnits(this.units).getLinearDistanceTo(m);
-                sumError2 += error*error;
+                sumError2 += error * error;
                 if (error > peakError) {
                     peakError = error;
                     peakErrorLocation = l;
                 }
             }
-            rmsError = Math.sqrt(sumError2/nozzleTipMeasuredLocations.size());
+            rmsError = Math.sqrt(sumError2 / nozzleTipMeasuredLocations.size());
             Logger.trace("[nozzleTipCalibration]peak error location = {}, error = {}", peakErrorLocation, peakError);
         }
-        
+
         /* function to calc the model based runout in cartesian coordinates */
         public Location getRunout(double angle) {
             //add phase shift
@@ -266,17 +269,17 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
 
         protected void calcCircleFitKasa(List<Location> nozzleTipMeasuredLocations) {
-            /* 
+            /*
              * this function fits a circle my means of the Kasa Method to the given List<Location>.
-             * this is a java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html 
+             * this is a java port of http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
              * The Kasa method should work well for this purpose since the measured locations are captured along a full circle
              */
             int n;
 
-            double kasaXi,kasaYi,kasaZi;
-            double kasaMxy,kasaMxx,kasaMyy,kasaMxz,kasaMyz;
-            double kasaB,kasaC,kasaG11,kasaG12,kasaG22,kasaD1,kasaD2;
-            double kasaMeanX=0.0, kasaMeanY=0.0;
+            double kasaXi, kasaYi, kasaZi;
+            double kasaMxy, kasaMxx, kasaMyy, kasaMxz, kasaMyz;
+            double kasaB, kasaC, kasaG11, kasaG12, kasaG22, kasaD1, kasaD2;
+            double kasaMeanX = 0.0, kasaMeanY = 0.0;
 
             n = nozzleTipMeasuredLocations.size();
 
@@ -286,21 +289,21 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 kasaMeanX += measuredLocation.getX();
                 kasaMeanY += measuredLocation.getY();
             }
-            kasaMeanX = kasaMeanX / (double)nozzleTipMeasuredLocations.size();
-            kasaMeanY = kasaMeanY / (double)nozzleTipMeasuredLocations.size();
+            kasaMeanX = kasaMeanX / (double) nozzleTipMeasuredLocations.size();
+            kasaMeanY = kasaMeanY / (double) nozzleTipMeasuredLocations.size();
 
-            kasaMxx=kasaMyy=kasaMxy=kasaMxz=kasaMyz=0.;
+            kasaMxx = kasaMyy = kasaMxy = kasaMxz = kasaMyz = 0.;
 
             for (int i = 0; i < n; i++) {
                 kasaXi = nozzleTipMeasuredLocations.get(i).getX() - kasaMeanX;   //  centered x-coordinates
                 kasaYi = nozzleTipMeasuredLocations.get(i).getY() - kasaMeanY;   //  centered y-coordinates
-                kasaZi = kasaXi*kasaXi + kasaYi*kasaYi;
+                kasaZi = kasaXi * kasaXi + kasaYi * kasaYi;
 
-                kasaMxx += kasaXi*kasaXi;
-                kasaMyy += kasaYi*kasaYi;
-                kasaMxy += kasaXi*kasaYi;
-                kasaMxz += kasaXi*kasaZi;
-                kasaMyz += kasaYi*kasaZi;
+                kasaMxx += kasaXi * kasaXi;
+                kasaMyy += kasaYi * kasaYi;
+                kasaMxy += kasaXi * kasaYi;
+                kasaMxz += kasaXi * kasaZi;
+                kasaMyz += kasaYi * kasaZi;
             }
             kasaMxx /= n;
             kasaMyy /= n;
@@ -314,20 +317,20 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             kasaG22 = Math.sqrt(kasaMyy - kasaG12 * kasaG12);
 
             kasaD1 = kasaMxz / kasaG11;
-            kasaD2 = (kasaMyz - kasaD1*kasaG12)/kasaG22;
+            kasaD2 = (kasaMyz - kasaD1 * kasaG12) / kasaG22;
 
             // computing parameters of the fitting circle
-            kasaC = kasaD2/kasaG22/2.0;
-            kasaB = (kasaD1 - kasaG12*kasaC)/kasaG11/2.0;
+            kasaC = kasaD2 / kasaG22 / 2.0;
+            kasaB = (kasaD1 - kasaG12 * kasaC) / kasaG11 / 2.0;
 
             // assembling the output
             Double centerX = kasaB + kasaMeanX;
             Double centerY = kasaC + kasaMeanY;
-            Double radius = Math.sqrt(kasaB*kasaB + kasaC*kasaC + kasaMxx + kasaMyy);
+            Double radius = Math.sqrt(kasaB * kasaB + kasaC * kasaC + kasaMxx + kasaMyy);
 
             // saving output if valid
             // the values are NaN if all given nozzleTipMeasuredLocations are the same (this is the case probably only on a simulated machine with nulldriver)
-            if ( !centerX.isNaN() && !centerY.isNaN() && !radius.isNaN() ) {
+            if (!centerX.isNaN() && !centerY.isNaN() && !radius.isNaN()) {
                 // values valid
                 this.centerX = centerX;
                 this.centerY = centerY;
@@ -347,40 +350,40 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
              * centered circle runout path.
              * With the phaseShift available, the calibration offset can be calculated analytically for every
              * location/rotation even if not captured while measured (stepped by angleIncrement)
-             * 
+             *
              */
             double phaseShift = 0;
 
-            double angle=0;
-            double measuredAngle=0;
+            double angle = 0;
+            double measuredAngle = 0;
             double priorDifferenceAngle = 0;
-            double differenceAngleMean=0;
+            double differenceAngleMean = 0;
 
             Iterator<Location> nozzleTipMeasuredLocationsIterator = nozzleTipMeasuredLocations.iterator();
             while (nozzleTipMeasuredLocationsIterator.hasNext()) {
                 Location measuredLocation = nozzleTipMeasuredLocationsIterator.next();
 
                 // get the measurement rotation
-                angle = measuredLocation.getRotation();		// the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
+                angle = measuredLocation.getRotation();        // the angle at which the measurement was made was stored to the nozzleTipMeasuredLocation into the rotation attribute
 
                 // move the offset-location by the centerY/centerY. by this all offset-locations are wrt. the 0/0 origin
-                Location centeredLocation = measuredLocation.subtract(new Location(this.units,this.centerX,this.centerY,0.,0.));
+                Location centeredLocation = measuredLocation.subtract(new Location(this.units, this.centerX, this.centerY, 0., 0.));
 
                 // calculate the angle, the nozzle tip is located at
-                measuredAngle=Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
+                measuredAngle = Math.toDegrees(Math.atan2(centeredLocation.getY(), centeredLocation.getX()));
 
                 // the difference is the phaseShift
-                double differenceAngle = angle-measuredAngle;
+                double differenceAngle = angle - measuredAngle;
 
                 //Correct for a possible phase wrap past +/-180 degrees
-                while ((priorDifferenceAngle-differenceAngle) > 180) {
-                        differenceAngle += 360;
+                while ((priorDifferenceAngle - differenceAngle) > 180) {
+                    differenceAngle += 360;
                 }
-                while ((priorDifferenceAngle-differenceAngle) < -180) {
-                        differenceAngle -= 360;
+                while ((priorDifferenceAngle - differenceAngle) < -180) {
+                    differenceAngle -= 360;
                 }
                 priorDifferenceAngle = differenceAngle;
-                
+
                 Logger.trace("[nozzleTipCalibration]differenceAngle: {}", differenceAngle);
 
                 // sum up all differenceAngles to build the average later
@@ -401,14 +404,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         @Override
         public Location getAxisOffset() {
-            return new Location(this.units,centerX,centerY,0.,0.);
+            return new Location(this.units, centerX, centerY, 0., 0.);
         }
 
 
         public double getPhaseShift() {
             return phaseShift;
         }
-        
+
         /**
          * @return The peak error (in this.units) of the measured nozzle tip
          * locations relative to the locations computed by the model
@@ -416,12 +419,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         public Double getPeakError() {
             return peakError;
         }
-        
+
         /**
          * @return The rms error (in this.units) of the measured nozzle tip
          * locations relative to the locations computed by the model
          */
-       public Double getRmsError() {
+        public Double getRmsError() {
             return rmsError;
         }
     }
@@ -430,9 +433,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         public ModelBasedRunoutNoOffsetCompensation() {
             super();
         }
+
         public ModelBasedRunoutNoOffsetCompensation(List<Location> nozzleTipMeasuredLocations) {
             super(nozzleTipMeasuredLocations);
         }
+
         public ModelBasedRunoutNoOffsetCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             super(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
         }
@@ -442,24 +447,27 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             return String.format(Locale.US, "Camera position error %.3f, %.3f, Runout %.3f, Phase %.3f, Peak err %.3f, RMS err %.3f %s", centerX, centerY, radius, phaseShift, peakError, rmsError, units.getShortName());
         }
 
-        @Override 
+        @Override
         public Location getOffset(double angle) {
             // Just return the runout, do not add the axis offset.
             return getRunout(angle);
         }
 
     }
+
     public static class ModelBasedRunoutCameraOffsetCompensation extends ReferenceNozzleTipCalibration.ModelBasedRunoutNoOffsetCompensation {
         public ModelBasedRunoutCameraOffsetCompensation() {
             super();
         }
+
         public ModelBasedRunoutCameraOffsetCompensation(List<Location> nozzleTipMeasuredLocations) {
             super(nozzleTipMeasuredLocations);
         }
+
         public ModelBasedRunoutCameraOffsetCompensation(List<Location> nozzleTipMeasuredLocations, List<Location> nozzleTipExpectedLocations) {
             super(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
         }
-        
+
         @Override
         public String toString() {
             return String.format(Locale.US, "Camera position offset %.3f, %.3f, Runout %.3f, Phase %.3f, Peak err %.3f, RMS err %.3f %s", centerX, centerY, radius, phaseShift, peakError, rmsError, units.getShortName());
@@ -506,13 +514,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public enum RecalibrationTrigger {
-        NozzleTipChange, NozzleTipChangeInJob, MachineHome,  Manual
+        NozzleTipChange, NozzleTipChangeInJob, MachineHome, Manual
     }
 
     @Attribute(required = false)
     private ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm runoutCompensationAlgorithm =
-        RunoutCompensationAlgorithm.ModelCameraOffsetAffine;
-    
+            RunoutCompensationAlgorithm.ModelCameraOffsetAffine;
+
     @Attribute(required = false)
     private double version = 1.0;
 
@@ -530,41 +538,41 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Length minimumDetailSize = new Length(0.2, LengthUnit.Millimeters);
 
     @Attribute(required = false)
-    private int backgroundMinHue; 
+    private int backgroundMinHue;
 
     @Attribute(required = false)
-    private int backgroundMaxHue; 
+    private int backgroundMaxHue;
 
     @Attribute(required = false)
-    private int backgroundTolHue = 8; 
+    private int backgroundTolHue = 8;
 
     @Attribute(required = false)
-    private int backgroundMinSaturation; 
+    private int backgroundMinSaturation;
 
     @Attribute(required = false)
-    private int backgroundMaxSaturation; 
+    private int backgroundMaxSaturation;
 
     @Attribute(required = false)
-    private int backgroundTolSaturation = 8; 
+    private int backgroundTolSaturation = 8;
 
     @Attribute(required = false)
-    private int backgroundMinValue; 
+    private int backgroundMinValue;
 
     @Attribute(required = false)
-    private int backgroundMaxValue; 
+    private int backgroundMaxValue;
 
     @Attribute(required = false)
-    private int backgroundTolValue = 8; 
+    private int backgroundTolValue = 8;
 
     @Attribute(required = false)
-    private String backgroundDiagnostics; 
+    private String backgroundDiagnostics;
 
 
     /**
      * Minimum brightness (value, range 0..255) at which to consider hue masking.
      */
     @Attribute(required = false)
-    private int minBackgroundMaskValue = 32;  
+    private int minBackgroundMaskValue = 32;
 
     /**
      * Maximum brightness (value, range 0..255) at which to consider hue masking.
@@ -576,40 +584,40 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
      * A key color should always be quite vivid, the worst saturation is set here.
      */
     @Attribute(required = false)
-    private int backgroundWorstSaturation = 255/4;
+    private int backgroundWorstSaturation = 255 / 4;
 
     /**
-     * A key color should be quite consistent, the worst hue span (max - min) is set here. 
+     * A key color should be quite consistent, the worst hue span (max - min) is set here.
      */
     @Attribute(required = false)
-    private int backgroundWorstHueSpan = 255/6; // The hue span should not be larger than 60°.
+    private int backgroundWorstHueSpan = 255 / 6; // The hue span should not be larger than 60°.
 
     /**
-     * A background (minus the key color) should be quite dark. 
+     * A background (minus the key color) should be quite dark.
      */
     @Attribute(required = false)
-    private int backgroundWorstValue = 255/2; 
+    private int backgroundWorstValue = 255 / 2;
 
-    private List<byte []> backgroundImages = new ArrayList<>();
+    private List<byte[]> backgroundImages = new ArrayList<>();
 
     /**
      * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
      */
     @Deprecated
-    @Attribute(required=false)
+    @Attribute(required = false)
     private Double angleIncrement = null;
 
     @Commit
     public void commit() {
         angleIncrement = null;
-        
+
         // OpenPNP Version update
         if (version < 2) {
             version = 2.0;
             // Force ModelCameraOffset calibration system.
             runoutCompensationAlgorithm = RunoutCompensationAlgorithm.ModelCameraOffset;
         }
-        
+
         //Update from KASA to Affine transform technique
         if (version < 2.1) {
             version = 2.1; //bump version number so this update is only done once
@@ -631,7 +639,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Length offsetThresholdLength = new Length(0.5, LengthUnit.Millimeters);
     /**
      * Vision detection search distance margin, relative to the threshold: we want to detect nozzle tips outside the threshold and
-     * get positive falses rather than false positives.  
+     * get positive falses rather than false positives.
      */
     @Attribute(required = false)
     private double detectionThresholdMargin = 0.4;
@@ -657,7 +665,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public void calibrate(ReferenceNozzle nozzle, boolean homing, boolean calibrateCamera) throws Exception {
-        if ( !isEnabled() ) {
+        if (!isEnabled()) {
             return;
         }
 
@@ -669,11 +677,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             throw new Exception("Nozzle to nozzle tip mismatch.");
         }
 
-        if (nozzle.getPart()!= null) {
-            throw new Exception("Cannot calibrate nozzle tip with part on nozzle "+nozzle.getName()+".");
+        if (nozzle.getPart() != null) {
+            throw new Exception("Cannot calibrate nozzle tip with part on nozzle " + nozzle.getName() + ".");
         }
         // Make sure to set start and end rotation to the limits.
-        double [] rotationModeLimits = nozzle.getRotationModeLimits();
+        double[] rotationModeLimits = nozzle.getRotationModeLimits();
         angleStart = rotationModeLimits[0];
         angleStop = rotationModeLimits[1];
         // Make sure no rotation mode offset is currently applied.
@@ -682,7 +690,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceCamera referenceCamera = null;
         if (camera instanceof ReferenceCamera) {
-            referenceCamera = (ReferenceCamera)camera;
+            referenceCamera = (ReferenceCamera) camera;
         }
 
         // Note: we do not apply the tool specific calibration offset here
@@ -692,40 +700,52 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         try {
             calibrating = true;
             Location excenter = new Location(measureBaseLocation.getUnits());
-            if (! calibrateCamera) {
+            if (!calibrateCamera) {
                 reset(nozzle);
-            }
-            else {
-                if (! isCalibrated(nozzle)) {
-                    throw new Exception("Calibrate the nozzle tip first."); 
+            } else {
+                if (!isCalibrated(nozzle)) {
+                    throw new Exception("Calibrate the nozzle tip first.");
                 }
                 if (referenceCamera == null) {
-                    throw new Exception("For calibration the bottom vision camera must be a ReferenceCamera."); 
+                    throw new Exception("For calibration the bottom vision camera must be a ReferenceCamera.");
                 }
-                excenter = VisionUtils.getPixelCenterOffsets(camera, 
-                        camera.getWidth()/2 + Math.min(camera.getWidth(), camera.getHeight())*excenterRatio, 
-                        camera.getHeight()/2);
+                excenter = VisionUtils.getPixelCenterOffsets(camera,
+                        camera.getWidth() / 2 + Math.min(camera.getWidth(), camera.getHeight()) * excenterRatio,
+                        camera.getHeight() / 2);
             }
 
             HashMap<String, Object> params = new HashMap<>();
             params.put("nozzle", nozzle);
             params.put("camera", camera);
             Configuration.get().getScripting().on("NozzleCalibration.Starting", params);
+            config = new IniAppConfig();
+            String cameraNum = config.getProperty("Calibration", "cameraNum");
 
-            // move nozzle to the camera location at the start angle - the nozzle must not necessarily be at the center
+            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+            Nozzle n1 = nozzles.get(0);
+            Nozzle n2 = nozzles.get(1);
+            if (cameraNum.equals("Multi") && nozzle == n2) {
+                Location n2Offest = n2.getHeadOffsets();
+                Location n1Offset = n1.getHeadOffsets();
+                measureBaseLocation.setX(measureBaseLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                measureBaseLocation.setY(measureBaseLocation.getY() + n2Offest.getY() - n1Offset.getY());
+            }
+
             MovableUtils.moveToLocationAtSafeZ(nozzle, measureBaseLocation.derive(null, null, null, angleStart));
 
+            // move nozzle to the camera location at the start angle - the nozzle must not necessarily be at the center
+
             // determine the resulting angleIncrements
-            double angleIncrement = ( angleStop - angleStart ) / this.angleSubdivisions;
+            double angleIncrement = (angleStop - angleStart) / this.angleSubdivisions;
 
             // determine the number of measurements to be made
             int angleSubdivisions = this.angleSubdivisions;
-            if(Math.abs(angleStart + 360 - angleStop) < 0.1) {
+            if (Math.abs(angleStart + 360 - angleStop) < 0.1) {
                 // we're measuring a full circle, the last measurement can be omitted
                 angleSubdivisions--;
             }
 
-            Logger.debug("[nozzleTipCalibration]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}", 
+            Logger.debug("[nozzleTipCalibration]starting measurement; angleStart: {}, angleStop: {}, angleIncrement: {}, angleSubdivisions: {}",
                     angleStart, angleStop, angleIncrement, angleSubdivisions);
 
             // Capture nozzle tip positions and add them to a list. For these calcs the camera location is considered to be 0/0
@@ -734,7 +754,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int misdetects = 0;
             for (int i = 0; i <= angleSubdivisions; i++) {
                 // calc the current measurement-angle
-                double measureAngle = angleStart + (i * angleIncrement); 
+                double measureAngle = angleStart + (i * angleIncrement);
 
                 Logger.debug("[nozzleTipCalibration]i: {}, measureAngle: {}", i, measureAngle);
 
@@ -742,8 +762,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Location measureLocation = measureBaseLocation
                         .derive(null, null, null, measureAngle)
                         .add(excenter.rotateXy(measureAngle));
+/*                if (cameraNum.equals("Multi") && nozzle == n2) {
+                    Location n2Offest = n2.getHeadOffsets();
+                    Location n1Offset = n1.getHeadOffsets();
+                    measureLocation.setX(measureLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                    measureLocation.setY(measureLocation.getY() + n2Offest.getY() - n1Offset.getY());
+                }*/
                 nozzle.moveTo(measureLocation);
-                
+
                 Location expectedLocation;
                 if (!calibrateCamera) {
                     //For nozzle tip calibration, we artificially create an expected run-out of 1 mm and
@@ -758,7 +784,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Location offset = findCircle(nozzle, measureLocation, calibrateCamera);
                 if (offset != null) {
                     // for later usage in the algorithm, the measureAngle is stored to the offset location in millimeter unit 
-                    offset = offset.derive(null, null, null, measureAngle);		
+                    offset = offset.derive(null, null, null, measureAngle);
 
                     // add offset to array
                     nozzleTipMeasuredLocations.add(offset);
@@ -797,11 +823,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 } else {
                     this.setRunoutCompensation(nozzle, new TableBasedRunoutCompensation(nozzleTipMeasuredLocations));
                 }
-            }
-            else {
+            } else {
                 if ((this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelAffine) ||
-                    (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffsetAffine) ||
-                    (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine)) {
+                        (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelNoOffsetAffine) ||
+                        (this.runoutCompensationAlgorithm == RunoutCompensationAlgorithm.ModelCameraOffsetAffine)) {
                     //This camera alignment stuff should be moved out of nozzle tip calibration
                     //and placed with the rest of the camera setup stuff
                     AffineTransform at = Utils2D.deriveAffineTransform(nozzleTipMeasuredLocations, nozzleTipExpectedLocations);
@@ -809,13 +834,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     Logger.debug("[nozzleTipCalibration]bottom camera affine transform: " + ai);
                     Location newCameraPosition = new Location(LengthUnit.Millimeters, ai.xTranslation, ai.yTranslation, 0, 0);
                     newCameraPosition = referenceCamera.getHeadOffsets().derive(newCameraPosition, true, true, false, false);
-                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
+                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}",
                             referenceCamera.getHeadOffsets(),
                             referenceCamera.getHeadOffsets().subtract(newCameraPosition),
                             newCameraPosition);
                     referenceCamera.setHeadOffsets(newCameraPosition);
                     double newCameraAngle = referenceCamera.getRotation() - ai.rotationAngleDeg;
-                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
+                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}",
                             referenceCamera.getRotation(),
                             ai.rotationAngleDeg,
                             newCameraAngle);
@@ -824,24 +849,36 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     ModelBasedRunoutCompensation cameraCompensation = new ModelBasedRunoutCompensation(nozzleTipMeasuredLocations);
                     Location newCameraPosition = referenceCamera.getHeadOffsets()
                             .subtract(cameraCompensation.getAxisOffset());
-                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}", 
+                    Logger.debug("[nozzleTipCalibration]applying axis offset to bottom camera position: {} - {} = {}",
                             referenceCamera.getHeadOffsets(),
                             cameraCompensation.getAxisOffset(),
                             newCameraPosition);
                     referenceCamera.setHeadOffsets(newCameraPosition);
                     // Calculate and apply the new angle
                     double newCameraAngle = referenceCamera.getRotation() - cameraCompensation.getPhaseShift();
-                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}", 
+                    Logger.debug("[nozzleTipCalibration]applying angle offset to bottom camera rotation: {} - {} = {}",
                             referenceCamera.getRotation(),
                             cameraCompensation.getPhaseShift(),
                             newCameraAngle);
                     referenceCamera.setRotation(newCameraAngle);
                 }
             }
-        }
-        finally {
+        } finally {
+            config = new IniAppConfig();
+            String cameraNum = config.getProperty("Calibration", "cameraNum");
+
+            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+            Nozzle n1 = nozzles.get(0);
+            Nozzle n2 = nozzles.get(1);
+            Location measureLocation = camera.getLocation(nozzle);
             // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
-            nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, measureBaseLocation.getZ(), angleStop));
+            if (cameraNum.equals("Multi") && nozzle == n2) {
+                Location n2Offest = n2.getHeadOffsets();
+                Location n1Offset = n1.getHeadOffsets();
+                measureLocation.setX(measureLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                measureLocation.setY(measureLocation.getY() + n2Offest.getY() - n1Offset.getY());
+            }
+            nozzle.moveTo(measureLocation.derive(null, null, measureBaseLocation.getZ(), angleStop));
 
             if (!calibrateCamera) {
                 // Finish the background calibration, if images were successfully collected.  
@@ -857,8 +894,26 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public Location getCalibrationLocation(Camera camera, HeadMountable nozzle) {
-        // This is our baseline location. 
-        Location cameraLocation = camera.getLocation(nozzle);
+        config = new IniAppConfig();
+        String cameraNum = config.getProperty("Calibration", "cameraNum");
+        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+        Nozzle n1 = nozzles.get(0);
+        // This is our baseline location.
+        Location cameraLocation = new Location();
+ /*         if (cameraNum.equals("Single")) {
+            cameraLocation = camera.getLocation(nozzle);
+        } else if (cameraNum.equals("Multi") && nozzle == n1) {
+            cameraLocation = camera.getLocation(nozzle);
+
+        } else if (cameraNum.equals("Multi") && nozzle != n1) {
+            cameraLocation = camera.getLocation(nozzle);
+            Location n2Offest = nozzles.get(1).getHeadOffsets();
+            Location n1Offset = nozzles.get(0).getHeadOffsets();
+            cameraLocation.setX(cameraLocation.getX() + n2Offest.getX() - n1Offset.getX());
+            cameraLocation.setY(cameraLocation.getY() + n2Offest.getY() - n1Offset.getY());
+        }*/
+        cameraLocation = camera.getLocation(nozzle);
+
         Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
                 .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
         return measureBaseLocation;
@@ -866,9 +921,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public static void resetAllNozzleTips() {
         // Reset all nozzle tip calibrations, as they have become invalid due to some machine configuration change.
-        for (NozzleTip nt: Configuration.get().getMachine().getNozzleTips()) {
+        for (NozzleTip nt : Configuration.get().getMachine().getNozzleTips()) {
             if (nt instanceof ReferenceNozzleTip) {
-                ((ReferenceNozzleTip)nt).getCalibration().resetAll();
+                ((ReferenceNozzleTip) nt).getCalibration().resetAll();
             }
         }
     }
@@ -903,9 +958,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 if (isEnabled() && isCalibrated(nozzle)) {
                     return this.getRunoutCompensation(nozzle).getCameraOffset();
                 }
-            } 
-        }
-        catch (Exception e) {
+            }
+        } catch (Exception e) {
             // There is no bottom vision camera, that's fine.
         }
 
@@ -915,7 +969,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Location findCircle(ReferenceNozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         try (CvPipeline pipeline = getPreparedPipeline(camera, nozzle, measureLocation)) {
-            
+
             pipeline.process();
             List<Location> locations = new ArrayList<>();
 
@@ -931,7 +985,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // add all results from pipeline to a Location-list post processing
             // are there any results from the pipeline?
-            if (0==results.size()) {
+            if (0 == results.size()) {
                 // Don't throw new Exception("No results from vision. Check pipeline.");      
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
@@ -940,16 +994,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 if ((result) instanceof Result.Circle) {
                     Result.Circle circle = ((Result.Circle) result);
                     locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
-                }
-                else if ((result) instanceof KeyPoint) {
+                } else if ((result) instanceof KeyPoint) {
                     KeyPoint keyPoint = ((KeyPoint) result);
                     locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
-                }
-                else if ((result) instanceof RotatedRect) {
+                } else if ((result) instanceof RotatedRect) {
                     RotatedRect rect = ((RotatedRect) result);
                     locations.add(VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y));
-                }
-                else {
+                } else {
                     Logger.error("[nozzleTipCalibration] Unrecognized result " + result);
                     throw new Exception("Unrecognized result " + result);
                 }
@@ -957,14 +1008,29 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // remove all results that are above threshold
             Iterator<Location> locationsIterator = locations.iterator();
+            Location cameraLocation = camera.getLocation();
+            IniAppConfig config = new IniAppConfig();
+            String cameraNum = config.getProperty("Calibration", "cameraNum");
+            List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+            Nozzle n1 = nozzles.get(0);
+            Nozzle n2 = nozzles.get(1);
+            if (cameraNum.equals("Multi") && nozzle == n2) {
+
+
+                Location n2Offest = n2.getHeadOffsets();
+                Location n1Offset = n1.getHeadOffsets();
+                cameraLocation.setX(cameraLocation.getX() + n2Offest.getX() - n1Offset.getX());
+                cameraLocation.setY(cameraLocation.getY() + n2Offest.getY() - n1Offset.getY());
+
+            }
             while (locationsIterator.hasNext()) {
                 Location location = locationsIterator.next();
                 Location measureLocationRelative = measureLocation.convertToUnits(location.getUnits()).
-                        subtract(camera.getLocation());
+                        subtract(cameraLocation);
                 double threshold = offsetThresholdLength.convertToUnits(location.getUnits()).getValue();
                 if (location.getLinearDistanceTo(measureLocationRelative) > threshold) {
                     locationsIterator.remove();
-                    Logger.trace("[nozzleTipCalibration]Removed offset location {} from results; measured distance {} exceeds offsetThresholdLength {}", location, location.getLinearDistanceTo(0., 0.), threshold); 
+                    Logger.trace("[nozzleTipCalibration]Removed offset location {} from results; measured distance {} exceeds offsetThresholdLength {}", location, location.getLinearDistanceTo(0., 0.), threshold);
                 }
             }
 
@@ -986,8 +1052,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
             return locations.get(0);
-        }
-        finally {
+        } finally {
             pipeline.setProperty("MaskCircle.center", null);
         }
     }
@@ -1002,32 +1067,31 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
                 org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
                 Length minPartDiameter = nozzleTip.getMinPartDiameter()
-                .subtract(nozzleTip.getMaxPickTolerance().multiply(2.0));
+                        .subtract(nozzleTip.getMaxPickTolerance().multiply(2.0));
                 if (minPartDiameter.compareTo(getCalibrationTipDiameter()) < 0) {
                     minPartDiameter = getCalibrationTipDiameter();
                 }
-                int radius = (int)Math.ceil(minPartDiameter
+                int radius = (int) Math.ceil(minPartDiameter
                         .divide(camera.getUnitsPerPixel().getLengthX())
-                        *0.5);
-                Imgproc.circle(image, center2, 
-                        radius, 
+                        * 0.5);
+                Imgproc.circle(image, center2,
+                        radius,
                         FluentCv.colorToScalar(new Color(0, 0, 0)),
                         Imgproc.FILLED, 8, 0);
             }
             // Blur.
-            int kernelSize = ((int)getMinimumDetailSize()
-                    .divide(camera.getUnitsPerPixel().getLengthX()))|1;
+            int kernelSize = ((int) getMinimumDetailSize()
+                    .divide(camera.getUnitsPerPixel().getLengthX())) | 1;
             Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
             if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
                 Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
-            }
-            else {
+            } else {
                 Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2Gray.getCode());
             }
             backgroundImageRows = image.rows();
             backgroundImageCols = image.cols();
             backgroundImageChannels = image.channels();
-            byte data[] = new byte[backgroundImageRows*backgroundImageCols*backgroundImageChannels];
+            byte data[] = new byte[backgroundImageRows * backgroundImageCols * backgroundImageChannels];
             image.get(0, 0, data);
             image.release();
             backgroundImages.add(data);
@@ -1035,19 +1099,19 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     protected synchronized void finishBackgroundCalibration(Camera camera, ReferenceNozzle nozzle) throws Exception {
-        try{
+        try {
             backgroundCalibrationImages = new ArrayList<BufferedImage>();
             ReferenceNozzleTip nozzleTip = nozzle.getCalibrationNozzleTip();
-            if (nozzleTip != null 
+            if (nozzleTip != null
                     && backgroundImages.size() > 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
                 double maskDiameterPixels = nozzleTip.getMaxPartDiameter()
-                .add(nozzleTip.getMaxPickTolerance().multiply(2.0))
-                        .divide(camera.getUnitsPerPixel().getLengthX())*0.5;
-                int maskSq = (int)Math.pow(maskDiameterPixels, 2);
+                        .add(nozzleTip.getMaxPickTolerance().multiply(2.0))
+                        .divide(camera.getUnitsPerPixel().getLengthX()) * 0.5;
+                int maskSq = (int) Math.pow(maskDiameterPixels, 2);
                 int rows = backgroundImageRows, cols = backgroundImageCols, ch = backgroundImageChannels;
                 if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
-                    int histogramHueValue[] = new int[256*256];
+                    int histogramHueValue[] = new int[256 * 256];
                     int histogramMonochrome[] = new int[256];
                     int minSaturationAtValue[] = new int[256];
                     int maxSaturationAtValue[] = new int[256];
@@ -1055,20 +1119,19 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     Arrays.fill(minSaturationAtValue, 255);
                     for (byte data[] : backgroundImages) {
                         for (int y = 0; y < rows; y++) {
-                            for (int x = 0, idx = y*cols*ch; x < cols; x++, idx += ch) {
-                                int dx = x - cols/2;
-                                int dy = y - rows/2;
-                                int rSq = dx*dx + dy*dy;
+                            for (int x = 0, idx = y * cols * ch; x < cols; x++, idx += ch) {
+                                int dx = x - cols / 2;
+                                int dy = y - rows / 2;
+                                int rSq = dx * dx + dy * dy;
                                 if (rSq < maskSq) {
-                                    int hue = Byte.toUnsignedInt(data[idx+0]);
-                                    int saturation = Byte.toUnsignedInt(data[idx+1]);
-                                    int value = Byte.toUnsignedInt(data[idx+2]);
-                                    if (saturation >= backgroundWorstSaturation) { 
-                                        histogramHueValue[hue*256 + value]++;
+                                    int hue = Byte.toUnsignedInt(data[idx + 0]);
+                                    int saturation = Byte.toUnsignedInt(data[idx + 1]);
+                                    int value = Byte.toUnsignedInt(data[idx + 2]);
+                                    if (saturation >= backgroundWorstSaturation) {
+                                        histogramHueValue[hue * 256 + value]++;
                                         minSaturationAtValue[value] = Math.min(minSaturationAtValue[value], saturation);
                                         maxSaturationAtValue[value] = Math.max(maxSaturationAtValue[value], saturation);
-                                    }
-                                    else {
+                                    } else {
                                         histogramMonochrome[value]++;
                                     }
                                 }
@@ -1078,10 +1141,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     // Sum histogram at value and larger.
                     for (int hue = 0; hue < 256; hue++) {
                         for (int value = 1; value < 256; value++) {
-                            int count = histogramHueValue[hue*256 + value]; 
+                            int count = histogramHueValue[hue * 256 + value];
                             if (count > 0) {
                                 for (int valueSum = 0; valueSum < value; valueSum++) {
-                                    histogramHueValue[hue*256 + valueSum] += count; 
+                                    histogramHueValue[hue * 256 + valueSum] += count;
                                     minSaturationAtValue[valueSum] = Math.min(minSaturationAtValue[valueSum], minSaturationAtValue[value]);
                                     maxSaturationAtValue[valueSum] = Math.max(maxSaturationAtValue[valueSum], maxSaturationAtValue[value]);
                                 }
@@ -1106,9 +1169,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     int bestMaxSaturation = 0;
                     int bestMaxValue = 0;
                     int bestMinValue = 0;
-                    for (int minValue = minBackgroundMaskValue; 
-                            minValue <= maxBackgroundMaskValue; 
-                            minValue++) {
+                    for (int minValue = minBackgroundMaskValue;
+                         minValue <= maxBackgroundMaskValue;
+                         minValue++) {
                         if (histogramMonochrome[minValue] == 0 || minValue == maxBackgroundMaskValue) {
                             // Find the largest gap in hue data (it wraps around).
                             int largestGap = 0;
@@ -1116,23 +1179,24 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                             int maxHue = 0;
                             for (int hue = 0; hue < 256; hue++) {
                                 int gap = 0;
-                                for (; histogramHueValue[((hue+gap)&0xFF)*256 + minValue] == 0 && gap < 255; gap++) {}
+                                for (; histogramHueValue[((hue + gap) & 0xFF) * 256 + minValue] == 0 && gap < 255; gap++) {
+                                }
                                 if (gap > largestGap) {
                                     largestGap = gap;
-                                    maxHue = (hue - 1)&0xFF;
-                                    minHue = (hue + gap)&0xFF;
+                                    maxHue = (hue - 1) & 0xFF;
+                                    minHue = (hue + gap) & 0xFF;
                                 }
                             }
                             int minSaturation = minSaturationAtValue[minValue];
                             int maxSaturation = maxSaturationAtValue[minValue];
                             // Calculate the masked color space.
                             int brightnessMasked = minValue
-                                    *(256-backgroundWorstSaturation)
-                                    *(backgroundWorstHueSpan+16);
-                            int hsvMasked = 
-                                    ((maxHue + 1 - minHue)&0xFF)
-                                    *(maxValue + 1 - minValue)
-                                    *(maxSaturation + 1 - minSaturation);
+                                    * (256 - backgroundWorstSaturation)
+                                    * (backgroundWorstHueSpan + 16);
+                            int hsvMasked =
+                                    ((maxHue + 1 - minHue) & 0xFF)
+                                            * (maxValue + 1 - minValue)
+                                            * (maxSaturation + 1 - minSaturation);
                             int totalMasked = brightnessMasked + hsvMasked;
                             if (totalMasked < bestMasked) {
                                 bestMasked = totalMasked;
@@ -1145,22 +1209,22 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                             }
                         }
                     }
-                    int hueSpan = (bestMaxHue-bestMinHue)&0xFF;
+                    int hueSpan = (bestMaxHue - bestMinHue) & 0xFF;
                     if (hueSpan > backgroundWorstHueSpan) {
                         // Inconsistent color, take best span.
                         long bestHueSpanSum = 0;
-                        int radius = backgroundWorstHueSpan/2;
+                        int radius = backgroundWorstHueSpan / 2;
                         for (int hue = 0; hue < 256; hue++) {
                             long sum = 0;
                             for (int span = 0; span <= backgroundWorstHueSpan; span++) {
                                 int d = span - radius;
-                                int weight = radius*radius - d*d;
-                                sum += weight*histogramHueValue[((hue+span)&0xFF)*256 + bestMinValue];
+                                int weight = radius * radius - d * d;
+                                sum += weight * histogramHueValue[((hue + span) & 0xFF) * 256 + bestMinValue];
                             }
                             if (sum > bestHueSpanSum) {
                                 bestHueSpanSum = sum;
                                 bestMinHue = hue;
-                                bestMaxHue = (hue+backgroundWorstHueSpan)&0xFF;
+                                bestMaxHue = (hue + backgroundWorstHueSpan) & 0xFF;
                             }
                         }
                     }
@@ -1173,38 +1237,37 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     setBackgroundMaxValue(bestMaxValue);
 
                     // Create the diagnostic images.
-                    int avgHue = (bestMinHue > bestMaxHue ? (bestMinHue + bestMaxHue)/2 : ((255 + bestMinHue + bestMaxHue)/2) & 0xFF);
-                    int signalColor = Color.getHSBColor(avgHue/255.0f, 1.0f, 1.0f).getRGB();
+                    int avgHue = (bestMinHue > bestMaxHue ? (bestMinHue + bestMaxHue) / 2 : ((255 + bestMinHue + bestMaxHue) / 2) & 0xFF);
+                    int signalColor = Color.getHSBColor(avgHue / 255.0f, 1.0f, 1.0f).getRGB();
                     for (byte data[] : backgroundImages) {
-                        int imagePixels[] = new int[cols*rows];
-                        int problemPixels[] = new int[cols*rows];
+                        int imagePixels[] = new int[cols * rows];
+                        int problemPixels[] = new int[cols * rows];
                         boolean hasProblems = false;
                         for (int y = 0; y < rows; y++) {
-                            for (int x = 0, idx = y*cols*ch; x < cols; x++, idx += ch) {
-                                int dx = x - cols/2;
-                                int dy = y - rows/2;
-                                int rSq = dx*dx + dy*dy;
+                            for (int x = 0, idx = y * cols * ch; x < cols; x++, idx += ch) {
+                                int dx = x - cols / 2;
+                                int dy = y - rows / 2;
+                                int rSq = dx * dx + dy * dy;
                                 if (rSq < maskSq) {
-                                    int hue = Byte.toUnsignedInt(data[idx+0]);
-                                    int saturation = Byte.toUnsignedInt(data[idx+1]);
-                                    int value = Byte.toUnsignedInt(data[idx+2]);
-                                    Color color = Color.getHSBColor(hue/255.0f, saturation/255.0f, value/255.0f);
+                                    int hue = Byte.toUnsignedInt(data[idx + 0]);
+                                    int saturation = Byte.toUnsignedInt(data[idx + 1]);
+                                    int value = Byte.toUnsignedInt(data[idx + 2]);
+                                    Color color = Color.getHSBColor(hue / 255.0f, saturation / 255.0f, value / 255.0f);
                                     int rgb = color.getRGB();
                                     if (value >= bestMinValue
                                             && (value > bestMaxValue
                                             || saturation < bestMinSaturation
                                             || saturation > bestMaxSaturation
-                                            || (bestMinHue < bestMaxHue ? 
-                                                    hue > bestMaxHue || hue < bestMinHue :
-                                                        hue > bestMaxHue && hue < bestMinHue))) {
+                                            || (bestMinHue < bestMaxHue ?
+                                            hue > bestMaxHue || hue < bestMinHue :
+                                            hue > bestMaxHue && hue < bestMinHue))) {
                                         // outside mask
-                                        imagePixels[y*cols + x] = rgb;
-                                        problemPixels[y*cols + x] = signalColor;
+                                        imagePixels[y * cols + x] = rgb;
+                                        problemPixels[y * cols + x] = signalColor;
                                         hasProblems = true;
-                                    }
-                                    else {
-                                        imagePixels[y*cols + x] = rgb;
-                                        problemPixels[y*cols + x] = rgb;
+                                    } else {
+                                        imagePixels[y * cols + x] = rgb;
+                                        problemPixels[y * cols + x] = rgb;
                                     }
                                 }
                             }
@@ -1230,15 +1293,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                                 + "Renew the blackening of dark parts of the nozzle tip.<br/>"
                                 + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
                                 + "Eliminate light sources that reflect on the nozzle tip.");
-                    }
-                    else if (bestMinValue > backgroundWorstValue/2) {
+                    } else if (bestMinValue > backgroundWorstValue / 2) {
                         report.append("sufficiently dark. <br/>");
-                    }
-                    else if (bestMinValue <= minBackgroundMaskValue) {
+                    } else if (bestMinValue <= minBackgroundMaskValue) {
                         report.append("possibly too dark. <br/>"
                                 + "Check camera exposure.<br/>");
-                    }
-                    else {
+                    } else {
                         report.append("quite dark. Perfect!<br/>");
                     }
                     if (bestMinValue <= backgroundWorstValue) {
@@ -1246,15 +1306,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                         report.append("The key color is ");
                         if (hueSpan > backgroundWorstHueSpan) {
                             report.append("not consistent enough.<br/>"
-                                    + (bestMinValue <= backgroundWorstValue ? 
-                                            "Check camera white balance (see the Wiki).<br/>" : "")
+                                    + (bestMinValue <= backgroundWorstValue ?
+                                    "Check camera white balance (see the Wiki).<br/>" : "")
                                     + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
                                     + "Eliminate light sources that reflect on the nozzle tip..<br/>");
-                        }
-                        else if (hueSpan > backgroundWorstHueSpan/2) {
+                        } else if (hueSpan > backgroundWorstHueSpan / 2) {
                             report.append("sufficiently consistent.<br/>");
-                        }
-                        else {
+                        } else {
                             report.append("very consistent. Perfect!<br/>");
                         }
                         if (hueSpan <= backgroundWorstHueSpan) {
@@ -1262,36 +1320,33 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                             report.append("The key color is ");
                             if (bestMinSaturation < backgroundWorstSaturation) {
                                 report.append("not vivid enough.<br/>"
-                                        + (bestMinValue <= backgroundWorstValue ? 
-                                                "Check camera white balance (see the Wiki).<br/>" : "")
+                                        + (bestMinValue <= backgroundWorstValue ?
+                                        "Check camera white balance (see the Wiki).<br/>" : "")
                                         + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
                                         + "Eliminate light sources that reflect on the nozzle tip.<br/>");
-                            }
-                            else if (bestMinSaturation < (255+backgroundWorstSaturation)/2) {
+                            } else if (bestMinSaturation < (255 + backgroundWorstSaturation) / 2) {
                                 report.append("sufficiently saturated.<br/>");
-                            }
-                            else {
+                            } else {
                                 report.append("very vivid. Perfect!<br/>");
                             }
                         }
                     }
                     report.append("</html>");
                     setBackgroundDiagnostics(report.toString());
-                }
-                else if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.Brightness) {
+                } else if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.Brightness) {
                     // Simple grayscale.
-                    int bestMinValue = 255; 
+                    int bestMinValue = 255;
                     int bestMaxValue = 0;
                     int signalColor = new Color(255, 0, 255).getRGB();
                     for (byte data[] : backgroundImages) {
-                        int imagePixels[] = new int[cols*rows];
-                        int problemPixels[] = new int[cols*rows];
+                        int imagePixels[] = new int[cols * rows];
+                        int problemPixels[] = new int[cols * rows];
                         boolean hasProblems = false;
                         for (int y = 0; y < rows; y++) {
-                            for (int x = 0, idx = y*cols*ch; x < cols; x++, idx += ch) {
-                                int dx = x - cols/2;
-                                int dy = y - rows/2;
-                                int rSq = dx*dx + dy*dy;
+                            for (int x = 0, idx = y * cols * ch; x < cols; x++, idx += ch) {
+                                int dx = x - cols / 2;
+                                int dy = y - rows / 2;
+                                int rSq = dx * dx + dy * dy;
                                 if (rSq < maskSq) {
                                     int value = Byte.toUnsignedInt(data[idx]);
                                     if (value > bestMaxValue) {
@@ -1305,13 +1360,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                                     int rgb = new Color(value, value, value).getRGB();
                                     if (value > backgroundWorstValue) {
                                         // outside mask
-                                        imagePixels[y*cols + x] = rgb;
-                                        problemPixels[y*cols + x] = signalColor;
+                                        imagePixels[y * cols + x] = rgb;
+                                        problemPixels[y * cols + x] = signalColor;
                                         hasProblems = true;
-                                    }
-                                    else {
-                                        imagePixels[y*cols + x] = rgb;
-                                        problemPixels[y*cols + x] = rgb;
+                                    } else {
+                                        imagePixels[y * cols + x] = rgb;
+                                        problemPixels[y * cols + x] = rgb;
                                     }
                                 }
                             }
@@ -1348,24 +1402,20 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                                 + "Renew the blackening of dark parts of the nozzle tip.<br/>"
                                 + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
                                 + "Eliminate light sources that reflect on the nozzle tip.");
-                    }
-                    else if (bestMaxValue > backgroundWorstValue/2) {
+                    } else if (bestMaxValue > backgroundWorstValue / 2) {
                         report.append("sufficiently dark. <br/>");
-                    }
-                    else if (bestMaxValue <= minBackgroundMaskValue) {
+                    } else if (bestMaxValue <= minBackgroundMaskValue) {
                         report.append("possibly too dark. <br/>"
                                 + "Check camera exposure.<br/>");
-                    }
-                    else {
+                    } else {
                         report.append("quite dark. Perfect!<br/>");
                     }
                     report.append("</html>");
                     setBackgroundDiagnostics(report.toString());
                 }
-                Logger.debug("Background calibration computation time: "+(NanosecondTime.getRuntimeSeconds() - t0)+"s");
+                Logger.debug("Background calibration computation time: " + (NanosecondTime.getRuntimeSeconds() - t0) + "s");
             }
-        }
-        finally {
+        } finally {
             backgroundImages = null;
         }
     }
@@ -1375,8 +1425,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             String xml = IOUtils.toString(ReferenceNozzleTip.class
                     .getResource("ReferenceNozzleTip-Calibration-DefaultPipeline.xml"));
             return new CvPipeline(xml);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new Error(e);
         }
     }
@@ -1417,11 +1466,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         if (nozzle != null) {
             if (runoutCompensation == null) {
                 runoutCompensationLookup.remove(nozzle.getId());
-            }
-            else {
+            } else {
                 runoutCompensationLookup.put(nozzle.getId(), runoutCompensation);
             }
-                
+
             // inform UI about changed information
             firePropertyChange("calibrationInformation", null, null);
         }
@@ -1429,7 +1477,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         runoutCompensation = null;
     }
 
-    public String getCalibrationInformation(ReferenceNozzle nozzle) { 
+    public String getCalibrationInformation(ReferenceNozzle nozzle) {
         return getRunoutCompensation(nozzle).toString();
     }
 
@@ -1517,7 +1565,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public boolean isRecalibrateOnHomeNeeded(ReferenceNozzle nozzle) {
         return recalibrationTrigger == RecalibrationTrigger.NozzleTipChange
-                ||  recalibrationTrigger == RecalibrationTrigger.MachineHome;
+                || recalibrationTrigger == RecalibrationTrigger.MachineHome;
     }
 
     public boolean isEnabled() {
@@ -1676,7 +1724,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public synchronized BufferedImage[] getBackgroundCalibrationImages() {
-        return backgroundCalibrationImages != null ? 
+        return backgroundCalibrationImages != null ?
                 backgroundCalibrationImages.toArray(new BufferedImage[backgroundCalibrationImages.size()])
                 : null;
     }
