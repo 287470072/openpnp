@@ -62,10 +62,10 @@ public class TopCameraCalibrationFrame extends JFrame {
 
         panel.add(gifLabel, "1, 1, fill, default");
 
-        JLabel descriypt = new JLabel("<html><body>1>:移动十字光标对准校准板<br/>的标记点<br/><br/>" +
-                "2>:点击数字的加减键修改<br/>数字使绿色框套住标记点<br/><br/>" +
+        JLabel descryption = new JLabel("<html><body>1>:移动十字光标对准校准板的标记点<br/><br/>" +
+                "2>:点击数字的加减键修改数字使绿色框套住标记点<br/><br/>" +
                 "3>:点击校准<br/></body></html>");
-        panel.add(descriypt, "3, 1, fill, default");
+        panel.add(descryption, "3, 1, 3, 1, fill, default");
 
 
         // 中间是一个标签
@@ -90,7 +90,6 @@ public class TopCameraCalibrationFrame extends JFrame {
             public void stateChanged(ChangeEvent e) {
                 // 当数值发生变化时触发此方法
                 featureDiameter = Double.parseDouble(spinner.getValue().toString());
-                System.out.println("当前值：" + featureDiameter);
                 UiUtils.submitUiMachineTask(() -> {
                     try {
                         VisionSolutions myUntils = new VisionSolutions();
@@ -141,7 +140,7 @@ public class TopCameraCalibrationFrame extends JFrame {
             }
         });
 
-        setSize(450, 290);
+        setSize(350, 290);
         setLocationRelativeTo(null); // 居中显示，相对于主窗口
 
 

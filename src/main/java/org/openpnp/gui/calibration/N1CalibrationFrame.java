@@ -17,6 +17,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.SwingUtil;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvStage;
 
@@ -65,19 +66,23 @@ public class N1CalibrationFrame extends JFrame {
                 });
         panel.setLayout(layout);
 
-        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/1.gif"));
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/n1calibration.gif"));
         Image image = icon.getImage();
-        Image newImage = image.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-        JLabel gifLabel = new JLabel(icon);
-        gifLabel.setPreferredSize(new Dimension(100, 100)); // 设置你想要的大小
+        JLabel gifLabel = new JLabel();
+        gifLabel.setIcon(SwingUtil.createAutoAdjustIcon(image, true));
+        gifLabel.setPreferredSize(new Dimension(360 / 2, 422 / 2)); // 设置你想要的大小
 
 
         panel.add(gifLabel, "1, 1, fill, default");
-
-
-        // 中间是一个标签
-        JLabel label = new JLabel("Feature diameter");
-        panel.add(label, "3, 1, fill, default");
+        
+        
+        JLabel descryption = new JLabel("<html><body>\n"
+        		+ "1>: 将圆形纸片白色朝上放置在圆圈中心<br/><br/>\n"
+        		+ "2>: 调整光圈数值大小，直到套住白色纸片<br/><br/>\n"
+        		+ "3>: 开始校准<br/><br/>\n"
+        		+ "</body></html>" +
+                "3>:点击校准<br/></body></html>");
+        panel.add(descryption, "3, 1, 3, 1, fill, default");
 
         // 右边是一个编辑框
         SpinnerNumberModel spinnerModel = new SpinnerNumberModel(18, 0, 999, 1);
@@ -91,13 +96,12 @@ public class N1CalibrationFrame extends JFrame {
         jftf.setColumns(2);
 
 
-        panel.add(spinner, "5, 1");
+        panel.add(spinner, "3, 3");
         spinner.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 // 当数值发生变化时触发此方法
                 featureDiameter = Double.parseDouble(spinner.getValue().toString());
-                System.out.println("当前值：" + featureDiameter);
                 UiUtils.submitUiMachineTask(() -> {
                     try {
                         VisionSolutions myUntils = new VisionSolutions();
@@ -119,41 +123,46 @@ public class N1CalibrationFrame extends JFrame {
             }
         });
 
-        // 第二行布局
-        JButton calibrateButton = new JButton("开始校准");
-        panel.add(calibrateButton, "3, 3, fill, default");
-
-        calibrateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    try {
-                        Head head = Configuration.get().getMachine().getDefaultHead();
-                        VisionSolutions myUntils = new VisionSolutions();
-                        CalibrationSolutions calibrationSolutions = new CalibrationSolutions();
-                        calibrationSolutions.setMachine((ReferenceMachine) Configuration.get().getMachine());
-                        for (Camera camera : head.getCameras()) {
-                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
-                                Circle testObject = myUntils
-                                        .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
-                                ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
-                                Nozzle n1 = head.getNozzles().get(0);
-                                oldNozzleOffsets = n1.getHeadOffsets();
-                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) n1);
-                            }
-                        }
-                    } catch (Exception ee) {
-                        Toolkit.getDefaultToolkit().beep();
-                    }
-                });
-            }
-        });
-
-        setSize(278, 174);
+        setSize(350, 290);
         setLocationRelativeTo(null); // 居中显示，相对于主窗口
 
 
         getContentPane().add(panel);
+                
+                
+                        // 中间是一个标签
+                        JLabel label = new JLabel("Feature diameter");
+                        panel.add(label, "1, 3, center, center");
+        
+                // 第二行布局
+                JButton calibrateButton = new JButton("开始校准");
+                panel.add(calibrateButton, "5, 3, fill, default");
+                
+                        calibrateButton.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                UiUtils.submitUiMachineTask(() -> {
+                                    try {
+                                        Head head = Configuration.get().getMachine().getDefaultHead();
+                                        VisionSolutions myUntils = new VisionSolutions();
+                                        CalibrationSolutions calibrationSolutions = new CalibrationSolutions();
+                                        calibrationSolutions.setMachine((ReferenceMachine) Configuration.get().getMachine());
+                                        for (Camera camera : head.getCameras()) {
+                                            if (camera instanceof ReferenceCamera && camera.getLooking() == Camera.Looking.Down) {
+                                                Circle testObject = myUntils
+                                                        .getSubjectPixelLocation((ReferenceCamera) camera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
+                                                ((ReferenceHead) head).setCalibrationTestObjectDiameter(((ReferenceCamera) camera).getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
+                                                Nozzle n1 = head.getNozzles().get(0);
+                                                oldNozzleOffsets = n1.getHeadOffsets();
+                                                calibrationSolutions.calibrateNozzleOffsets((ReferenceHead) head, (ReferenceCamera) camera, (ReferenceNozzle) n1);
+                                            }
+                                        }
+                                    } catch (Exception ee) {
+                                        Toolkit.getDefaultToolkit().beep();
+                                    }
+                                });
+                            }
+                        });
 
 
     }
