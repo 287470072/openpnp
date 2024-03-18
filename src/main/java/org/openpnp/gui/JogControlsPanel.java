@@ -37,10 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
-import org.openpnp.gui.calibration.BottomCameraCalibrationFrame;
-import org.openpnp.gui.calibration.N1CalibrationFrame;
-import org.openpnp.gui.calibration.N2CalibrationFrame;
-import org.openpnp.gui.calibration.TopCameraCalibrationFrame;
+import org.openpnp.gui.calibration.*;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -1386,80 +1383,14 @@ public class JogControlsPanel extends JPanel {
     protected Action n1OffseAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleOffseAction.N1.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
-                Camera topCamera = VisionUtils.getTopVisionCamera();
-                //移动相机到二维码上方
-                Location offsetLocation = new Location();
-                offsetLocation = topCamera.getLocation();
-                offsetLocation.setX(-60);
-                offsetLocation.setY(15);
-                MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
-                MovableUtils.fireTargetedUserAction(topCamera);
-                //识别二维码
-                String qrString = VisionUtils.readQrCode(topCamera);
-                if (qrString != null) {
-                    JSONObject jsonObject = new JSONObject(qrString);
-                    JSONArray pixelData = jsonObject.getJSONArray("data");
-                    for (Object obj : pixelData) {
-
-                        JSONObject temp = (JSONObject) obj;
-                        String name = temp.get("name").toString();
-                        List<Nozzle> nozzles = configuration.getMachine().getHeads().get(0).getNozzles();
-                        for (Nozzle nozzle : nozzles) {
-                            if (nozzle.getName().equals(name)) {
-                                //填充到nozzle offset配置中
-                                Location offset = nozzle.getHeadOffsets();
-                                offset.setX(Double.parseDouble(temp.get("x").toString()));
-                                offset.setY(Double.parseDouble(temp.get("y").toString()));
-                                offset.setZ(Double.parseDouble(temp.get("z").toString()));
-                            }
-                        }
-                    }
-                    MessageBoxes.infoBox("消息", "偏移坐标写入成功！");
-                } else {
-                    throw new Exception("二维码识别失败，请重新尝试!");
-                }
-            });
+            new N1OffsetFrame().setVisible(true);
         }
     };
     
     protected Action n2OffseAction = new AbstractAction(Translations.getString("JogControlsPanel.nozzleOffseAction.N2.Text")) {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            UiUtils.messageBoxOnException(() -> {
-                Camera topCamera = VisionUtils.getTopVisionCamera();
-                //移动相机到二维码上方
-                Location offsetLocation = new Location();
-                offsetLocation = topCamera.getLocation();
-                offsetLocation.setX(-60);
-                offsetLocation.setY(15);
-                MovableUtils.moveToLocationAtSafeZ(topCamera, offsetLocation);
-                MovableUtils.fireTargetedUserAction(topCamera);
-                //识别二维码
-                String qrString = VisionUtils.readQrCode(topCamera);
-                if (qrString != null) {
-                    JSONObject jsonObject = new JSONObject(qrString);
-                    JSONArray pixelData = jsonObject.getJSONArray("data");
-                    for (Object obj : pixelData) {
-
-                        JSONObject temp = (JSONObject) obj;
-                        String name = temp.get("name").toString();
-                        List<Nozzle> nozzles = configuration.getMachine().getHeads().get(0).getNozzles();
-                        for (Nozzle nozzle : nozzles) {
-                            if (nozzle.getName().equals(name)) {
-                                //填充到nozzle offset配置中
-                                Location offset = nozzle.getHeadOffsets();
-                                offset.setX(Double.parseDouble(temp.get("x").toString()));
-                                offset.setY(Double.parseDouble(temp.get("y").toString()));
-                                offset.setZ(Double.parseDouble(temp.get("z").toString()));
-                            }
-                        }
-                    }
-                    MessageBoxes.infoBox("消息", "偏移坐标写入成功！");
-                } else {
-                    throw new Exception("二维码识别失败，请重新尝试!");
-                }
-            });
+            new N2OffsetFrame().setVisible(true);
         }
     };
 
