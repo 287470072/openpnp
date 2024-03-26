@@ -54,7 +54,7 @@ public class N2OffsetFrame extends JFrame {
     }
 
     public void createUi() {
-        setTitle(Translations.getString("JogControlsPanel.nozzleN1OffsetCalibrateAction.Text"));
+        setTitle(Translations.getString("JogControlsPanel.nozzleN2OffsetCalibrateAction.Text"));
 
         setResizable(false);
         setAlwaysOnTop(true);
@@ -76,7 +76,7 @@ public class N2OffsetFrame extends JFrame {
                 });
         panel.setLayout(layout);
 
-        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/n1n2offset.gif"));
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("icons/gif/n2offset.gif"));
         Image image = icon.getImage();
         JLabel gifLabel = new JLabel();
         gifLabel.setIcon(SwingUtil.createAutoAdjustIcon(image, true));
@@ -86,8 +86,7 @@ public class N2OffsetFrame extends JFrame {
         panel.add(gifLabel, "1, 1, fill, default");
 
 
-        JLabel descryption = new JLabel("<html><body>1>:移动吸嘴到标记点的中心，并且正好接触到PCB<br/><br/>\n" +
-                "2>:点击校准<br/><br/></body></html>");
+        JLabel descryption = new JLabel("<html><body>1>:移动吸嘴N2到标记点的中心，并且正好接触到PCB<br/><br/>" + "2>:点击校准<br/><br/></body></html>");
         panel.add(descryption, "3, 1, 3, 1, fill, default");
 
         // 右边是一个编辑框
