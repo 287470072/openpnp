@@ -86,12 +86,7 @@ public class N1CalibrationFrame extends JFrame {
         panel.add(gifLabel, "1, 1, fill, default");
 
 
-        JLabel descryption = new JLabel("<html><body>\n"
-                + "1>: 将圆形纸片白色朝上放置在圆圈中心<br/><br/>\n"
-                + "2>: 调整光圈数值大小，直到套住白色纸片<br/><br/>\n"
-                + "3>: 开始校准<br/><br/>\n"
-                + "</body></html>" +
-                "3>:点击校准<br/></body></html>");
+        JLabel descryption = new JLabel(Translations.getString("N2.Calibration.Frame.Descryption"));
         panel.add(descryption, "3, 1, 3, 1, fill, default");
 
         // 右边是一个编辑框
@@ -196,7 +191,7 @@ public class N1CalibrationFrame extends JFrame {
         panel.add(label, "1, 3, center, center");
 
         // 第二行布局
-        JButton calibrateButton = new JButton("开始校准");
+        JButton calibrateButton = new JButton(Translations.getString("TopCamera.Calibration.Frame.Start"));
         panel.add(calibrateButton, "5, 3, fill, default");
 
         calibrateButton.addActionListener(new ActionListener() {

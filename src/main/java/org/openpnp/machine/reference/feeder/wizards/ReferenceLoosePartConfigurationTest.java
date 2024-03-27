@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
@@ -38,7 +39,7 @@ public class ReferenceLoosePartConfigurationTest extends AbstractConfigurationWi
         this.feeder = feeder;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "限制范围(基于Top摄像头的坐标)", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, Translations.getString("ReferenceLoose.PartConfigurationTest.Title"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -84,13 +85,13 @@ public class ReferenceLoosePartConfigurationTest extends AbstractConfigurationWi
         rightYValue = new JTextField();
         panel.add(rightYValue, "6, 6");
         rightYValue.setColumns(10);
-        
-        
-        JLabel lblFeed = new JLabel("左下角坐标");
+
+
+        JLabel lblFeed = new JLabel(Translations.getString("ReferenceLoose.PartConfigurationTest.Title.Lower.Left"));
         panel.add(lblFeed, "2, 4, right, default");
         
         
-        JLabel lblPostPick = new JLabel("右上角坐标");
+        JLabel lblPostPick = new JLabel(Translations.getString("ReferenceLoose.PartConfigurationTest.Title.Lower.Right"));
         panel.add(lblPostPick, "2, 6, right, default");
         
         

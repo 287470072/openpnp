@@ -25,6 +25,7 @@ import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -91,7 +92,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
                 }
                 if (i == 2 && status == false) {
                     Logger.debug("元件位置超过限定范围！！");
-                    throw new Exception("在限定范围内，未找到可用元件！");
+                    throw new Exception(Translations.getString("ReferenceLoose.PartConfigurationTest.feed"));
                 }
                 //Logger.debug("X|Y:" + pickLocation.getX() + "|" + pickLocation.getY());
 
@@ -248,7 +249,8 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[]{
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new ReferenceLoosePartConfigurationTest(this), "散料范围设置"),
+                new PropertySheetWizardAdapter(new ReferenceLoosePartConfigurationTest(this), Translations.getString("ReferenceLoose.PartConfigurationTest")),
+               // new PropertySheetWizardAdapter(new ReferenceLoosePartConfigurationTest(this), "散料范围设置"),
         };
 
 

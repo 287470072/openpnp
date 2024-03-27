@@ -72,9 +72,7 @@ public class BottomCameraCalibrationFrame extends JFrame {
 
         panel.add(gifLabel, "1, 1, fill, default");
         
-        JLabel descryption = new JLabel("<html><body>1>:移动十字光标对准校准板的标记点<br/><br/>" +
-                "2>:点击数字的加减键修改数字使绿色框套住标记点<br/><br/>" +
-                "3>:点击校准<br/></body></html>");
+        JLabel descryption = new JLabel(Translations.getString("BottomCamera.Calibration.Frame"));
         panel.add(descryption, "3, 1, 3, 1, fill, default");
 
 
@@ -125,7 +123,7 @@ public class BottomCameraCalibrationFrame extends JFrame {
         
         
                 // 第二行布局
-                JButton calibrateButton = new JButton("开始校准");
+                JButton calibrateButton = new JButton(Translations.getString("TopCamera.Calibration.Frame.Start"));
                 panel.add(calibrateButton, "5, 3, fill, default");
                 
                         calibrateButton.addActionListener(new ActionListener() {

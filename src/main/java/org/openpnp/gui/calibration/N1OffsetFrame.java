@@ -86,8 +86,7 @@ public class N1OffsetFrame extends JFrame {
         panel.add(gifLabel, "1, 1, fill, default");
 
 
-        JLabel descryption = new JLabel("<html><body>1>:移动吸嘴N1到标记点的中心，并且正好接触到PCB<br/><br/>\n" +
-                "2>:点击校准<br/><br/></body></html>");
+        JLabel descryption = new JLabel(Translations.getString("N1.Offset.Frame.Descryption"));
         panel.add(descryption, "3, 1, 3, 1, fill, default");
 
         // 右边是一个编辑框
@@ -114,7 +113,7 @@ public class N1OffsetFrame extends JFrame {
         //panel.add(label, "1, 3, center, center");
 
         // 第二行布局
-        JButton calibrateButton = new JButton("开始校准");
+        JButton calibrateButton = new JButton(Translations.getString("TopCamera.Calibration.Frame.Start"));
         panel.add(calibrateButton, "5, 3, fill, default");
 
         calibrateButton.addActionListener(new ActionListener() {
