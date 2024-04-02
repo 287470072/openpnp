@@ -292,9 +292,9 @@ public class DetectCircularSymmetry extends CvStage {
             searchHeight = getPossiblePipelinePropertyOverride(searchHeight, pipeline, 
                     propertyName + ".searchHeight", Double.class, Integer.class, Length.class);
 
-            center = getPossiblePipelinePropertyOverride(center, pipeline, 
+         /*   center = getPossiblePipelinePropertyOverride(center, pipeline,
                     propertyName + ".center", Point.class, org.opencv.core.Point.class, 
-                    Location.class);
+                    Location.class);*/
         }
         if (searchWidth <= 0) {
             searchWidth = maxDistance*2;

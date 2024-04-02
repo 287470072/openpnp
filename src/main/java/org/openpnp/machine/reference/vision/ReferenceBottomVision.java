@@ -17,6 +17,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.BackgroundCalibrationMethod;
@@ -1312,7 +1313,21 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
                     Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
 
-                    Location n1Offset = n1.getHeadOffsets();
+                    Nozzle n2 = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1);
+                    ReferenceNozzleTip calibrationNozzleTip = (ReferenceNozzleTip) n2.getNozzleTip();
+                    Location offset = new Location(LengthUnit.Millimeters);
+                    if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated((ReferenceNozzle) n2)) {
+                        offset = calibrationNozzleTip.getCalibration().getCalibratedOffset1((ReferenceNozzle) n2);
+                    }
+
+
+                    affineWarp.setX0(lefUpLocation.getX() + offset.getX());
+                    affineWarp.setY0(lefUpLocation.getY() + offset.getY());
+                    affineWarp.setX1(rightUpLocation.getX() + offset.getX());
+                    affineWarp.setY1(rightUpLocation.getY() + offset.getY());
+                    affineWarp.setX2(leftDownLocation.getX() + offset.getX());
+                    affineWarp.setY2(leftDownLocation.getY() + offset.getY());
+                    /*Location n1Offset = n1.getHeadOffsets();
                     Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
                     double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();
                     double n2N1OffsetY = n2Offset.getY() - n1Offset.getY();
@@ -1338,7 +1353,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     affineWarp.setX1(rightUpLocation.getX() + cameraNozzelOffsetX);
                     affineWarp.setY1(rightUpLocation.getY() + cameraNozzelOffsetY);
                     affineWarp.setX2(leftDownLocation.getX() + cameraNozzelOffsetX);
-                    affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);
+                    affineWarp.setY2(leftDownLocation.getY() + cameraNozzelOffsetY);*/
                 }
                 pipeline.insert(affineWarp, 3);
                 pipeline.insert(affineWarp, pipeline.getStages().size() - 2);

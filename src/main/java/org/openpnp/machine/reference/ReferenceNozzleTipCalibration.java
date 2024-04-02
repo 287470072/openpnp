@@ -19,12 +19,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Point;
+import org.openpnp.model.*;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
@@ -32,7 +27,9 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.*;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.AffineWarp;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -900,7 +897,22 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         Nozzle n1 = nozzles.get(0);
         // This is our baseline location.
         Location cameraLocation = new Location();
- /*         if (cameraNum.equals("Single")) {
+
+        cameraLocation = camera.getLocation(nozzle);
+
+        Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
+                .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
+        return measureBaseLocation;
+    }
+
+    public Location getCalibrationLocation2(Camera camera, HeadMountable nozzle) {
+        config = new IniAppConfig();
+        String cameraNum = config.getProperty("Calibration", "cameraNum");
+        List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+        Nozzle n1 = nozzles.get(0);
+        // This is our baseline location.
+        Location cameraLocation = new Location();
+        if (cameraNum.equals("Single")) {
             cameraLocation = camera.getLocation(nozzle);
         } else if (cameraNum.equals("Multi") && nozzle == n1) {
             cameraLocation = camera.getLocation(nozzle);
@@ -911,8 +923,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             Location n1Offset = nozzles.get(0).getHeadOffsets();
             cameraLocation.setX(cameraLocation.getX() + n2Offest.getX() - n1Offset.getX());
             cameraLocation.setY(cameraLocation.getY() + n2Offest.getY() - n1Offset.getY());
-        }*/
-        cameraLocation = camera.getLocation(nozzle);
+        }
+        //cameraLocation = camera.getLocation(nozzle);
 
         Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
                 .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
@@ -949,6 +961,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     }
 
+    public Location getCalibratedOffset1(ReferenceNozzle nozzle) {
+        Location offset = new Location(LengthUnit.Millimeters);
+        ModelBasedRunoutCameraOffsetCompensation test = (ModelBasedRunoutCameraOffsetCompensation) this.runoutCompensationLookup.get(nozzle.getId());
+        offset.setX(test.centerX);
+        offset.setY(test.centerY);
+        return offset;
+
+    }
+
     /*
      * The axis offset determined in runout calibration can be applied as a tool specific camera offset.
      */
@@ -969,6 +990,49 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Location findCircle(ReferenceNozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         try (CvPipeline pipeline = getPreparedPipeline(camera, nozzle, measureLocation)) {
+            AffineWarp affineWarp = new AffineWarp();
+            List<CvStage> stages = pipeline.getStages();
+            for (int i = 0; i < stages.size(); i++) {
+                if (stages.get(i) instanceof AffineWarp) {
+                    pipeline.remove(stages.get(i));
+                }
+            }
+            Nozzle n1 = Configuration.get().getMachine().getHeads().get(0).getNozzles().stream().findFirst().orElse(null);
+
+            Serial serial = Configuration.get().getSerial();
+
+            if (serial != null & serial.isCertification() && camera.isTwoCamera()) {
+                if (nozzle == n1 && camera.getLooking() == Camera.Looking.Up) {
+                    //左半边
+                    //Location test = VisionUtils.getPixelLocation(camera, -20.250438, 5.852280);
+                    Location unitsPerPixel = camera.getUnitsPerPixel();
+
+                    Location lefUpLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(0, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(0 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+                    affineWarp.setX0(lefUpLocation.getX());
+                    affineWarp.setY0(lefUpLocation.getY());
+                    affineWarp.setX1(rightUpLocation.getX());
+                    affineWarp.setY1(rightUpLocation.getY());
+                    affineWarp.setX2(leftDownLocation.getX());
+                    affineWarp.setY2(leftDownLocation.getY());
+                } else {
+                    //右半边
+                    Location unitsPerPixel = camera.getUnitsPerPixelAtZ().convertToUnits(LengthUnit.Millimeters);
+                    Location lefUpLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location rightUpLocation = unitsPerPixel.multiply(camera.getWidth() - camera.getWidth() / 2, 0 + camera.getHeight() / 2, 0, 0);
+                    Location leftDownLocation = unitsPerPixel.multiply(camera.getWidth() / 2 - camera.getWidth() / 2, -camera.getHeight() + camera.getHeight() / 2, 0, 0);
+
+                    affineWarp.setX0(lefUpLocation.getX());
+                    affineWarp.setY0(lefUpLocation.getY());
+                    affineWarp.setX1(rightUpLocation.getX());
+                    affineWarp.setY1(rightUpLocation.getY());
+                    affineWarp.setX2(leftDownLocation.getX());
+                    affineWarp.setY2(leftDownLocation.getY());
+                }
+                pipeline.insert(affineWarp, 2);
+                //pipeline.insert(affineWarp, pipeline.getStages().size() - 2);
+            }
 
             pipeline.process();
             List<Location> locations = new ArrayList<>();
@@ -1012,7 +1076,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             IniAppConfig config = new IniAppConfig();
             String cameraNum = config.getProperty("Calibration", "cameraNum");
             List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
-            Nozzle n1 = nozzles.get(0);
             Nozzle n2 = nozzles.get(1);
             if (cameraNum.equals("Multi") && nozzle == n2) {
 
