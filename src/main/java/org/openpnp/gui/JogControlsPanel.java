@@ -1009,38 +1009,38 @@ public class JogControlsPanel extends JPanel {
 
         //相机偏移
         JLabel cameraOffsetLab = new JLabel("X");
-        panelCalibrateChild2.add(cameraOffsetLab, "2, 2, center, default");
+        //panelCalibrateChild2.add(cameraOffsetLab, "2, 2, center, default");
 
         cameraOffsetText = new JTextField("0.00");
 
-        panelCalibrateChild2.add(cameraOffsetText, "4, 2");
+        //panelCalibrateChild2.add(cameraOffsetText, "4, 2");
 
         JLabel cameraOffsetLabY = new JLabel("Y");
-        panelCalibrateChild2.add(cameraOffsetLabY, "6, 2, center, default");
+        //panelCalibrateChild2.add(cameraOffsetLabY, "6, 2, center, default");
 
         cameraOffsetYText = new JTextField("0.00");
 
         JLabel cameraSpeedLab = new JLabel("相机速度");
 
 
-        panelCalibrateChild2.add(cameraOffsetYText, "8, 2");
+        //panelCalibrateChild2.add(cameraOffsetYText, "8, 2");
 
-        panelCalibrateChild2.add(cameraSpeedLab, "10, 2");
+        panelCalibrateChild2.add(cameraSpeedLab, "2, 2");
 
         cameraSpeedText = new JComboBox(Camera.Speeding.values());
 
         cameraOneTwo = new JComboBox(Camera.CameraNub.values());
 
-        panelCalibrateChild2.add(cameraOneTwo, "12, 2");
+        panelCalibrateChild2.add(cameraOneTwo, "4, 2");
 
-        panelCalibrateChild2.add(cameraSpeedText, "14, 2");
+        panelCalibrateChild2.add(cameraSpeedText, "6, 2");
 
 
         JButton cameraOffsetApply = new JButton("Apply");
-        panelCalibrateChild2.add(cameraOffsetApply, "16, 2");
+        panelCalibrateChild2.add(cameraOffsetApply, "8, 2");
 
         JButton cameraOffsetReset = new JButton("Reset");
-        panelCalibrateChild2.add(cameraOffsetReset, "18, 2");
+        panelCalibrateChild2.add(cameraOffsetReset, "10, 2");
 
 
 

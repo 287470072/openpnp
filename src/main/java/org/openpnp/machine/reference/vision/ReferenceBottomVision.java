@@ -74,6 +74,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = null;
 
+    private List<PnpJobPlanner.PlannedPlacement> ppsTemp;
+
     public ReferenceBottomVision() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -207,6 +209,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         Logger.trace("双目识别开始：" + System.currentTimeMillis());
         Camera camera = VisionUtils.getBottomVisionCamera();
         List<Nozzle> nozzles = Configuration.get().getMachine().getHeads().get(0).getNozzles();
+        ppsTemp = pps;
 
         //需要贴的元件有两个的时候
         if (pps.size() > 1) {
@@ -1274,7 +1277,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     private RotatedRect processPipelineAndGetResultMulti(CvPipeline pipeline, Camera camera, Part part, Nozzle nozzle, Location wantedLocation, Location adjustedNozzleLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
 
-
         // 准备并配置视觉管道，以进行零件识别
         preparePipelineMulti(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, part.getPackage(), nozzle, nozzle.getNozzleTip(), wantedLocation, adjustedNozzleLocation, bottomVisionSettings);
         for (PipelineShot pipelineShot : pipeline.getPipelineShots()) {
@@ -1320,13 +1322,24 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         offset = calibrationNozzleTip.getCalibration().getCalibratedOffset1((ReferenceNozzle) n2);
                     }
 
+                    if (ppsTemp.size() == 1 && ppsTemp.get(0).nozzle == n2) {
+                        affineWarp.setX0(lefUpLocation.getX());
+                        affineWarp.setY0(lefUpLocation.getY());
+                        affineWarp.setX1(rightUpLocation.getX());
+                        affineWarp.setY1(rightUpLocation.getY());
+                        affineWarp.setX2(leftDownLocation.getX());
+                        affineWarp.setY2(leftDownLocation.getY());
+                    } else {
+                        affineWarp.setX0(lefUpLocation.getX() + offset.getX());
+                        affineWarp.setY0(lefUpLocation.getY() + offset.getY());
+                        affineWarp.setX1(rightUpLocation.getX() + offset.getX());
+                        affineWarp.setY1(rightUpLocation.getY() + offset.getY());
+                        affineWarp.setX2(leftDownLocation.getX() + offset.getX());
+                        affineWarp.setY2(leftDownLocation.getY() + offset.getY());
+                    }
 
-                    affineWarp.setX0(lefUpLocation.getX() + offset.getX());
-                    affineWarp.setY0(lefUpLocation.getY() + offset.getY());
-                    affineWarp.setX1(rightUpLocation.getX() + offset.getX());
-                    affineWarp.setY1(rightUpLocation.getY() + offset.getY());
-                    affineWarp.setX2(leftDownLocation.getX() + offset.getX());
-                    affineWarp.setY2(leftDownLocation.getY() + offset.getY());
+
+
                     /*Location n1Offset = n1.getHeadOffsets();
                     Location n2Offset = Configuration.get().getMachine().getHeads().get(0).getNozzles().get(1).getHeadOffsets();
                     double n2N1OffsetX = n2Offset.getX() - n1Offset.getX();

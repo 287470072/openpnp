@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="10.0.6" transformSequenceNumber="10">
   <directoryPresets config="./jarDecrypt.dll" />
-  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="2024-02-16_18-41-02.785da92" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
+  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="2024-04-03_08-07-32.2d96b96" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <variables>
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
@@ -58,7 +58,7 @@
   </files>
   <launchers>
     <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
-      <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
+      <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" executionLevel="requireAdministrator" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
       <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
         <classPath>
